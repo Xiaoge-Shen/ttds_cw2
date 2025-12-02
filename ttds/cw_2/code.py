@@ -451,17 +451,14 @@ class SentimentClassifier:
             train_path: 训练数据路径
             test_path: 测试数据路径（可选，稍后提供）
         """
-        # 读取训练数据
-        self.train_data = pd.read_csv(train_path, sep='\t', 
-                                      names=['sentiment', 'text'], 
-                                      header=None)
+        # 读取训练数据 - 注意有header和3列
+        self.train_data = pd.read_csv(train_path, sep='\t', header=0)
+        # 数据格式: id, sentiment, tweet
         
         self.test_data = None
         if test_path:
             try:
-                self.test_data = pd.read_csv(test_path, sep='\t', 
-                                            names=['sentiment', 'text'], 
-                                            header=None)
+                self.test_data = pd.read_csv(test_path, sep='\t', header=0)
             except:
                 print("Test file not found, will load later")
         
@@ -488,13 +485,28 @@ class SentimentClassifier:
         """打乱并切分 Train/Dev"""
         from sklearn.model_selection import train_test_split
         
-        X = self.train_data['text'].values
+        # 使用'tweet'列作为X，'sentiment'列作为y
+        X = self.train_data['tweet'].values
         y = self.train_data['sentiment'].values
         
-        self.X_train, self.X_dev, self.y_train, self.y_dev = train_test_split(
-            X, y, test_size=test_size, random_state=random_state, 
-            stratify=y  # 保持类别比例
-        )
+        # 先检查类别分布
+        print(f"\nOriginal class distribution:")
+        print(pd.Series(y).value_counts())
+        
+        # 如果某些类别样本太少，不使用stratify
+        class_counts = pd.Series(y).value_counts()
+        use_stratify = all(count >= 2 for count in class_counts.values)
+        
+        if use_stratify:
+            self.X_train, self.X_dev, self.y_train, self.y_dev = train_test_split(
+                X, y, test_size=test_size, random_state=random_state, 
+                stratify=y
+            )
+        else:
+            print("Warning: Some classes have too few samples. Stratification disabled.")
+            self.X_train, self.X_dev, self.y_train, self.y_dev = train_test_split(
+                X, y, test_size=test_size, random_state=random_state
+            )
         
         print(f"\nData split complete:")
         print(f"  Training set: {len(self.X_train)} samples")
@@ -504,17 +516,16 @@ class SentimentClassifier:
         
     def load_test_data(self, test_path):
         """加载测试数据"""
-        self.test_data = pd.read_csv(test_path, sep='\t', 
-                                     names=['sentiment', 'text'], 
-                                     header=None)
-        self.X_test = self.test_data['text'].values
+        self.test_data = pd.read_csv(test_path, sep='\t', header=0)
+        # 测试数据格式: id, sentiment, tweet
+        self.X_test = self.test_data['tweet'].values
         self.y_test = self.test_data['sentiment'].values
         print(f"Test set loaded: {len(self.X_test)} samples")
+        print(f"Test class distribution:")
+        print(pd.Series(self.y_test).value_counts())
     
     def extract_features_baseline(self):
         """Baseline特征提取：BOW"""
-        from sklearn.feature_extraction.text import CountVectorizer
-        
         print("\n" + "="*50)
         print("Extracting Baseline Features (BOW)")
         print("="*50)
@@ -760,16 +771,16 @@ class SentimentClassifier:
 # ==========================================
 
 if __name__ == "__main__":
-    # 1. Run IR Evaluation
-    ir = IREvaluator("ttdssystemresults.csv", "qrels.csv")
-    ir.evaluate_all()
-    ir.perform_significance_test() 
+    # # 1. Run IR Evaluation
+    # ir = IREvaluator("ttdssystemresults.csv", "qrels.csv")
+    # ir.evaluate_all()
+    # ir.perform_significance_test() 
 
-    # 2. Run Text Analysis
-    analyzer = TextAnalyzer("bible_and_quran.tsv")
-    analyzer.preprocess()
-    analyzer.compute_feature_selection()
-    analyzer.run_lda_analysis()
+    # # 2. Run Text Analysis
+    # analyzer = TextAnalyzer("bible_and_quran.tsv")
+    # analyzer.preprocess()
+    # analyzer.compute_feature_selection()
+    # analyzer.run_lda_analysis()
 
     # 3. Run Classification
     clf = SentimentClassifier("train.txt")  
