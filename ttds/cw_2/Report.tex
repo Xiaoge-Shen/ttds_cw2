@@ -1,0 +1,358 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\title{\textbf{TTDS Coursework 2 Report} \\ 
+IR Evaluation, Text Analysis, and Classification}
+\author{\\ Student ID: s2414220}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Implementation Overview}
+
+This coursework involves three main components: IR system evaluation, text corpus analysis, and sentiment classification. All implementations were completed in Python using standard libraries including pandas, numpy, scikit-learn, and NLTK.
+
+\subsection{Code Structure}
+The implementation is organized into three main classes:
+\begin{itemize}
+    \item \texttt{IREvaluator}: Computes precision, recall, R-precision, AP, and nDCG metrics for IR systems
+    \item \texttt{TextAnalyzer}: Performs mutual information, chi-square analysis, and LDA topic modeling
+    \item \texttt{SentimentClassifier}: Implements baseline and improved sentiment classification models
+\end{itemize}
+
+\subsection{Key Implementation Challenges}
+Several challenges were encountered during implementation:
+\begin{enumerate}
+    \item \textbf{nDCG Calculation}: Ensuring the correct formula from Lecture 9 was used, particularly handling the log base and position indexing correctly (i.e., $\text{rel}_i / \log_2(i)$ for $i \geq 2$).
+    \item \textbf{Data Structure Design}: Converting qrels into an efficient dictionary format (\texttt{query\_id} $\rightarrow$ \texttt{doc\_id} $\rightarrow$ \texttt{relevance}) for O(1) lookup time.
+    \item \textbf{Binary vs. Graded Relevance}: Correctly distinguishing between metrics requiring binary relevance (P, R, AP) versus graded relevance (nDCG).
+\end{enumerate}
+
+\subsection{What Was Learned}
+This coursework provided hands-on experience with:
+\begin{itemize}
+    \item Implementation of standard IR evaluation metrics from first principles
+    \item Statistical significance testing for comparing system performance
+    \item Feature selection techniques (MI and $\chi^2$) for corpus comparison
+    \item Topic modeling with LDA and interpretation of results
+    \item Practical challenges in sentiment classification and model improvement
+\end{itemize}
+
+\section{IR Evaluation Results}
+
+\subsection{System Performance Comparison}
+
+Table~\ref{tab:ir_results} presents the mean performance of all six IR systems across the ten test queries, evaluated using six different metrics.
+
+\begin{table}[h]
+\centering
+\caption{Mean Performance of IR Systems Across All Metrics}
+\label{tab:ir_results}
+\begin{tabular}{ccccccc}
+\toprule
+\textbf{System} & \textbf{P@10} & \textbf{R@50} & \textbf{R-Prec} & \textbf{AP} & \textbf{nDCG@10} & \textbf{nDCG@20} \\
+\midrule
+1 & 0.390 & 0.834 & 0.401 & 0.400 & 0.363 & 0.485 \\
+2 & 0.220 & \textbf{0.867} & 0.252 & 0.300 & 0.200 & 0.246 \\
+3 & \textbf{0.410} & 0.767 & \textbf{0.449} & \textbf{0.451} & \textbf{0.420} & \textbf{0.511} \\
+4 & 0.080 & 0.189 & 0.049 & 0.075 & 0.069 & 0.076 \\
+5 & \textbf{0.410} & 0.767 & 0.358 & 0.364 & 0.332 & 0.424 \\
+6 & \textbf{0.410} & 0.767 & \textbf{0.449} & 0.445 & 0.400 & 0.490 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Best Performing Systems by Metric}
+
+Table~\ref{tab:significance} summarizes the best and second-best systems for each metric, along with statistical significance test results using a two-tailed t-test ($\alpha = 0.05$).
+
+\begin{table}[h]
+\centering
+\caption{Statistical Significance Analysis of Best Performing Systems}
+\label{tab:significance}
+\small
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Metric} & \textbf{Best Sys} & \textbf{Mean} & \textbf{2nd Sys} & \textbf{Mean} & \textbf{p-value} \\
+\midrule
+P@10        & 3 (tie with 5,6) & 0.410 & 5 & 0.410 & 1.000 \\
+R@50        & 2 & 0.867 & 1 & 0.834 & 0.703 \\
+R-Precision & 3 (tie with 6) & 0.449 & 6 & 0.449 & 1.000 \\
+AP          & 3 & 0.451 & 6 & 0.445 & 0.967 \\
+nDCG@10     & 3 & 0.420 & 6 & 0.400 & 0.883 \\
+nDCG@20     & 3 & 0.511 & 6 & 0.490 & 0.868 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Analysis and Discussion}
+
+\textbf{Overall Best System}: System 3 emerges as the strongest performer, achieving the highest scores in five out of six metrics (P@10, R-Precision, AP, nDCG@10, nDCG@20). System 2 performs best only on R@50, suggesting it retrieves more relevant documents in the top 50 results.
+
+\textbf{Statistical Significance}: Notably, \textit{none of the best systems are statistically significantly better than their second-place counterparts} (all p-values $> 0.05$). This can be attributed to several factors:
+
+\begin{enumerate}
+    \item \textbf{Small Sample Size}: With only 10 queries, the statistical power is limited. Small variations in performance across queries lead to large standard deviations, making it difficult to detect significant differences.
+    
+    \item \textbf{Tied Performances}: For P@10 and R-Precision, Systems 3, 5, and 6 achieved identical or near-identical mean scores (e.g., all three systems scored 0.410 on P@10), resulting in p-values of 1.000.
+    
+    \item \textbf{High Variance}: IR system performance often varies considerably across different queries depending on query difficulty and relevance distribution. This natural variance obscures small performance differences between systems.
+    
+    \item \textbf{Similar Retrieval Quality}: Systems 3 and 6 show remarkably similar performance patterns across all metrics, suggesting they may employ similar retrieval strategies or ranking functions.
+\end{enumerate}
+
+\textbf{Practical Implications}: While statistical significance is not achieved, System 3 consistently achieves the highest or near-highest scores across multiple metrics, suggesting it is the most robust choice in practice. The lack of significance primarily reflects limitations in test collection size rather than absence of real performance differences.
+
+\textbf{Metric-Specific Observations}:
+\begin{itemize}
+    \item System 2's superiority in R@50 but poor performance in precision-oriented metrics (P@10, nDCG) suggests a recall-focused strategy that retrieves many relevant documents but with lower ranking quality.
+    \item System 4 performs poorly across all metrics, indicating fundamental issues with its retrieval approach.
+    \item The strong correlation between systems' AP, nDCG@10, and nDCG@20 scores suggests these metrics capture similar aspects of ranking quality.
+\end{itemize}
+
+\section{Text Analysis}
+
+\subsection{Corpus Overview}
+The analysis focused on three religious text corpora: the Quran, Old Testament (OT), and New Testament (NT). Each verse was treated as a separate document. Preprocessing included tokenization, lowercasing, and stopword removal.
+
+\subsection{Mutual Information and Chi-Square Analysis}
+
+% TODO: Add your MI and Chi-square tables here
+% Use the format below for each corpus
+
+\subsubsection{Top Features by Mutual Information}
+
+\begin{table}[h]
+\centering
+\caption{Top 10 Tokens by Mutual Information Score}
+\label{tab:mi_scores}
+\small
+\begin{tabular}{llllll}
+\toprule
+\multicolumn{2}{c}{\textbf{Quran}} & \multicolumn{2}{c}{\textbf{Old Testament}} & \multicolumn{2}{c}{\textbf{New Testament}} \\
+\textbf{Token} & \textbf{MI} & \textbf{Token} & \textbf{MI} & \textbf{Token} & \textbf{MI} \\
+\midrule
+bargain & 2.576 & overflows & 0.690 & eunice & 2.236 \\
+trunks & 2.576 & circumference & 0.690 & infallible & 2.236 \\
+needlessly & 2.576 & ishpan & 0.690 & bethphage & 2.236 \\
+unsuccessful & 2.576 & embalm & 0.690 & rigid & 2.236 \\
+vicious & 2.576 & dismayed & 0.690 & murmuring & 2.236 \\
+kinsmen & 2.576 & shedder & 0.690 & apelles & 2.236 \\
+evert & 2.576 & musician & 0.690 & conversion & 2.236 \\
+mim & 2.576 & defer & 0.690 & pilot & 2.236 \\
+insignificant & 2.576 & gluttons & 0.690 & parthians & 2.236 \\
+aimlessly & 2.576 & treading & 0.690 & abba & 2.236 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Top Features by Chi-Square}
+
+\begin{table}[h]
+\centering
+\caption{Top 10 Tokens by $\chi^2$ Score}
+\label{tab:chi_scores}
+\small
+\begin{tabular}{llllll}
+\toprule
+\multicolumn{2}{c}{\textbf{Quran}} & \multicolumn{2}{c}{\textbf{Old Testament}} & \multicolumn{2}{c}{\textbf{New Testament}} \\
+\textbf{Token} & \textbf{$\chi^2$} & \textbf{Token} & \textbf{$\chi^2$} & \textbf{Token} & \textbf{$\chi^2$} \\
+\midrule
+muhammad & 1852.1 & shall & 1504.9 & jesus & 3026.7 \\
+god & 1792.5 & lord & 1114.1 & christ & 1764.5 \\
+certainly & 1682.7 & israel & 1096.0 & disciples & 741.0 \\
+believers & 1588.1 & king & 862.0 & things & 673.9 \\
+torment & 1381.9 & land & 471.6 & paul & 529.0 \\
+unbelievers & 874.5 & sons & 423.4 & peter & 529.0 \\
+revelations & 814.4 & judah & 402.0 & john & 408.2 \\
+guidance & 810.9 & house & 377.8 & spirit & 374.9 \\
+messenger & 793.1 & david & 323.7 & gospel & 300.3 \\
+quran & 753.0 & hand & 280.2 & grace & 298.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Comparison of MI and $\chi^2$ Rankings}
+
+The two feature selection methods reveal strikingly different characteristics of the corpora:
+
+\textbf{Mutual Information (MI)} identifies \textit{corpus-exclusive vocabulary} but exhibits a known limitation: all top-ranked terms within each corpus share identical scores (2.576 for Quran, 0.690 for OT, 2.236 for NT). This occurs because these words appear exclusively in their respective corpus, achieving the theoretical maximum information gain of $\log_2(N/N_c)$ where $N$ is total documents and $N_c$ is corpus size. However, these terms are predominantly rare proper nouns (e.g., ``ishpan'', ``apelles'') or low-frequency words with limited semantic salience, making MI rankings less interpretable for understanding corpus themes.
+
+\textbf{Chi-Square ($\chi^2$)} produces more semantically meaningful rankings by prioritizing \textit{high-frequency discriminative terms}. The top words clearly capture each corpus's thematic identity:
+\begin{itemize}
+    \item \textbf{Quran}: ``muhammad'', ``believers'', ``torment'', ``messenger'' --- reflecting Islamic theology and prophetic discourse
+    \item \textbf{Old Testament}: ``israel'', ``king'', ``judah'', ``david'' --- emphasizing Hebrew monarchy and nationhood
+    \item \textbf{New Testament}: ``jesus'', ``christ'', ``disciples'', ``grace'' --- centering on Christian soteriology
+\end{itemize}
+
+\textbf{Key Difference}: MI measures \textit{lexical uniqueness} (perfect discrimination even for singletons), while $\chi^2$ tests \textit{statistically significant deviation} from expected distribution, inherently favoring terms with sufficient occurrence counts. For thematic corpus analysis, $\chi^2$ proves more robust, as its rankings reflect content-defining keywords rather than incidental vocabulary.
+
+\subsection{LDA Topic Modeling}
+
+An LDA model with 20 topics was trained on all verses from the three corpora. For each corpus, the most prominent topic (highest average document-topic probability) was identified.
+
+\begin{table}[h]
+\centering
+\caption{Most Prominent Topics and Top Tokens for Each Corpus}
+\label{tab:lda_topics}
+\small
+\begin{tabular}{p{2.5cm}p{1.8cm}p{8.5cm}}
+\toprule
+\textbf{Corpus} & \textbf{Topic ID (Avg Score)} & \textbf{Top 10 Tokens} \\
+\midrule
+Quran & Topic 19 (0.358) & god, people, would, say, one, muhammad, certainly, lord, torment, know \\
+\midrule
+Old Testament & Topic 16 (0.080) & king, came, david, saying, said, sent, lord, people, jerusalem, house \\
+\midrule
+New Testament & Topic 10 (0.143) & things, jesus, said, life, christ, answered, god, world, one, come \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Topic Labels}
+Based on the top tokens, I assign the following interpretive labels to these topics:
+\begin{itemize}
+    \item \textbf{Quran Topic 19}: ``Divine Guidance and Prophethood'' --- dominated by theological terminology (god, lord, muhammad, torment) reflecting Islamic monotheism and prophetic teachings
+    \item \textbf{Old Testament Topic 16}: ``Davidic Monarchy and Temple'' --- centered on Hebrew kingship (king, david, jerusalem, house) representing the historical-political narrative of ancient Israel
+    \item \textbf{New Testament Topic 10}: ``Christ's Life and Teachings'' --- focused on Jesus's ministry (jesus, christ, life, things, world) capturing the Gospel narrative and theological discourse
+\end{itemize}
+
+\subsubsection{LDA Insights and Comparison with MI/$\chi^2$}
+
+\textbf{Thematic Coherence Varies Dramatically}: The average topic scores reveal striking differences in corpus homogeneity:
+\begin{itemize}
+    \item \textbf{Quran (0.358)}: Exhibits highest thematic coherence, with over one-third of its content concentrated in a single topic. This reflects the Quran's unified theological focus on monotheism and prophethood.
+    \item \textbf{New Testament (0.143)}: Moderate coherence, balancing Gospel narratives with diverse epistles and apocalyptic literature.
+    \item \textbf{Old Testament (0.080)}: Lowest coherence, consistent with its encyclopedic nature spanning history (Genesis-Kings), law (Leviticus), wisdom (Proverbs), and prophecy (Isaiah).
+\end{itemize}
+
+\textbf{Cross-Corpus Topic Patterns}: Analysis of the full 20-topic distribution reveals:
+\begin{itemize}
+    \item \textbf{Corpus-Exclusive Topics}: Topic 19 is Quran-specific (0.358 vs. 0.018 in OT), while Topic 10 is NT-dominant (0.143 vs. 0.024 in OT). These represent each text's unique theological identity.
+    \item \textbf{Biblical Continuity}: Topics 5-7 show OT dominance (0.07-0.08) with moderate NT presence (0.03-0.05) but low Quran scores (0.01-0.04). These likely capture prophetic/legal themes shared between Old and New Testaments, reflecting theological continuity absent in the Quran.
+    \item \textbf{OT Dispersion}: The Old Testament scores moderately (0.04-0.08) across Topics 3-9, confirming its diverse compositional structure.
+\end{itemize}
+
+\textbf{LDA vs. MI/$\chi^2$}: The methods provide complementary insights:
+\begin{itemize}
+    \item \textbf{MI/$\chi^2$} identify \textit{discriminative vocabulary} --- individual words that distinguish corpora (e.g., ``muhammad'' vs. ``jesus'').
+    \item \textbf{LDA} reveals \textit{latent thematic structure} --- co-occurring word patterns that form semantic topics (e.g., ``king + david + jerusalem + house'' forming a monarchy theme).
+    \item \textbf{Key Advantage of LDA}: Captures \textit{polysemy} and \textit{context}. For example, ``lord'' appears in all corpora but within different semantic contexts (Quran: divine authority; OT: covenant relationship; NT: christological title). LDA models these contextual differences through topic distributions, while MI/$\chi^2$ treat each word atomically.
+\end{itemize}
+
+\section{Text Classification}
+
+\subsection{Dataset and Experimental Setup}
+The sentiment classification task involved three-way classification (positive, negative, neutral) of tweets. The training data was split 90/10 into training and development sets. All experiments used the same random seed for reproducibility.
+
+\subsection{Baseline System}
+The baseline system followed the lab 7 approach:
+\begin{itemize}
+    \item \textbf{Preprocessing}: Basic tokenization, lowercasing
+    \item \textbf{Features}: Bag-of-words (BOW) with \texttt{CountVectorizer}
+    \item \textbf{Classifier}: Linear SVM with $C=1000$
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\caption{Baseline System Performance}
+\label{tab:baseline}
+\begin{tabular}{lccccccccccccc}
+\toprule
+\textbf{Split} & \textbf{P-Pos} & \textbf{R-Pos} & \textbf{F-Pos} & \textbf{P-Neg} & \textbf{R-Neg} & \textbf{F-Neg} & \textbf{P-Neu} & \textbf{R-Neu} & \textbf{F-Neu} & \textbf{P-Macro} & \textbf{R-Macro} & \textbf{F-Macro} \\
+\midrule
+Train & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx \\
+Dev   & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx \\
+Test  & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Error Analysis}
+Three misclassified examples from the development set were analyzed:
+
+\begin{enumerate}
+    \item \textbf{Example 1}: [Text] \\
+    \textit{Predicted: X, Actual: Y} \\
+    \textit{Hypothesis}: [Why it was misclassified]
+    
+    \item \textbf{Example 2}: [Text] \\
+    \textit{Predicted: X, Actual: Y} \\
+    \textit{Hypothesis}: [Why it was misclassified]
+    
+    \item \textbf{Example 3}: [Text] \\
+    \textit{Predicted: X, Actual: Y} \\
+    \textit{Hypothesis}: [Why it was misclassified]
+\end{enumerate}
+
+\subsection{Improved System}
+Based on error analysis and experiments, the following improvements were implemented:
+
+% TODO: Describe your improvements
+\subsubsection{Improvements Made}
+\begin{enumerate}
+    \item \textbf{[Improvement 1]}: [Description, e.g., "N-gram features (unigrams + bigrams)"]
+    \begin{itemize}
+        \item \textit{Motivation}: [Why you tried this]
+        \item \textit{Implementation}: [How you implemented it]
+        \item \textit{Result}: [Impact on performance]
+    \end{itemize}
+    
+    \item \textbf{[Improvement 2]}: [Description]
+    \begin{itemize}
+        \item \textit{Motivation}: [Why you tried this]
+        \item \textit{Implementation}: [How you implemented it]
+        \item \textit{Result}: [Impact on performance]
+    \end{itemize}
+    
+    \item \textbf{[What Didn't Work]}: [Description of failed attempts]
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+\caption{Improved System Performance}
+\label{tab:improved}
+\begin{tabular}{lccccccccccccc}
+\toprule
+\textbf{Split} & \textbf{P-Pos} & \textbf{R-Pos} & \textbf{F-Pos} & \textbf{P-Neg} & \textbf{R-Neg} & \textbf{F-Neg} & \textbf{P-Neu} & \textbf{R-Neu} & \textbf{F-Neu} & \textbf{P-Macro} & \textbf{R-Macro} & \textbf{F-Macro} \\
+\midrule
+Train & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx \\
+Dev   & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx \\
+Test  & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx & 0.xxx \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Performance Gains}
+\begin{itemize}
+    \item \textbf{Development Set}: Macro-F1 improved from 0.xxx to 0.xxx (+X.xxx gain)
+    \item \textbf{Test Set}: Macro-F1 improved from 0.xxx to 0.xxx (+X.xxx gain)
+\end{itemize}
+
+\subsection{Analysis of Dev vs. Test Performance}
+% TODO: Discuss if test results differ significantly from dev results
+[Your analysis here - if test performance is lower than dev, discuss possible overfitting; if similar, discuss generalization]
+
+\section{Conclusion}
+
+This coursework provided comprehensive experience in three core areas of text and data mining. Key takeaways include:
+\begin{itemize}
+    \item The importance of statistical testing when comparing system performance
+    \item Different perspectives provided by discriminative (MI/$\chi^2$) vs. generative (LDA) approaches to text analysis
+    \item The iterative nature of improving classification systems through error analysis and experimentation
+\end{itemize}
+
+% TODO: Add any final reflections on the assignment
+
+\end{document}
+
