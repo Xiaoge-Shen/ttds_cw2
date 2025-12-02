@@ -444,42 +444,316 @@ class TextAnalyzer:
 # ==========================================
 
 class SentimentClassifier:
-    def __init__(self, train_path, test_path):
-        self.train_data = pd.read_csv(train_path, sep='\t', names=['sentiment', 'text']) # 假设格式
-        # 注意：test_path 只有在最后阶段才有
-        self.test_data = None 
-
-    def split_data(self):
+    def __init__(self, train_path, test_path=None):
+        """
+        初始化分类器
+        Args:
+            train_path: 训练数据路径
+            test_path: 测试数据路径（可选，稍后提供）
+        """
+        # 读取训练数据
+        self.train_data = pd.read_csv(train_path, sep='\t', 
+                                      names=['sentiment', 'text'], 
+                                      header=None)
+        
+        self.test_data = None
+        if test_path:
+            try:
+                self.test_data = pd.read_csv(test_path, sep='\t', 
+                                            names=['sentiment', 'text'], 
+                                            header=None)
+            except:
+                print("Test file not found, will load later")
+        
+        # 数据划分
+        self.X_train = None
+        self.X_dev = None
+        self.y_train = None
+        self.y_dev = None
+        self.X_test = None
+        self.y_test = None
+        
+        # 特征向量化器
+        self.vectorizer = None
+        self.vectorizer_improved = None
+        
+        # 模型
+        self.baseline_model = None
+        self.improved_model = None
+        
+        # 结果存储
+        self.results = []
+        
+    def split_data(self, test_size=0.1, random_state=42):
         """打乱并切分 Train/Dev"""
-        # TODO: 使用 train_test_split 切分 self.train_data
-        pass
-
-    def extract_features(self, method='bow'):
-        """特征提取"""
-        # TODO: 实例化 CountVectorizer 或 TfidfVectorizer
-        # TODO: fit_transform 训练集，transform 开发集
-        pass
-
+        from sklearn.model_selection import train_test_split
+        
+        X = self.train_data['text'].values
+        y = self.train_data['sentiment'].values
+        
+        self.X_train, self.X_dev, self.y_train, self.y_dev = train_test_split(
+            X, y, test_size=test_size, random_state=random_state, 
+            stratify=y  # 保持类别比例
+        )
+        
+        print(f"\nData split complete:")
+        print(f"  Training set: {len(self.X_train)} samples")
+        print(f"  Development set: {len(self.X_dev)} samples")
+        print(f"  Class distribution in train:")
+        print(pd.Series(self.y_train).value_counts())
+        
+    def load_test_data(self, test_path):
+        """加载测试数据"""
+        self.test_data = pd.read_csv(test_path, sep='\t', 
+                                     names=['sentiment', 'text'], 
+                                     header=None)
+        self.X_test = self.test_data['text'].values
+        self.y_test = self.test_data['sentiment'].values
+        print(f"Test set loaded: {len(self.X_test)} samples")
+    
+    def extract_features_baseline(self):
+        """Baseline特征提取：BOW"""
+        from sklearn.feature_extraction.text import CountVectorizer
+        
+        print("\n" + "="*50)
+        print("Extracting Baseline Features (BOW)")
+        print("="*50)
+        
+        # 使用CountVectorizer（词袋模型）
+        self.vectorizer = CountVectorizer(
+            lowercase=True,
+            max_features=10000,  # 限制特征数
+            min_df=2  # 至少出现2次
+        )
+        
+        # fit_transform训练集
+        X_train_vec = self.vectorizer.fit_transform(self.X_train)
+        # transform开发集
+        X_dev_vec = self.vectorizer.transform(self.X_dev)
+        
+        print(f"Vocabulary size: {len(self.vectorizer.vocabulary_)}")
+        print(f"Training matrix shape: {X_train_vec.shape}")
+        print(f"Dev matrix shape: {X_dev_vec.shape}")
+        
+        return X_train_vec, X_dev_vec
+    
     def train_baseline(self):
         """训练 Baseline SVM (C=1000)"""
-        # TODO: 使用 sklearn.svm.SVC(kernel='linear', C=1000) 或 LinearSVC
-        pass
-
+        from sklearn.svm import LinearSVC
+        
+        print("\n" + "="*50)
+        print("Training Baseline Model: Linear SVM (C=1000)")
+        print("="*50)
+        
+        # 提取特征
+        X_train_vec, X_dev_vec = self.extract_features_baseline()
+        
+        # 训练SVM
+        self.baseline_model = LinearSVC(C=1000, random_state=42, max_iter=1000)
+        self.baseline_model.fit(X_train_vec, self.y_train)
+        
+        print("Baseline model training complete!")
+        
+        # 评估训练集
+        print("\n--- Baseline Performance on Train Set ---")
+        train_results = self.evaluate(self.baseline_model, X_train_vec, 
+                                     self.y_train, split_name='train')
+        self.results.append(['baseline', 'train'] + train_results)
+        
+        # 评估开发集
+        print("\n--- Baseline Performance on Dev Set ---")
+        dev_results = self.evaluate(self.baseline_model, X_dev_vec, 
+                                    self.y_dev, split_name='dev')
+        self.results.append(['baseline', 'dev'] + dev_results)
+        
+        return self.baseline_model
+    
+    def evaluate(self, model, X, y_true, split_name=''):
+        """计算 P, R, F1 (Micro/Macro)"""
+        from sklearn.metrics import precision_recall_fscore_support, classification_report
+        
+        # 预测
+        y_pred = model.predict(X)
+        
+        # 计算每个类别的指标
+        precision, recall, f1, support = precision_recall_fscore_support(
+            y_true, y_pred, labels=['positive', 'negative', 'neutral'], 
+            average=None, zero_division=0
+        )
+        
+        # 计算macro平均
+        p_macro, r_macro, f_macro, _ = precision_recall_fscore_support(
+            y_true, y_pred, average='macro', zero_division=0
+        )
+        
+        # 打印详细报告
+        print(classification_report(y_true, y_pred, 
+                                   labels=['positive', 'negative', 'neutral'],
+                                   digits=3))
+        
+        # 返回格式：[p-pos, r-pos, f-pos, p-neg, r-neg, f-neg, 
+        #            p-neu, r-neu, f-neu, p-macro, r-macro, f-macro]
+        results = [
+            precision[0], recall[0], f1[0],  # positive
+            precision[1], recall[1], f1[1],  # negative
+            precision[2], recall[2], f1[2],  # neutral
+            p_macro, r_macro, f_macro         # macro
+        ]
+        
+        return results
+    
+    def analyze_errors(self, num_examples=3):
+        """分析开发集上的错误"""
+        print("\n" + "="*50)
+        print("Error Analysis on Dev Set")
+        print("="*50)
+        
+        # 对开发集进行预测
+        X_dev_vec = self.vectorizer.transform(self.X_dev)
+        y_pred = self.baseline_model.predict(X_dev_vec)
+        
+        # 找到错误分类的样本
+        errors = []
+        for i, (true, pred) in enumerate(zip(self.y_dev, y_pred)):
+            if true != pred:
+                errors.append({
+                    'index': i,
+                    'text': self.X_dev[i],
+                    'true': true,
+                    'pred': pred
+                })
+        
+        print(f"\nTotal errors: {len(errors)} / {len(self.y_dev)}")
+        print(f"Accuracy: {1 - len(errors)/len(self.y_dev):.3f}")
+        
+        # 随机选择几个例子
+        import random
+        random.seed(42)
+        sample_errors = random.sample(errors, min(num_examples, len(errors)))
+        
+        print(f"\n{num_examples} Example Errors:")
+        for i, err in enumerate(sample_errors, 1):
+            print(f"\n{i}. Text: {err['text'][:100]}...")
+            print(f"   True: {err['true']} | Predicted: {err['pred']}")
+        
+        return sample_errors
+    
     def train_improved_model(self):
         """训练改进模型"""
-        # TODO: 你的改进策略 (例如: 不同的预处理, n-grams, 不同的C值, 不同的模型)
-        pass
-
-    def evaluate(self, model, X, y_true):
-        """计算 P, R, F1 (Micro/Macro)"""
-        # TODO: 使用 precision_recall_fscore_support
-        # 返回格式需符合 classification.csv 的要求
-        pass
-
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.svm import LinearSVC
+        
+        print("\n" + "="*50)
+        print("Training Improved Model")
+        print("="*50)
+        
+        # 策略1: 使用TF-IDF而不是BOW
+        # 策略2: 使用n-grams (unigrams + bigrams)
+        # 策略3: 调整C参数
+        
+        print("Improvements:")
+        print("  1. TF-IDF features (instead of BOW)")
+        print("  2. Bigrams (unigrams + bigrams)")
+        print("  3. Fine-tuned C parameter (C=500)")
+        print("  4. Sublinear TF scaling")
+        
+        self.vectorizer_improved = TfidfVectorizer(
+            lowercase=True,
+            ngram_range=(1, 2),  # unigrams + bigrams
+            max_features=20000,
+            min_df=2,
+            sublinear_tf=True,  # 使用log scaling
+            max_df=0.95  # 忽略太常见的词
+        )
+        
+        # 提取特征
+        X_train_vec = self.vectorizer_improved.fit_transform(self.X_train)
+        X_dev_vec = self.vectorizer_improved.transform(self.X_dev)
+        
+        print(f"Improved vocabulary size: {len(self.vectorizer_improved.vocabulary_)}")
+        print(f"Training matrix shape: {X_train_vec.shape}")
+        
+        # 训练改进的SVM
+        self.improved_model = LinearSVC(C=500, random_state=42, max_iter=2000)
+        self.improved_model.fit(X_train_vec, self.y_train)
+        
+        print("Improved model training complete!")
+        
+        # 评估训练集
+        print("\n--- Improved Performance on Train Set ---")
+        train_results = self.evaluate(self.improved_model, X_train_vec, 
+                                     self.y_train, split_name='train')
+        self.results.append(['improved', 'train'] + train_results)
+        
+        # 评估开发集
+        print("\n--- Improved Performance on Dev Set ---")
+        dev_results = self.evaluate(self.improved_model, X_dev_vec, 
+                                    self.y_dev, split_name='dev')
+        self.results.append(['improved', 'dev'] + dev_results)
+        
+        # 计算提升
+        baseline_f_macro = self.results[1][-1]  # baseline dev的macro-f1
+        improved_f_macro = dev_results[-1]
+        improvement = improved_f_macro - baseline_f_macro
+        
+        print(f"\n>>> Improvement on Dev Set:")
+        print(f"    Baseline Macro-F1: {baseline_f_macro:.3f}")
+        print(f"    Improved Macro-F1: {improved_f_macro:.3f}")
+        print(f"    Gain: +{improvement:.3f}")
+        
+        return self.improved_model
+    
+    def evaluate_on_test(self):
+        """在测试集上评估"""
+        if self.X_test is None:
+            print("Test set not loaded!")
+            return
+        
+        print("\n" + "="*50)
+        print("Evaluating on Test Set")
+        print("="*50)
+        
+        # Baseline在测试集上
+        X_test_baseline = self.vectorizer.transform(self.X_test)
+        print("\n--- Baseline Performance on Test Set ---")
+        test_results_baseline = self.evaluate(self.baseline_model, 
+                                             X_test_baseline, 
+                                             self.y_test, split_name='test')
+        self.results.append(['baseline', 'test'] + test_results_baseline)
+        
+        # Improved在测试集上
+        X_test_improved = self.vectorizer_improved.transform(self.X_test)
+        print("\n--- Improved Performance on Test Set ---")
+        test_results_improved = self.evaluate(self.improved_model, 
+                                             X_test_improved, 
+                                             self.y_test, split_name='test')
+        self.results.append(['improved', 'test'] + test_results_improved)
+        
+        # 对比
+        baseline_f_macro = test_results_baseline[-1]
+        improved_f_macro = test_results_improved[-1]
+        improvement = improved_f_macro - baseline_f_macro
+        
+        print(f"\n>>> Improvement on Test Set:")
+        print(f"    Baseline Macro-F1: {baseline_f_macro:.3f}")
+        print(f"    Improved Macro-F1: {improved_f_macro:.3f}")
+        print(f"    Gain: +{improvement:.3f}")
+    
     def generate_output_csv(self, output_file="classification.csv"):
         """生成最终的提交文件"""
-        # TODO: 按照指定格式输出 Baseline 和 Improved 模型在 Train, Dev, Test 上的结果
-        pass
+        headers = ["system", "split", "p-pos", "r-pos", "f-pos", 
+                   "p-neg", "r-neg", "f-neg", "p-neu", "r-neu", "f-neu", 
+                   "p-macro", "r-macro", "f-macro"]
+        
+        with open(output_file, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(headers)
+            for row in self.results:
+                # 保留3位小数
+                formatted_row = row[:2] + [round(x, 3) for x in row[2:]]
+                writer.writerow(formatted_row)
+        
+        print(f"\nClassification results saved to {output_file}")
 
 # ==========================================
 # Main Execution
@@ -498,8 +772,15 @@ if __name__ == "__main__":
     analyzer.run_lda_analysis()
 
     # 3. Run Classification
-    # clf = SentimentClassifier("train.txt", "test.txt")
-    # clf.split_data()
-    # clf.train_baseline()
-    # ...
-    pass
+    clf = SentimentClassifier("train.txt")  
+    clf.split_data(test_size=0.1, random_state=42)
+
+    clf.train_baseline()
+    error_examples = clf.analyze_errors(num_examples=3)
+    clf.train_improved_model()
+    try:
+        clf.load_test_data("ttds_2025_cw2_test.txt") 
+        clf.evaluate_on_test()
+    except:
+        print("\nTest set not available yet")
+    clf.generate_output_csv("classification.csv")
