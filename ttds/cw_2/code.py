@@ -785,7 +785,6 @@ if __name__ == "__main__":
     # 3. Run Classification
     clf = SentimentClassifier("train.txt")  
     clf.split_data(test_size=0.1, random_state=42)
-
     clf.train_baseline()
     error_examples = clf.analyze_errors(num_examples=3)
     clf.train_improved_model()
