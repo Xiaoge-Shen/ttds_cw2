@@ -105,6 +105,219 @@ def esc(text: object) -> str:
     return "".join(replacements.get(ch, ch) for ch in s)
 
 
+MATH_MARKER_RE = re.compile(
+    r"""
+    (?:
+        \\[A-Za-z]+
+        | \\[{}]
+        | [A-Za-z0-9]+(?:_[A-Za-z0-9{}]+|\^[A-Za-z0-9{}]+)+
+        | \b[A-Za-z]\([A-Za-z0-9_{}\\^+\-*/|<>,]+\)
+    )
+    """,
+    re.VERBOSE,
+)
+EXPLICIT_MATH_RE = re.compile(r"(\$\$.*?\$\$|\$.*?\$|\\\(.*?\\\))", re.DOTALL)
+MATH_CHARS = set(r"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_{}\^=+-*/()|<>[]@'")
+MATH_SEPARATORS = set(",;:.")
+MATH_COMMANDS = {
+    "alpha",
+    "beta",
+    "gamma",
+    "delta",
+    "epsilon",
+    "theta",
+    "lambda",
+    "mu",
+    "sigma",
+    "ldots",
+    "cdots",
+    "mid",
+    "in",
+    "notin",
+    "forall",
+    "exists",
+    "sum",
+    "prod",
+    "sqrt",
+    "frac",
+    "log",
+    "exp",
+    "text",
+}
+
+
+def math_braces_balanced(text: str) -> bool:
+    depth = 0
+    escaped = False
+    for ch in text:
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\":
+            escaped = True
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth < 0:
+                return False
+    return depth == 0
+
+
+def looks_like_inline_math(text: str) -> bool:
+    if not math_braces_balanced(text):
+        return False
+    commands = re.findall(r"\\([A-Za-z]+)", text)
+    if commands and not any(command in MATH_COMMANDS for command in commands):
+        return False
+    if "\\" in text or "_" in text or "^" in text:
+        return True
+    if re.search(r"\b[A-Za-z]\([^()\s]*[|=<>][^()\s]*\)", text):
+        return True
+    return False
+
+
+def normalize_inline_math(text: str) -> str:
+    for name in ("alpha", "beta", "gamma", "delta", "epsilon", "theta", "lambda", "mu", "sigma"):
+        text = re.sub(rf"(?<!\\)\b{name}\b(?=\()", rf"\\{name}", text)
+    return text
+
+
+def is_math_char(ch: str) -> bool:
+    return ch in MATH_CHARS
+
+
+def left_math_atom(text: str, index: int) -> bool:
+    if index < 0:
+        return False
+    ch = text[index]
+    if ch == "\\":
+        return True
+    if ch in ")]}":
+        return True
+    if ch.isdigit():
+        return True
+    if ch.isalpha():
+        start = index
+        while start > 0 and text[start - 1].isalpha():
+            start -= 1
+        word = text[start : index + 1]
+        return start > 0 and text[start - 1] == "\\" or len(word) == 1
+    return ch in "_^+-*/=|<>"
+
+
+def right_math_atom(text: str, index: int) -> bool:
+    if index >= len(text):
+        return False
+    ch = text[index]
+    if ch == "\\":
+        return True
+    if ch in "([{":
+        return True
+    if ch.isdigit():
+        return True
+    if ch.isalpha():
+        end = index
+        while end + 1 < len(text) and text[end + 1].isalpha():
+            end += 1
+        word = text[index : end + 1]
+        following = text[end + 1] if end + 1 < len(text) else ""
+        return len(word) == 1 or following in "_^("
+    return ch in "_^+-*/=|<>"
+
+
+def next_nonspace(text: str, index: int) -> int:
+    while index < len(text) and text[index].isspace():
+        index += 1
+    return index
+
+
+def prev_nonspace(text: str, index: int) -> int:
+    while index >= 0 and text[index].isspace():
+        index -= 1
+    return index
+
+
+def should_include_separator(text: str, start: int, end: int) -> bool:
+    left = prev_nonspace(text, start - 1)
+    right = next_nonspace(text, end)
+    return left_math_atom(text, left) and right_math_atom(text, right)
+
+
+def expand_math_span(text: str, start: int, end: int) -> tuple[int, int]:
+    while start > 0:
+        ch = text[start - 1]
+        if is_math_char(ch):
+            start -= 1
+        elif ch.isspace():
+            new_start = prev_nonspace(text, start - 1) + 1
+            if should_include_separator(text, new_start, start):
+                start = new_start
+            else:
+                break
+        elif ch in MATH_SEPARATORS and should_include_separator(text, start - 1, start):
+            start -= 1
+        else:
+            break
+
+    while end < len(text):
+        ch = text[end]
+        if is_math_char(ch):
+            end += 1
+        elif ch.isspace():
+            new_end = next_nonspace(text, end)
+            if should_include_separator(text, end, new_end):
+                end = new_end
+            else:
+                break
+        elif ch in MATH_SEPARATORS and should_include_separator(text, end, end + 1):
+            end += 1
+        else:
+            break
+    return start, end
+
+
+def emit_inline_segment(segment: str, out: list[str]) -> None:
+    last = 0
+    for match in MATH_MARKER_RE.finditer(segment):
+        if match.start() < last:
+            continue
+        start, end = expand_math_span(segment, *match.span())
+        token = segment[start:end].strip()
+        if not looks_like_inline_math(token):
+            continue
+        out.append(esc(segment[last:start]))
+        out.append(r"\(" + normalize_inline_math(token) + r"\)")
+        last = end
+    out.append(esc(segment[last:]))
+
+
+def emit_explicit_math(token: str, out: list[str]) -> None:
+    if token.startswith(r"\(") and token.endswith(r"\)"):
+        out.append(token)
+    elif token.startswith("$$") and token.endswith("$$"):
+        out.append(r"\[" + token[2:-2].strip() + r"\]")
+    elif token.startswith("$") and token.endswith("$"):
+        out.append(r"\(" + token[1:-1].strip() + r"\)")
+    else:
+        out.append(esc(token))
+
+
+def esc_rich(text: object) -> str:
+    """Escape prose while preserving lightweight inline LaTeX math snippets."""
+    s = "" if text is None else str(text)
+    out: list[str] = []
+    last = 0
+    for match in EXPLICIT_MATH_RE.finditer(s):
+        start, end = match.span()
+        emit_inline_segment(s[last:start], out)
+        emit_explicit_math(match.group(0), out)
+        last = end
+    emit_inline_segment(s[last:], out)
+    return "".join(out)
+
+
 def normalize_formula(formula: str | None) -> str | None:
     if not formula:
         return None
@@ -184,7 +397,7 @@ def tex_document(bp: dict) -> str:
         parts.append("\\begin{chainbox}\n\\sffamily " + concept_chain + "\n\\end{chainbox}\n")
     first_slide = slides[0]["page"] if slides else 1
     parts.append(f"\\slideimage{{{int(first_slide)}}}{{0.72}}{{{pdf_path}}}\n")
-    parts.append("\\begin{callout}{这节课一句话}\n" + esc(bp.get("one_sentence", "")) + "\n\\end{callout}\n")
+    parts.append("\\begin{callout}{这节课一句话}\n" + esc_rich(bp.get("one_sentence", "")) + "\n\\end{callout}\n")
 
     for idx, section in enumerate(sections, start=1):
         parts.append("\\Needspace{0.38\\textheight}\n")
@@ -192,18 +405,18 @@ def tex_document(bp: dict) -> str:
         slide_page = section.get("slide_page")
         if slide_page:
             parts.append(f"\\slideimage{{{int(slide_page)}}}{{0.62}}{{{pdf_path}}}\n")
-        parts.append("\\begin{callout}{人话直觉}\n" + esc(section.get("intuition", "")) + "\n\\end{callout}\n")
-        parts.append("\\noindent\\textbf{精确定义 / 机制：} " + esc(section.get("explanation", "")) + "\n\n")
+        parts.append("\\begin{callout}{人话直觉}\n" + esc_rich(section.get("intuition", "")) + "\n\\end{callout}\n")
+        parts.append("\\noindent\\textbf{精确定义 / 机制：} " + esc_rich(section.get("explanation", "")) + "\n\n")
         formula = normalize_formula(section.get("formula_latex"))
         if formula:
             parts.append("\\[\n" + formula + "\n\\]\n")
-        parts.append("\\noindent\\textbf{考试问法：} " + esc(section.get("exam_angle", "")) + "\n\n")
+        parts.append("\\noindent\\textbf{考试问法：} " + esc_rich(section.get("exam_angle", "")) + "\n\n")
 
     parts.append("\\section{考试速记版}\n\\begin{itemize}\n")
     for item in quick:
-        parts.append("\\item " + esc(item) + "\n")
+        parts.append("\\item " + esc_rich(item) + "\n")
     parts.append("\\end{itemize}\n")
-    parts.append("\\begin{callout}{一段稳妥考场回答}\n" + esc(bp.get("exam_answer", "")) + "\n\\end{callout}\n")
+    parts.append("\\begin{callout}{一段稳妥考场回答}\n" + esc_rich(bp.get("exam_answer", "")) + "\n\\end{callout}\n")
     parts.append("\\end{document}\n")
     return "".join(parts)
 
