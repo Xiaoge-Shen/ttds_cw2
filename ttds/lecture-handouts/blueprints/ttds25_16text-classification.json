@@ -1,0 +1,193 @@
+{
+  "lecture": "TTDS 16",
+  "source_pdf": "ttds25_16text-classification.pdf",
+  "title": "Text Classification: Definitions, Representations, Models, and Evaluation",
+  "one_sentence": "这节课一句话：text classification 是把文本变成可学习的表示，再用规则、监督学习或预训练语言模型，把每个文本映射到预定义标签，并用合适指标检验泛化。",
+  "concept_chain": [
+    "classification maps data items to predefined finite classes",
+    "types include binary, SLMC, and MLMC",
+    "rule-based methods trade interpretability for coverage",
+    "supervised pipeline labels data, extracts features, trains classifier",
+    "feature extraction turns text into vectors",
+    "feature selection/weighting controls sparsity and importance",
+    "classifiers must handle high-dimensional sparse text",
+    "embeddings and PLMs provide dense/contextual representations",
+    "zero/few-shot use language models without task-specific fine-tuning",
+    "evaluation needs metrics, baselines, data split, and hyperparameter discipline"
+  ],
+  "slides": [
+    {
+      "page": 3,
+      "reason": "给出 text classification 的直观定义、输入与类别类型。",
+      "caption": "把 documents/sentences/articles 分类到预定义类别。"
+    },
+    {
+      "page": 5,
+      "reason": "Binary、SLMC、MLMC 及 h:D→C / h:D→2^C 是考试公式核心。",
+      "caption": "分类任务的 label-set 结构。"
+    },
+    {
+      "page": 7,
+      "reason": "rule-based 与 supervised learning 的优缺点对比。",
+      "caption": "手写规则 vs 从标注样本学习。"
+    },
+    {
+      "page": 9,
+      "reason": "feature extraction 与 BOW 是传统文本分类管线起点。",
+      "caption": "把词变成 vector dimensions。"
+    },
+    {
+      "page": 11,
+      "reason": "展示除 BOW 外的 syntactic、topic、non-textual features。",
+      "caption": "feature 选择取决于任务，不只是词袋。"
+    },
+    {
+      "page": 12,
+      "reason": "高维稀疏、feature selection 与 overfitting 是考试重点。",
+      "caption": "从 10^6 维降到更可控的 feature space。"
+    },
+    {
+      "page": 13,
+      "reason": "feature weighting、TF-IDF/BM25/MI/chi-square 出现在此页。",
+      "caption": "选了 feature 之后，还要决定它值多大。"
+    },
+    {
+      "page": 16,
+      "reason": "word embeddings 引入 dense semantic representation。",
+      "caption": "从 sparse term vector 到 dense semantic vector。"
+    },
+    {
+      "page": 17,
+      "reason": "pre-trained language models 与 contextual embeddings。",
+      "caption": "大规模 self-supervised pretraining 支撑现代分类器。"
+    },
+    {
+      "page": 20,
+      "reason": "evaluation 维度：effectiveness、efficiency、baselines。",
+      "caption": "模型好不好，不只看 accuracy。"
+    },
+    {
+      "page": 23,
+      "reason": "imbalanced data 与 macro-F1/majority baseline 是考试陷阱。",
+      "caption": "多数类 accuracy 高，不代表分类器真有用。"
+    },
+    {
+      "page": 24,
+      "reason": "train/test split、development set 与 hyperparameter optimisation。",
+      "caption": "不能在 test set 上调参。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "1. Definition：分类不是“发现类别”，而是预测预定义类别",
+      "slide_page": 3,
+      "intuition": "classification 像把邮件投进已经写好标签的信箱：spam/not spam、sports/politics、positive/negative。信箱提前存在，模型学的是投递规则。",
+      "explanation": "Text classification 是根据文本内容把 documents、articles、sentences、queries 或 web pages 分类到 predefined categories。一般分类可表示为生成 hypothesis/classifier/model h，把 domain D 中的数据项映射到有限 class set C。它不同于 clustering：clustering 的 groups 和数量事先未知。若类别成员可确定性计算，例如判断自然数是否 prime，也不适合作为普通 classification 任务。",
+      "exam_angle": "定义题要包含 predefined finite classes；比较题要说 classification classes known in advance，clustering groups unknown。",
+      "formula_latex": "h:D\\to C,\\quad D=\\{x_1,x_2,\\ldots\\},\\quad C=\\{c_1,\\ldots,c_n\\}"
+    },
+    {
+      "title": "2. Types：binary、SLMC、MLMC 看的是标签集合结构",
+      "slide_page": 5,
+      "intuition": "有的任务像二选一开关，有的像多选一单选题，有的像复选题——一篇 CS 论文可以同时属于 IR、ML 和 NLP。",
+      "explanation": "Binary classification 把 item 分到两个 classes 之一，如 spam/not spam。Single-label multi-class classification 从 n>2 个 classes 中选一个，如 sports/politics/entertainment。Multi-label multi-class classification 允许 item 属于零个、一个或多个 classes，可形式化为映射到 power set 2^C，通常可拆成 n 个 independent binary classification problems。分类还可按 topic、sentiment、language、genre、author、gender、usefulness 等 dimensions 进行。",
+      "exam_angle": "分类类型题要给定义、公式和例子。MLMC 的关键是 h:D→2^C，不是 h:D→C；常见解法是 one binary classifier per class。",
+      "formula_latex": "\\text{Binary/SLMC: }h:D\\to C;\\quad \\text{MLMC: }h:D\\to 2^C"
+    },
+    {
+      "title": "3. Rule-based classification：清楚但脆弱的手写规则",
+      "slide_page": 7,
+      "intuition": "规则分类器像门卫拿着关键词清单：看到 Viagra/Cialis 就判 spam。解释很容易，但骗子换个说法就绕过去。",
+      "explanation": "Rule-based classification 通过 knowledge engineering 手工构建规则或 dictionaries。优点是可解释、无需 labeled training data，适合规则明确或监管要求强的场景。缺点是 setup 和 maintenance 昂贵，coverage 差，依赖少量 keywords 时 recall 往往低，面对语言变化和规避策略很脆弱。",
+      "exam_angle": "优缺点题答三点：interpretable/no labels vs expensive maintenance/poor coverage/low recall。举例可用 spam dictionary。",
+      "formula_latex": null
+    },
+    {
+      "title": "4. Supervised pipeline：让标注样本教模型，而不是人手写所有规则",
+      "slide_page": 8,
+      "intuition": "与其让专家写一千条规则，不如先标注一批例子，让模型自己学“哪些文本特征常伴随哪个 label”。",
+      "explanation": "Supervised-learning classification 使用人工标注样本训练 classifier。典型 pipeline 是 label sample、extract features、train classifier、apply model to unlabelled documents，并在 held-out data 上评估。它通常比构建复杂规则便宜，也更容易适应新类别和语义变化，但依赖 labeled data 的质量和代表性。",
+      "exam_angle": "pipeline 题要完整：labelled data → feature extraction/selection/weighting → train classifier → apply/evaluate。不要漏 evaluation。",
+      "formula_latex": null
+    },
+    {
+      "title": "5. Feature extraction：把文本翻译成模型能吃的向量",
+      "slide_page": 9,
+      "intuition": "模型不能直接吃一篇文章，它需要一张表：每一列是 feature，每一行是 document，每个格子是这个 feature 在文档中的值。",
+      "explanation": "大多数 learning algorithms 需要 numerical vectors。Feature extraction 决定哪些文本属性作为 vector dimensions。最简单的是 Bag-of-words：每个 term 是一个 feature，feature space size 等于训练/文档集合 vocabulary size。通常会配合 tokenisation、stopping、stemming、case folding 等 preprocessing，但选择取决于 task：sentiment 中 punctuation、all caps、emoji 可能非常有用，不应盲目删除。",
+      "exam_angle": "若问 BOW，答 each term as feature and vocabulary size as dimensionality；若问 preprocessing，强调 task-dependent。",
+      "formula_latex": "\\mathbf{x}_d=(x_{d,1},x_{d,2},\\ldots,x_{d,|V|})"
+    },
+    {
+      "title": "6. Beyond BOW：feature 不只有词频",
+      "slide_page": 11,
+      "intuition": "判断作者、情绪或网页类型时，词本身不够；句法、实体、链接、emoji、大写比例都可能泄露信号。",
+      "explanation": "除 BOW 外，可用 word n-grams 捕捉局部词序，但会扩大 feature space 并更 sparse；character n-grams 对 OCR/ASR degraded text、拼写错误、形态丰富语言有用；syntactic features 包括 POS tags 和 syntactic tree structures；topic-based features 包括 LDA topics、named entities、links/linked terms；non-textual features 包括平均文档/句子/词长、大写比例、链接/hashtag/emoji 比例等。",
+      "exam_angle": "特征题不要只背 BOW。答题最好说明 feature choice depends on application，例如 sentiment 保留 emoji/all caps，language ID 可用 character n-grams。",
+      "formula_latex": null
+    },
+    {
+      "title": "7. Feature selection：高维稀疏是文本分类的地心引力",
+      "slide_page": 12,
+      "intuition": "如果 vocabulary 有百万维，很多列几乎全是 0。模型不仅算得慢，还可能把偶然噪声当规律。feature selection 是先筛掉没用列。",
+      "explanation": "文本 feature vector 可达 10^6 维且非常 sparse，带来 high computational cost 和 overfitting。基本做法是为每个 class 找 top k representative features，再对所有 classes 取 union，形成 reduced feature space。Document frequency 只看 class 中出现比例，可能选出 stop words；mutual information 衡量 term presence/absence 对 class 的信息量；chi-squared 衡量 term appearance 与 class 是否独立以及偏离独立的程度。",
+      "exam_angle": "若问为什么 feature selection 重要，答 reduce dimensionality, computational cost, overfitting。若问方法，DF 有 stop-word 风险，MI/χ² 用 class association。",
+      "formula_latex": "\\chi^2(t,c)=\\sum_{i\\in\\{0,1\\}}\\sum_{j\\in\\{0,1\\}}\\frac{(O_{ij}-E_{ij})^2}{E_{ij}}"
+    },
+    {
+      "title": "8. Feature weighting：同一个词出现了，也要问它有多重要",
+      "slide_page": 13,
+      "intuition": "feature selection 决定“要不要这列”，feature weighting 决定“这列的数值是多少”。出现一次的 rare term 和出现一次的 stop word 不该同等对待。",
+      "explanation": "Feature weighting 给 document 中的 feature t_k 赋值，可为 binary presence/absence，也可为 numeric importance，如 term frequency、TF-IDF、BM25。Unsupervised weighting 不用 label，如 TF-IDF/BM25；supervised weighting 可结合 label association，如 tf*MI 或 tf*χ²。Scaling 也重要，因为不同特征量纲不同，若不缩放可能让某些 features 不合理地主导模型。",
+      "exam_angle": "常见混淆：selection 是挑 feature，weighting 是给 feature value。答题时可举 binary、tf、TF-IDF、BM25、tf*MI。",
+      "formula_latex": "w_{d,t}=tf_{d,t}\\cdot idf_t"
+    },
+    {
+      "title": "9. Classifiers：没有一种算法通吃所有文本任务",
+      "slide_page": 15,
+      "intuition": "分类器像不同工具：SVM、Naive Bayes、k-NN、random forest 都能干活，但没有一把瑞士军刀永远最好。",
+      "explanation": "Classical binary classifiers 包括 SVM、random forests、Naive Bayes、k-NN、logistic regression 等。No-free-lunch principle 表示没有一种 learning algorithm 在所有 contexts 中都优于其他。文本分类实现要适应 high-dimensional sparse representation。某些算法天然支持 multi-class，如 decision trees、random forests、Naive Bayes、k-NN、neural networks；SVM 做 multi-class 通常需要组合或级联 binary SVM，如 one-vs-rest。",
+      "exam_angle": "若问 algorithm choice，答 no-free-lunch and task/data-dependent。若问 SVM multi-class，说明需要 binary decomposition/cascade。",
+      "formula_latex": null
+    },
+    {
+      "title": "10. Embeddings and PLMs：从稀疏词表到上下文语义",
+      "slide_page": 17,
+      "intuition": "BOW 里 cat 和 kitten 是两列互不认识的 0/1；embedding 让相似词在向量空间里靠近；PLM 进一步让 bank 在 river bank 和 bank account 中有不同表示。",
+      "explanation": "Word embeddings 是 dense vectors，通常所有 entries 非零，能更直接捕捉 semantic similarity；可用 self-supervised learning 训练，如 CBOW 根据上下文预测中心词，skip-gram 根据目标词预测上下文。Pre-trained language models 在大规模未标注语料上做 next token prediction 或 masked language modelling，产生 contextualized embeddings，同一词在不同上下文中可有不同表示。Supervised fine-tuning 是先预训练 LM，再用 labeled task data 微调成 classification model。",
+      "exam_angle": "比较题：BOW sparse and indirect semantics；embeddings dense semantic vectors；PLMs contextual and pre-trained on large unlabelled corpora。",
+      "formula_latex": null
+    },
+    {
+      "title": "11. Zero-shot and few-shot：用 prompt 临时搭一个分类器",
+      "slide_page": 18,
+      "intuition": "zero-shot 像直接问一个大模型“这条评论是正面还是负面？”；few-shot 则先给它看几道样题，再让它接着做。",
+      "explanation": "Zero-shot classification 不提供 task-specific training examples，也跳过 fine-tuning，直接用 language model 按 prompt 分类。优点是人工成本低，能快速建立 baseline；缺点是依赖 black-box model，customisation 和 error analysis 空间有限。Few-shot classification 在 prompt 中给少量 examples，不做参数 fine-tuning，利用 in-context learning 适配任务。",
+      "exam_angle": "若问 zero-shot/few-shot 区别：few-shot has examples in prompt；二者都 skip task-specific fine-tuning。评价时可作为 baseline，但不要把它当成无须验证的最终模型。",
+      "formula_latex": null
+    },
+    {
+      "title": "12. Evaluation：accuracy 很诱人，但经常骗人",
+      "slide_page": 23,
+      "intuition": "如果 80% 样本都是 C1，一个永远猜 C1 的笨模型 accuracy 也有 0.8；但它对 C2/C3 完全不会。",
+      "explanation": "Evaluation 包括 effectiveness、efficiency 和 baselines。Effectiveness measures 有 accuracy、precision、recall、F1、per-class metrics、macro-F1；efficiency 可看 training speed、classification speed、feature extraction speed；baselines 包括 random、majority class、simple BOW、LLM zero-shot。Accuracy 在 classes 平衡且同等重要时合适；imbalanced data 中可能被 majority class baseline 掩盖。Macro-F1 先算每个 class 的 F1 再平均，给 minority classes 同等权重。Data splitting 用 training/test 或 training/development/test；development set 用于 hyperparameter optimisation，test set 只能做最终评估。",
+      "exam_angle": "若考 imbalanced classification，明确说 accuracy misleading；应报告 minority/each-class precision, recall, F1 and macro-F1，并与 majority baseline 比较。若问调参，强调在 test set 上调参是 cheating。",
+      "formula_latex": "F1=\\frac{2\\cdot Precision\\cdot Recall}{Precision+Recall},\\quad MacroF1=\\frac{1}{|C|}\\sum_{c\\in C}F1_c"
+    }
+  ],
+  "quick_revision": [
+    "Classification = predict predefined finite classes；clustering = groups unknown。",
+    "General mapping: h:D→C；MLMC: h:D→2^C。",
+    "Binary/SLMC/MLMC 要会定义、举例、写公式。",
+    "Rule-based: interpretable/no labels but expensive/low recall。",
+    "Supervised pipeline: label → features → train → apply/evaluate。",
+    "BOW feature size = vocabulary size；preprocessing is task-dependent。",
+    "Feature selection reduces high-dimensional sparse overfitting；MI/χ² use label association。",
+    "Feature weighting: binary/tf/TF-IDF/BM25/tf*MI/tf*χ²。",
+    "Embeddings are dense semantic; PLMs provide contextual representations。",
+    "Zero-shot/few-shot skip fine-tuning; useful baselines but need evaluation。",
+    "Imbalanced data: accuracy can mislead; use per-class P/R/F1 and macro-F1。",
+    "Never tune hyperparameters on test set; use development set。"
+  ],
+  "exam_answer": "如果考 text classification pipeline，可以这样答：text classification 是学习一个 classifier h，把文本数据项 D 映射到预定义有限类别 C。实际 supervised pipeline 先人工标注 representative samples，再把文本转换为 numerical feature vectors，例如 BOW、n-grams、syntactic/topic/non-textual features；由于文本表示高维稀疏，通常需要 feature selection 降低计算成本和 overfitting，并用 binary、tf、TF-IDF、BM25 或 supervised weights 给 features 赋值。随后训练合适 classifier，如 Naive Bayes、SVM、logistic regression、random forest 或 neural model；现代方法还可用 embeddings、pre-trained language models、zero-shot/few-shot prompts。最后必须在 unseen data 上评估，使用 accuracy、precision、recall、F1、macro-F1 等指标，并与 baselines 比较；若 classes imbalanced，accuracy 可能被 majority class baseline 误导，应重点报告 per-class 和 macro-F1。"
+}

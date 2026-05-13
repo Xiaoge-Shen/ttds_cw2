@@ -1,0 +1,167 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 15}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}Web Search (2): Sponsored Search, SEO, Duplicate Detection, and Crawling}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily early keyword engines and scalability limits $\rightarrow$ sponsored search monetises ranking attention $\rightarrow$ Google separates algorithmic results from ads $\rightarrow$ user intent shapes result type $\rightarrow$ SEO exploits ranking signals $\rightarrow$ duplicate detection protects index quality $\rightarrow$ shingles and MinHash approximate near-duplicate similarity $\rightarrow$ crawler starts from seeds and expands frontier $\rightarrow$ politeness/robustness/freshness constrain crawling architecture
+\end{chainbox}
+\slideimage{2}{0.72}{/Users/huez/Documents/ttds/lec/ttds25_15web2.pdf}
+\begin{callout}{这节课一句话}
+这节课一句话：Web search 从历史上看是“自然排序、广告商业化、SEO 对抗、去重和爬虫工程”共同演化出来的系统，而不是一个单纯的 ranking formula。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. 1. Web search history：先有关键词，再有广告，再有图链接}
+\slideimage{2}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_15web2.pdf}
+\begin{callout}{人话直觉}
+早期搜索像在超大文件夹里 Ctrl+F；后来有人发现，搜索结果位置本身就是黄金广告位。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 1995-1997 年的 Altavista、Excite、Infoseek、Lycos、AOL 等主要使用 keyword-based traditional IR techniques，问题是 scalability 和 ranking quality。Goto/Overture 引入 paid search ranking：关键词拍卖，排名与支付相关，形成 sponsored search。CPC 是 cost per click，CPM 是 cost per thousand impressions；视频等新服务中还会用 RPM，即 revenue per 1000 video views。
+
+\noindent\textbf{考试问法：} 历史题按时间线答：early keyword engines \(\rightarrow\) paid ranking/sponsored search \(\rightarrow\) Google link-based ranking。商业指标题要区分 CPC/CPM/RPM。
+
+\Needspace{0.38\textheight}
+\section{2. 2. Algorithmic results vs sponsored ads：自然排序和广告别混为一谈}
+\slideimage{3}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_15web2.pdf}
+\begin{callout}{人话直觉}
+搜索页面上有两条河：一条是算法认为你需要什么，另一条是广告系统认为谁愿意为你的注意力付钱。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 1998+ Google 的 link-based ranking 改善了 algorithmic search experience，但早期也在寻找商业模式；后来 Google 将 paid search ads 放在旁边，与 algorithmic results 分开展示。Yahoo 也通过收购 Overture 和 Inktomi 组合 paid placement 与 search。2024+ 的新趋势是 AI + RAG systems，但尚无明确最终赢家。
+
+\noindent\textbf{考试问法：} 若问 paid search 与 SEO/algorithmic ranking 区别：paid search 通过广告系统和竞价获得展示；algorithmic results 基于 relevance/quality ranking；SEO 试图影响自然结果而非直接买广告位。
+
+\Needspace{0.38\textheight}
+\section{3. 3. Web search basics：从 crawler 到 indexer 再到 ranking}
+\slideimage{6}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_15web2.pdf}
+\begin{callout}{人话直觉}
+搜索不是用户敲 query 后才去全网找；真正的工作早在后台完成：先派蜘蛛抓网页，整理成索引，query 来时只查索引。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 基本组件包括 web spider/crawler、indexer、indexes/ad indexes 和 search/ranking component。Crawler 抓取网页并解析链接；indexer 处理 crawled pages，建立 searchable indexes；广告系统维护 ad indexes；用户 query 到来后，search component 在索引中检索并排序。
+
+\noindent\textbf{考试问法：} 组件题要按 pipeline 说清：crawl/fetch/parse/extract URLs \(\rightarrow\) index pages \(\rightarrow\) query-time search/ranking。别把 crawler 和 indexer 混成一个东西。
+
+\Needspace{0.38\textheight}
+\section{4. 4. User intent：同一个搜索框，三种完全不同的需求}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_15web2.pdf}
+\begin{callout}{人话直觉}
+搜“Information Retrieval”是在学习；搜“United Airlines”是要去官网；搜“Seattle weather”是要完成动作。结果页面应该跟着意图变。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Web search user needs 主要分为 informational、navigational、transactional。Informational 是想了解某事；navigational 是想去特定网站或页面；transactional 是想完成 web-mediated action，如查天气、下载图片、购物。还有 exploratory search，需求开放、边界不明确。Intent 影响 ranking features、result types 和界面呈现。
+
+\noindent\textbf{考试问法：} 若给 query 分类，先判断用户目标：learn、go to page、do action。若问为什么 intent 重要，答不同 intent 需要不同排序和结果展示。
+
+\Needspace{0.38\textheight}
+\section{5. 5. SEO simplest form：当 tf-idf 变成考试答案模板，网页就开始背模板}
+\slideimage{8}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_15web2.pdf}
+\begin{callout}{人话直觉}
+如果早期引擎相信“maui resort”出现越多越相关，网页作者就会把 maui resort 写到天荒地老，甚至白字白底藏起来。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} SEO 是 Search Engine Optimization，通过调整网页使其在 algorithmic search results 中对特定 keywords 排名更高。早期 engines heavily relied on tf-idf/word density，SEOs 用 dense repetitions、misleading meta-tags、hidden text 等操纵 crawlers。pure word density 不可靠，因为它很容易被优化成目标而不反映真实 quality/relevance。
+
+\noindent\textbf{考试问法：} SEO 题要区分 white/legitimate 与 shady/spammy；举例时写 keyword stuffing、misleading meta-tags、hidden same-color text，并指出它们利用 term frequency/metadata signals。
+
+\Needspace{0.38\textheight}
+\section{6. 6. Cloaking：给搜索蜘蛛看一张脸，给用户看另一张脸}
+\slideimage{9}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_15web2.pdf}
+\begin{callout}{人话直觉}
+cloaking 像考试时给监考老师看标准答案，转头给同学看广告传单：同一个 URL，对 crawler 和 human 端出不同内容。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Cloaking 是 black-hat spam technique：server 对 search engine spider 提供 fake content，对普通用户提供另一份内容。它直接破坏 index 的真实性，是比普通关键词堆砌更强的欺骗。课件紧接 duplicate detection，说明 web search 不只要找相关，还要清理重复、垃圾、伪装内容。
+
+\noindent\textbf{考试问法：} 若问 cloaking，必须说 different content to spider and user；不要泛化成普通 SEO。可补充它为什么是 spam：it manipulates what gets indexed。
+
+\Needspace{0.38\textheight}
+\section{7. 7. Duplicate detection：不要让同一篇网页占满索引和结果页}
+\slideimage{9}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_15web2.pdf}
+\begin{callout}{人话直觉}
+如果搜索结果前十条都是同一篇文章换了日期或镜像站，用户会觉得搜索坏了；index 也在浪费空间。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Web 充满 duplicate 和 near-duplicate content。Strict duplicate detection 检测 exact match，可用 fingerprints；near-duplicate detection 处理高度相似但不完全相同的 documents，例如只改 last modified date。近重复通常使用 similarity threshold，如 similarity > 80\%。注意 near-duplicate relation 不一定传递：A\(\approx\)B 且 B\(\approx\)C 不保证 A\(\approx\)C。
+
+\noindent\textbf{考试问法：} 若考 duplicate detection，先区分 strict duplicate/exact match 与 near-duplicate/high similarity；再说明为什么重要：节省 index、改善 ranking 和 user experience。
+
+\Needspace{0.38\textheight}
+\section{8. 8. Shingles + MinHash：把网页相似度压缩成小签名}
+\slideimage{10}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_15web2.pdf}
+\begin{callout}{人话直觉}
+不要逐字比较全网每两篇文章，那像让全班每个人和每个人逐句对答案。shingles 先切成短片段，MinHash 再给每篇文档做一个小指纹。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Shingles 是 document 的 word n-grams，可把 document 表示为 shingle set。两个文档的集合相似度常用 Jaccard similarity，即 intersection over union。Web-scale 下不能对所有 document pairs 精确计算 shingle intersection，因此用 MinHash/sketch 为每个 document 生成短 signature，近似估计 Jaccard similarity，降低 pairwise comparison 成本。
+
+\[
+J(A,B)=\frac{|A\cap B|}{|A\cup B|}
+\]
+\noindent\textbf{考试问法：} 高频题答法：document \(\rightarrow\) shingles \(\rightarrow\) set similarity/Jaccard \(\rightarrow\) web-scale too expensive \(\rightarrow\) MinHash/sketch approximation。
+
+\Needspace{0.38\textheight}
+\section{9. 9. Web crawling：从 seed URLs 开始滚雪球}
+\slideimage{11}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_15web2.pdf}
+\begin{callout}{人话直觉}
+crawler 像探险队：从已知城市出发，沿路牌发现新城市；但有些区域没有路牌指向，就是 dark web/unseen web。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Basic crawler operation：begin with known seed URLs，fetch and parse them，extract URLs they point to，place new URLs into URL frontier，repeat。URL frontier 是等待抓取的队列/集合，需要管理优先级、去重和 politeness。Dark Web 在课件图中表示 crawler 不能直接从已知 links 到达或尚未发现的部分。
+
+\noindent\textbf{考试问法：} 流程题要写 seed \(\rightarrow\) fetch/parse \(\rightarrow\) extract links \(\rightarrow\) frontier \(\rightarrow\) repeat；再补 URL dedup/content dedup 和 dark/unseen web。
+
+\Needspace{0.38\textheight}
+\section{10. 10. Crawler architecture and frontier：快、稳、礼貌三者拉扯}
+\slideimage{15}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_15web2.pdf}
+\begin{callout}{人话直觉}
+一个好 crawler 不是最快下载器；它像有礼貌的快递系统：不能狂敲同一家的门，还要优先送新闻这种容易过期的包裹。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Crawler must be polite：尊重 robots.txt，避免过于频繁访问同一 server；must be robust：抵抗 spider traps、malicious servers、spam/link farms；should be scalable：支持 distributed operation；freshness 要求重新抓取已抓页面的新版本。Basic architecture 包括 DNS、fetch、parse、content seen check、URL filter、duplicate URL elimination、robots filters、URL frontier、fingerprints 等。URL frontier 的两大考虑是 politeness 与 priority/freshness，它们可能冲突：高优先级 URLs 若集中在同一 host，简单 priority queue 会造成 burst。
+
+\noindent\textbf{考试问法：} 若考 crawler，必须包含 politeness 和 frontier，不要只写 fetch pages。politeness 分 explicit robots.txt 和 implicit rate limiting；priority/freshness 说明哪些页面更该重抓。
+
+\section{考试速记版}
+\begin{itemize}
+\item Early engines: keyword-based traditional IR; main issue = scalability/ranking quality。
+\item Sponsored search: ranking attention monetised; CPC/CPM/RPM 要分清。
+\item Algorithmic results \(\neq\) sponsored ads；SEO \(\neq\) paid search。
+\item User intents: informational、navigational、transactional、exploratory。
+\item SEO spam: keyword stuffing、misleading meta-tags、hidden text、cloaking。
+\item Duplicate detection: exact fingerprints vs near-duplicate threshold。
+\item Shingles = word n-grams；Jaccard = intersection/union。
+\item MinHash/sketch approximates Jaccard to avoid full pairwise comparison。
+\item Crawler: seed URLs \(\rightarrow\) fetch/parse \(\rightarrow\) extract URLs \(\rightarrow\) URL frontier。
+\item Crawler constraints: robots.txt, implicit politeness, robustness, scalability, freshness。
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+如果考 web crawler，可以这样答：crawler 从 seed URLs 开始，把待抓 URL 放入 URL frontier；每次取出 URL 后 fetch document、parse 页面、extract outgoing URLs，并把页面送入 indexing pipeline。系统还要做 content seen check、URL filtering、duplicate URL elimination、robots filtering 和 fingerprinting。URL frontier 不只是普通队列，它必须同时处理 priority/freshness 和 politeness：新闻等变化快或重要页面需要更频繁抓取，但 crawler 也要遵守 robots.txt 的 explicit politeness，并通过 rate limiting 避免 implicit politeness violation。一个实际 crawler 还要 robust against spider traps、malicious servers、spam/link farms，并能分布式扩展。
+\end{callout}
+\end{document}

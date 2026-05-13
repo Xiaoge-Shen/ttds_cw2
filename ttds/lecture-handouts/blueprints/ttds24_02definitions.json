@@ -1,0 +1,166 @@
+{
+  "lecture": "TTDS 02",
+  "source_pdf": "ttds24_02definitions.pdf",
+  "title": "Definitions：IR 的基本对象、相关性与系统黑箱",
+  "one_sentence": "这节课把 IR 拆成最小零件：给定 query Q，在 document collection 中找到 relevant documents D，同时在 effectiveness 和 efficiency 之间做系统级权衡。",
+  "concept_chain": [
+    "IR basic form：Given Q, find relevant D",
+    "两大问题：effectiveness 与 efficiency",
+    "三大对象：documents、queries、relevant documents",
+    "Query 是 information need 的不完美表达",
+    "Relevance 是主题匹配、任务满足与用户主观性的混合体",
+    "Bag-of-words 用词项 overlap 近似 aboutness",
+    "IR 与 DB 的根本差异：unstructured/imprecise vs structured/exact",
+    "系统架构：offline indexing + online search"
+  ],
+  "slides": [
+    {
+      "page": 1,
+      "reason": "列出本讲目标：document、information need、query、index、BOW。",
+      "caption": "本讲建立 IR 词汇表。"
+    },
+    {
+      "page": 2,
+      "reason": "用黑箱图直观展示 query、documents、retrieval model 和 hits。",
+      "caption": "IR 是把 query 和 documents 放进模型，输出 ranked hits。"
+    },
+    {
+      "page": 3,
+      "reason": "给出 IR basic form 和 effectiveness/efficiency 两大问题。",
+      "caption": "Given Q, find relevant D；既要找对，也要找快。"
+    },
+    {
+      "page": 4,
+      "reason": "定义 documents，并说明 document 可远超普通文本文件。",
+      "caption": "Document 是被检索单位，有 unique ID，N 个组成 collection。"
+    },
+    {
+      "page": 5,
+      "reason": "解释 query 与 information need 的多对多关系。",
+      "caption": "同一需求可多种 query，同一 query 可多种需求。"
+    },
+    {
+      "page": 6,
+      "reason": "集中讨论 relevance 的抽象定义和语言挑战。",
+      "caption": "Relevance 不是字符串相等，而是是否满足用户任务。"
+    },
+    {
+      "page": 7,
+      "reason": "说明 similar vocabulary → similar meaning，并对比 IR 与 DB。",
+      "caption": "IR 用相似词汇近似相似主题，结果天然不精确。"
+    },
+    {
+      "page": 9,
+      "reason": "定义 bag-of-words 并列出优点与批评。",
+      "caption": "BOW 忽略词序，用带重复的词袋让检索模型可计算。"
+    },
+    {
+      "page": 10,
+      "reason": "展示 IR black box 和 offline/online 系统视角。",
+      "caption": "Indexing 离线准备，search 在线响应。"
+    },
+    {
+      "page": 11,
+      "reason": "细化 indexing process 的 acquisition、transformation、index creation。",
+      "caption": "索引是快速找到含某个词的文档的 lookup table。"
+    },
+    {
+      "page": 12,
+      "reason": "总结本讲：components、BOW、architecture。",
+      "caption": "Definitions lecture 的考试重点集中在定义、比较、架构。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "IR basic form：Q 找 D",
+      "slide_page": 3,
+      "intuition": "把 query 想成用户递给系统的一张寻物启事，documents 是仓库里的物品，IR 要找出最可能有用的那些。",
+      "explanation": "IR 的基本形式是：Given Query Q, find relevant documents D。这里的 Q 不一定是完整问题，D 也不一定是网页，可以是任何被检索单位。关键是 relevant：系统不是返回所有包含同一字符串的对象，而是返回能满足 query 背后 information need 的对象。",
+      "exam_angle": "若问 IR 的 basic form，写出 Q、D、relevant documents，并说明输出通常是 ranked set 而非唯一精确答案。",
+      "formula_latex": "Q \\rightarrow \\{D_1, D_2, \\ldots, D_k\\}_{\\text{ranked by relevance}}"
+    },
+    {
+      "title": "Effectiveness 与 efficiency：找对也要找快",
+      "slide_page": 3,
+      "intuition": "只找对但一分钟才返回，用户已经走了；只找快但全是垃圾，系统也失败。IR 永远在这两个方向拉扯。",
+      "explanation": "Effectiveness 指系统能否找到真正 relevant、能满足 information need 的文档；efficiency 指系统能否在海量数据和高查询吞吐下快速完成检索。讲义强调 IR 面对 vast quantities of data、thousands queries per second、constantly changing data，因此必须既有好的 retrieval model，也有高效 index 与 query processing。",
+      "exam_angle": "比较或系统设计题常要求解释二者 trade-off：复杂模型可能提升效果但增加延迟，高效索引可能牺牲部分语义细节。",
+      "formula_latex": null
+    },
+    {
+      "title": "Document：被检索的最小业务单位",
+      "slide_page": 4,
+      "intuition": "Document 不一定是一篇 PDF；它只是系统决定“每次返回什么”的单位。",
+      "explanation": "Document 是 element to be retrieved，通常有 unique ID，N documents 构成 collection。它可以是 web page、email、book、page、sentence、tweet、photo、video、music piece、code、QA answer、product description、advertisement，甚至 DNA。重要的是系统如何定义 document boundary，因为它决定 indexing、ranking 和 evaluation 的粒度。",
+      "exam_angle": "若问 document 是否一定是传统文本，答案是否定；强调 unique ID、collection、retrieval unit，并举多种例子。",
+      "formula_latex": "C = \\{D_1, D_2, \\ldots, D_N\\}"
+    },
+    {
+      "title": "Query：information need 的压缩表达",
+      "slide_page": 5,
+      "intuition": "用户脑子里是一整段需求，打进搜索框的却常常只有两三个词；query 是需求的影子，不是需求本身。",
+      "explanation": "Query 通常是表达 information need 的 free text。同一 information need 可以被多个 query 表达，例如 hurricane news、North Carolina storm、Florence；同一 query 也可能对应多个需求，例如 Apple 和 Jaguar。query 还可以是 image sample、QA question、hummed tune、user history、structured scholar search 或 advanced search operators。",
+      "exam_angle": "常考 query formulation 难点：synonymy、polysemy、short query、上下文缺失；回答时强调 query 与 information need 是多对多关系。",
+      "formula_latex": null
+    },
+    {
+      "title": "Relevance：IR 最难被钉死的词",
+      "slide_page": 6,
+      "intuition": "相关性不是试卷上的标准答案，更像“这篇文档能不能帮这个用户完成眼前任务”。",
+      "explanation": "在抽象层面，IR 关心 item D 是否 match item Q，或 D 是否 relevant to Q。Relevance 可能意味着用户会喜欢/点击，能帮助完成任务，具有新颖性，或与 query 主题相同。它困难在于语言没有清晰语义边界：synonymy 让 Edinburgh festival 与 The Fringe 词面不同但相关，polysemy 让 Apple/Jaguar 一个词有多个主题，用户主观性和 web spam 又进一步干扰判断。",
+      "exam_angle": "若问 relevance 为什么 tricky，列 synonymy、polysemy、subjectivity、novelty/task satisfaction、SEO/spam；不要只说“词不一样”。",
+      "formula_latex": null
+    },
+    {
+      "title": "Relevant items are similar：词汇相似近似主题相似",
+      "slide_page": 7,
+      "intuition": "如果两篇文章都反复出现 hurricane、storm、North Carolina，它们大概率在聊同一件事。",
+      "explanation": "IR 的关键假设是 use similar vocabulary → similar meaning，similar documents relevant to same queries。这个假设允许系统用 string match、word overlap 或 P(D|Q) 这类 retrieval model 来近似相关性。它不是完美语义理解，但在大规模检索里简单、可扩展、效果足够强。",
+      "exam_angle": "若考 retrieval model 的直觉，说明词汇 overlap 是 aboutness 的代理；同时指出 synonymy/polysemy 会破坏这个代理。",
+      "formula_latex": "\\operatorname{score}(D,Q) = f(\\operatorname{overlap}(D,Q), \\text{term statistics})"
+    },
+    {
+      "title": "IR vs DB：不精确文本检索 vs 精确结构查询",
+      "slide_page": 7,
+      "intuition": "数据库像查学生表里 matriculation number 等于 X 的行；IR 像问“有没有讲搜索评价的材料”，答案要排序、要判断、还可能不唯一。",
+      "explanation": "Databases 处理 structured data，语义基于 formal model，query 是 SQL/relational algebra 等形式化、无歧义表达，结果通常 exact。IR 多处理 mostly unstructured free text，query 是 natural language 或 Boolean-like 表达，结果 imprecise，需要 relevance measurement，且 interaction 很重要。",
+      "exam_angle": "比较题按四列回答最稳：retrieved data、query type、result type、interaction；DB=structured/formal/exact/one-shot，IR=unstructured/free text/imprecise/interactive。",
+      "formula_latex": null
+    },
+    {
+      "title": "Bag-of-words：把语序放下，先抓主题",
+      "slide_page": 9,
+      "intuition": "把一句话打散成一袋词，语法没了，但主题味道还在；像闻调料包就能猜菜系。",
+      "explanation": "Bag-of-words 把 documents 和 queries 当成带重复的词袋，match 变成 D 与 Q 的 overlap 或基于词项特征的统计匹配。它的优点是简单、可扩展、让 retrieval models tractable。批评是会丢失词序、句法、negation 和多词表达，对 Chinese/Japanese 这类无空格语言需 segmentation，对 German compounds 可能需 decompounding。",
+      "exam_angle": "若问 BOW，定义必须包含“忽略词序”和“保留重复”；优点写 tractable/scalable，缺点写 context/negation/language-specific segmentation。",
+      "formula_latex": "D = \\{(t_1, c_1), (t_2, c_2), \\ldots\\}"
+    },
+    {
+      "title": "IR black box：表示、比较、索引",
+      "slide_page": 10,
+      "intuition": "黑箱里不是魔法，而是三件事：把 query 变形、把 document 变形、用模型比较它们。",
+      "explanation": "IR black box 包含 query representation function、document transformation function、comparison function、retrieval model 和 index。Documents 通常 offline 转换为 BOW 或其他 representation 并进入 index；query online 被转换后与 index 中的 document representation 比较，输出 hits。Index 是效率核心，因为它避免每个 query 都扫描整个 collection。",
+      "exam_angle": "架构题要把 representation、comparison、retrieval model、index 联系起来，并区分 offline document processing 与 online query processing。",
+      "formula_latex": "\\operatorname{score}(Q,D) = \\operatorname{compare}(\\phi_Q(Q), \\phi_D(D))"
+    },
+    {
+      "title": "Indexing offline，search online",
+      "slide_page": 11,
+      "intuition": "餐厅提前备菜是 indexing，客人点菜后快速出餐是 search；准备越充分，现场越快。",
+      "explanation": "Indexing process 是 offline：acquire data from crawling/feeds、store originals if needed、transform text、decide word units/stopping/stemming、create index。Search process 是 online：assist query formulation、retrieve and rank results、help browsing/reformulation、log user actions and adjust retrieval model。这个分工解释了为什么 IR 能在海量 collection 上快速响应。",
+      "exam_angle": "若问 indexing/search process，按 offline/online 两段答；index 是 quickly finding all docs containing a word 的 lookup table。",
+      "formula_latex": null
+    }
+  ],
+  "quick_revision": [
+    "IR basic form：Given query Q, find relevant documents D。",
+    "两大核心问题：effectiveness 找得准，efficiency 找得快。",
+    "Document 是 retrieval unit，有 unique ID；N 个 documents 构成 collection。",
+    "Query 是 information need 的表达，不等于 information need 本身。",
+    "Relevance 受 synonymy、polysemy、subjectivity、novelty、spam 影响。",
+    "BOW = 带重复词袋，忽略词序，用 overlap 近似 aboutness。",
+    "DB 是 structured/formal/exact；IR 是 unstructured/free text/imprecise。",
+    "Indexing 是 offline，search 是 online。"
+  ],
+  "exam_answer": "In its basic form, IR takes a query Q and returns documents D that are relevant to the user's information need. The two main issues are effectiveness, meaning whether the system retrieves truly useful relevant documents, and efficiency, meaning whether it can do so quickly at large scale. Documents are uniquely identified retrieval units in a collection, while queries are often short and ambiguous expressions of information needs. Because relevance is subjective and affected by synonymy, polysemy and spam, IR commonly uses bag-of-words representations and retrieval models over an offline index to support fast online search."
+}

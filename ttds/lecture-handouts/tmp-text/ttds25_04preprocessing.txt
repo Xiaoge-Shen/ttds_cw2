@@ -1,0 +1,672 @@
+                                                           9/23/25
+
+
+
+
+                  Text Technologies for Data Science
+                                   INFR11145
+
+                             Preprocessing
+                                    Instructor:
+                                   Walid Magdy
+
+
+    24-Sep-2025
+
+
+
+1
+
+
+
+
+     Lecture Objectives
+        • Learn about and implement
+        • Standard text pre-processing steps:
+              • Tokenisation
+              • Stopping
+              • Normalisation
+                • Stemming
+
+
+
+
+                                                       2
+     Walid Magdy, TTDS 2025/2026
+
+2
+
+
+
+
+                                                                1
+                                                                                                            9/23/25
+
+
+
+
+    Indexing Process
+                                                           document à unique ID
+                                              Document      what can you store?
+                      web-crawling                          disk space? rights?
+                      provider feeds          data store
+                                                               compression?
+                       RSS “feeds”
+         A System
+                      desktop/email
+         and
+         Method for
+      …………………
+         …
+                                Documents                   Index
+      …………………
+         …………………
+      …………………
+         …………………
+      …………………
+         …………………
+      …………………
+         ………..                  acquisition                creation               Index
+
+     what data
+    do we want?                                                            a lookup table for
+                                                                         quickly finding all docs
+                                   Pre transformation
+                                               Text                        containing a word
+                                         -pr
+                                              oceinternational?
+                                format conversion.
+                                                    s“meaning”?
+                                 which part contains s  ing                       © Addison W esley, 2008
+
+
+                                word units? stopping? stemming?
+                                                                                                     3
+    Walid Magdy, TTDS 2025/2026
+
+3
+
+
+
+
+    Preprocessing
+                                                 …………………
+                                                 …………………
+                                                 …………………
+                                                 …………………
+                                                 …………………
+
+
+
+
+                                                   Text                      Text
+     Find the best text                       transformation             transformation
+     transformation technique
+     (preprocessing) that will
+     lead to better match
+     between different forms
+                                                 BOW                       BOW
+     of words in document
+     and query                                                  Index
+                                                                                                     4
+    Walid Magdy, TTDS 2025/2026
+
+4
+
+
+
+
+                                                                                                                 2
+                                                                    9/23/25
+
+
+
+
+    Getting ready for indexing?
+       • BOW, what is a word?
+       • In IR, we refer to word-elements as “terms”
+            • word “preprocessing”
+            • part of a word “pre”
+            • number / code “INFR11145”
+       • Pre-processing steps before indexing:
+            • Tokenisation
+            • Stopping
+            • Stemming
+       • Objective à identify the optimal form of the term to
+          be indexed to achieve the best retrieval performance
+
+                                                                5
+    Walid Magdy, TTDS 2025/2026
+
+5
+
+
+
+
+    Tokenisation
+       • Input: “Friends, Romans; and Countrymen!”
+       • Output: Tokens
+            •   Friends
+            •   Romans
+            •   and
+            •   Countrymen
+
+       • Sentence à tokenization (splitting) à tokens
+       • A token is an instance of a sequence of characters
+       • Typical technique: split at non-letter characters
+       • Each such token is now a candidate for an index entry
+          (term), after further processing
+                                                                6
+    Walid Magdy, TTDS 2025/2026
+
+6
+
+
+
+
+                                                                         3
+                                                                           9/23/25
+
+
+
+
+    Issues in Tokenisation
+       • “Finland’s” capital ® Finland? Finlands? Finland’s?
+       • Hewlett-Packard ® one token or two?
+            • state-of-the-art: break up hyphenated sequence.
+            • co-education
+            • lowercase, lower-case, lower case ?
+            • It can be effective to get the user to put in possible
+                hyphens
+       • Numbers?
+            • 3/20/91 vs. Mar. 20, 1991 vs. 20/3/91
+            • This course code is INFR11145
+            • (800) 234-2333
+
+
+                                                                       7
+    Walid Magdy, TTDS 2025/2026
+
+7
+
+
+
+
+    Issues in Tokenisation
+       • URLs:
+            • http://www.bbc.co.uk
+            • http://www.bbc.co.uk/news/world-europe-41376577
+       • Social Media
+            • Black lives matter
+            • #Black_lives_matter
+            • #BlackLivesMatter
+            • #blacklivesmatter
+            • @blacklivesmatter
+       • San Francisco: one token or two?
+            • How do you decide it is one token?
+
+                                                                       8
+    Walid Magdy, TTDS 2025/2026
+
+8
+
+
+
+
+                                                                                4
+                                                                                        9/23/25
+
+
+
+
+     Tokenisation for different languages
+        • French à L'ensemble ® one token or two?
+                 • L ? L’ ? Le ?
+                 • Want l’ensemble to match with un ensemble
+                 • Until at least 2003, it didn’t on Google
+        • German à compounds
+             • Lebensversicherungsgesellschaftsangestellter
+                 ‘life insurance company employee’
+             • German retrieval systems benefit greatly from a compound splitter
+                 module à Can give a 15% performance boost for German
+
+        • Chinese and Japanese à no spaces between words:
+             • 莎拉波娃现在居住在美国东南部的佛罗里达
+             • Tokenisation à Segmentation
+                                                                                   9
+     Walid Magdy, TTDS 2025/2026
+
+9
+
+
+
+
+     Tokenisation: common practice
+        • Just split at non-letter characters
+        • Add special cases if required
+        • Some applications have special setup
+             • Social media: hashtags/mentions handled differently
+             • URLs: no split, split at domain only, remove entirely!
+             • Medical: protein & diseases names
+
+
+
+
+                                                                                   10
+     Walid Magdy, TTDS 2025/2026
+
+10
+
+
+
+
+                                                                                             5
+                                                                              9/23/25
+
+
+
+
+     Stopping (stop words removal)
+        • This is a very exciting lecture on the technologies of
+           text
+        • Stop words: the most common words in collection
+           à the, a, is, he, she, I, him, for, on, to, very, …
+        • There are a lot of them ≈ 30-40% of text
+        • New stop words appear in specific domains
+             • Tweets: RT à “RT @realDonalTrump Mexico will …”
+             • Patents: said, claim à “a said method that extracts ….”
+        • Stop words
+             • influence on sentence structure
+             • less influence on topic (aboutness)
+                                                                         11
+     Walid Magdy, TTDS 2025/2026
+
+11
+
+
+
+
+     Stopping: always apply?
+        • Sometimes very important:
+             • Phrase queries: “Let it be”, “To be or not to be”
+             • Relational queries:
+                 - flights to London from Edinburgh
+                 - flights from London to Edinburgh
+
+        • In Web search, trend is to keep them:
+             • Good compression techniques means the space for
+               including stop words in a system is very small
+             • Good query optimization techniques mean you pay little at
+               query time for including stop words.
+             • Probabilistic retrieval models give them low weight.
+
+                                                                         12
+     Walid Magdy, TTDS 2025/2026
+
+12
+
+
+
+
+                                                                                   6
+                                                                            9/23/25
+
+
+
+
+     Stopping: stop words
+        • Common practice in many applications
+           à remove stop words
+        • There are common stop words list for each language
+             • NLTK (python)
+             • http://members.unine.ch/jacques.savoy/clef/index.html
+        • There are special stop words list for some
+           applications
+        • How to create your list:
+             • Sort all terms in a collection by frequency
+             • Manually select the possible stop words from top N terms
+                                                                       13
+     Walid Magdy, TTDS 2025/2026
+
+13
+
+
+
+
+     Normalisation
+        • Objective à make words with different surface
+           forms look the same
+        • Document: “this is my CAR!!”
+           Query: “car”
+           should “car” match “CAR”?
+        • Sentence à tokenisation à tokens à normalisation
+           à terms to be indexed
+        • Same tokenisation/normalisation steps should be
+           applied to documents & queries
+
+
+                                                                       14
+     Walid Magdy, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                                 7
+                                                                           9/23/25
+
+
+
+
+     Case folding and equivalents
+        • “A” & “a” are different strings for computers
+        • Case folding: convert all letters to lower case
+             • CAR, Car, caR à car
+             • Windows à windows, should we do that?
+             • Usually yes, users are so lazy
+        • Diacritics/Accents removal
+             • French: Château à chateau
+             • German: Tüebingen à tuebingen
+             • Arabic: ٍ‫ ﻛُﺗ ُب‬à ‫ﻛﺗب‬
+
+
+                                                                      15
+     Walid Magdy, TTDS 2025/2026
+
+15
+
+
+
+
+     Equivalence Classes
+        • U.S.A. à USA
+        • Ph.D. à PhD
+        • 92.3 à 923? 92 3?
+        • multi-disciplinary à multidisplinary ß multi disciplinary
+
+
+        • The most important criteria:
+             • Be consistent between documents & queries
+             • Try to follow users’ most common behaviour
+
+
+
+                                                                      16
+     Walid Magdy, TTDS 2025/2026
+
+16
+
+
+
+
+                                                                                8
+                                                                               9/23/25
+
+
+
+
+     Stemming
+        • Search for: “play”
+           should it match: “played”, “playing”, “player”?
+        • Many morphological variations of words
+             • inflectional (plurals, tenses)
+             • derivational (making verbs nouns etc.)
+        • In most cases, aboutness does not change
+        • Stemmers attempt to reduce morphological variations
+           of words to a common stem
+            • usually involves removing suffixes (in English)
+        • Can be done at indexing time or as part of query
+           processing (like stopwords)
+                                                                          17
+     Walid Magdy, TTDS 2025/2026
+
+17
+
+
+
+
+     Stemming
+        • Usually, it achieves 5-10% improvement in retrieval
+           effectiveness, e.g. English
+        • For highly inflected languages, it is more critical:
+             • 30% improvement in Finnish IR
+             • 50% improvement in Arabic IR
+                They are Peter’s children              ‫ھﺆﻻء أﺑﻨﺎء ﺑﯿﺘﺮ‬
+                The children behaved well          ‫اﻷﺑﻨﺎء ﺗﺼﺮﻓﻮا ﺟﯿﺪا‬
+                Her children are cute                     ‫أﺑﻨﺎءھﺎ ﻟﻄﺎف‬
+                My children are funny                     ‫أﺑﻨﺎﺋﻲ ظﺮﻓﺎء‬
+                We have to save our children     ‫ﻋﻠﯿﻨﺎ أن ﻧﺤﻤﻲ أﺑﻨﺎءﻧﺎ‬
+                Patents and children are happy    ‫اﻵﺑﺎء واﻷﺑﻨﺎء ﺳﻌﺪاء‬
+                He loves his children                   ‫ھﻮ ﯾﺤﺐ أﺑﻨﺎءه‬
+                His children loves him                    ‫أﺑﻨﺎؤه ﯾﺤﺒﻮﻧﮫ‬
+                                                                          18
+     Walid Magdy, TTDS 2025/2026
+
+18
+
+
+
+
+                                                                                    9
+                                                                            9/23/25
+
+
+
+
+     Stemming
+        • Two basic types
+             • Dictionary-based: uses lists of related words
+             • Algorithmic: uses program to determine related words
+        • Algorithmic stemmers
+             • suffix-s: remove ‘s’ endings assuming plural
+             • e.g., cats → cat, lakes → lake, windows → window
+             • Many false negatives: supplies → supplie
+             • Some false positives: James → Jame
+
+
+
+
+                                                                       19
+     Walid Magdy, TTDS 2025/2026
+
+19
+
+
+
+
+     Porter Stemmer
+        • Most common algorithm for stemming English
+        • Conventions + 5 phases of reductions
+             • phases applied sequentially
+             • each phase consists of a set of commands
+             • sample convention:
+                 of the rules in a compound command, select the one that
+                 applies to the longest suffix.
+        • Example rules in Porter stemmer
+             • sses ® ss            (processes ® process)
+             • y®i                  (reply ® repli)
+             • ies ® i              (replies ® repli)
+             • ement → null         (replacement ® replac)
+
+                                                                       20
+     Walid Magdy, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                                10
+                                                                                9/23/25
+
+
+
+
+     Stemmed words are misspelled!!
+        • repli, replac, suppli, inform retriev, anim
+        • These are not words anymore, these are terms
+        • These terms are not seen by the user, but just used
+           by the IR system (search engine)
+        • These represent the optimal form for a better match
+           between different surface forms of a term
+            • e.g. replac à replace, replaces, replaced, replacing,
+                 replacer, replacers, replacement, replacements.
+
+
+
+                                                                           21
+     Walid Magdy, TTDS 2025/2026
+
+21
+
+
+
+
+     Pre-processing: Common practice
+        • Tokenisation: split at non-letter characters
+             • Basic regular expression
+                 à process \w and neglect anything else
+             • For tweets, you might want to keep “#” and “@”
+        • Remove stop words
+             • find a common list, and filter these words out
+        • Apply case folding
+             • One command in Perl or Python: lc($string)
+        • Apply Porter stemmer
+             • Other stemmers are available, but Porter is the most
+                 famous with many implementations available in different
+                 programming languages
+                                                                           22
+     Walid Magdy, TTDS 2025/2026
+
+22
+
+
+
+
+                                                                                    11
+                                                                   9/23/25
+
+
+
+
+     Limitations
+        • Irregular verbs:
+           • saw à see
+           • went à go
+        • Different spellings
+           • colour vs. color
+           • tokenisation vs. tokenization
+           • Television vs. TV
+        • Synonyms
+             • car vs. vehicle
+             • UK vs. Britain
+
+        • Solution à Query expansion …
+                                                              23
+     Walid Magdy, TTDS 2025/2026
+
+23
+
+
+
+
+     Asymmetric Expansion
+        • Maintains relations between unnormalized tokens
+        • An alternative to equivalence classing
+        • An example of where this may be useful
+             • query: window       search: window, windows
+             • query: windows      search: windows, Windows
+             • query: Windows      search: Windows
+
+        • Potentially more powerful, but less efficient
+             • More vocabulary, longer query
+        • Can be less effective:
+             • Inaccurate stats on terms (“car” ≠ “Car”)
+
+
+                                                              24
+     Walid Magdy, TTDS 2025/2026
+
+24
+
+
+
+
+                                                                       12
+                                                                                   9/23/25
+
+
+
+
+     Summary
+        • Text pre-processing before IR:
+           • Tokenisation à Stopping à Stemming
+
+         This is an example sentence of how the pre-processing is
+         applied to text in information retrieval. It includes: Tokenization,
+         Stop Words Removal, and Stemming
+
+
+
+
+                                                                              25
+     Walid Magdy, TTDS 2025/2026
+
+25
+
+
+
+
+     Practical
+
+
+                                   Original           After Pre-processing
+             Collection
+                              # words    File size    # words     File size
+
+                Bible         824,054    4.24 MB      358,112     2.05 MB
+
+               Wiki
+                            78,137,597   472 MB      47,741,065   309 MB
+             abstracts
+
+
+
+
+                                                                              26
+     Walid Magdy, TTDS 2025/2026
+
+26
+
+
+
+
+                                                                                       13
+                                                                  9/23/25
+
+
+
+
+     Resources
+        • Text book 1: Intro to IR, Chapter 2 à 2.2.4
+        • Text book 2: IR in Practice, chapter 4
+
+        • Lab 1 à Implement what learnt in these two lectures
+           START NOW, support on PIAZZA
+
+
+        • Optional reading:
+           if you think English pre-processing is hard!
+           - Arabic Information Retrieval. Darwish & Magdy
+
+                                                             27
+     Walid Magdy, TTDS 2025/2026
+
+27
+
+
+
+
+                                                                      14
+

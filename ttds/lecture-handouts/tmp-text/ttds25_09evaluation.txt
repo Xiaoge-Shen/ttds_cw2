@@ -1,0 +1,1180 @@
+                                                            10/14/25
+
+
+
+
+                   Text Technologies for Data Science
+                                    INFR11145
+
+                              IR Evaluation
+                                     Instructor:
+                                    Walid Magdy
+
+
+    15-Oct-2025
+
+
+
+1
+
+
+
+
+     Lecture Objectives
+        • Learn about how to evaluate IR
+                  • Evaluation measures
+                  • P, R, F
+                  • MAP
+                  • nDCG
+
+        • Implement: (as part of CW2)
+                  • P, R
+                  • MAP
+                  • nDCG
+
+                                                        2
+     Walid Magdy, TTDS 2025/2026
+
+2
+
+
+
+
+                                                                  1
+                                                                                                               10/14/25
+
+
+
+
+    Search Process
+
+                   help user formulate             Document
+                      the query by                 data store
+
+
+
+
+                                                                  ü
+                   suggesting what he                           fetch a set of results,
+                    could search for
+
+
+
+                                                                ü
+                                                                 present to the user
+
+                                        User
+                                                                Ranking
+                                     Interaction                                            Index
+
+
+
+
+                                                   ?
+    log user’s actions:                                                   Iterate!
+     clicks, hovering,    Log data
+                                               Evaluation
+          giving up
+                                                                                     © Addison W esley, 2008
+
+
+
+
+                                                                                                       3
+    Walid Magdy, TTDS 2025/2026
+
+3
+
+
+
+
+    IR as an Experimental Science!
+       • Formulate a research question: the hypothesis
+       • Design an experiment to answer the question
+       • Perform the experiment
+             • Compare with a baseline “control”
+       • Does the experiment answer the question?
+             • Are the results significant? Or is it just luck?
+       • Report the results!
+       • Iterate …
+       • e.g. stemming improves results? (university à univers)
+                                                                                                       4
+    Walid Magdy, TTDS 2025/2026
+
+4
+
+
+
+
+                                                                                                                     2
+                                                                             10/14/25
+
+
+
+
+    Lab 3 output                    Is that a good performance?
+
+       1, 65, 4.8040              2, 3549, 7.0396     3, 3354, 4.6113
+       1, 3533, 4.7264            2, 305, 6.8394      3, 3345, 4.5087
+       1, 3562, 3.5454            2, 288, 6.6742      3, 268, 3.6606
+       1, 3608, 3.4910            2, 223, 6.1252      3, 328, 3.4825
+       1, 141, 3.3262             2, 219, 4.8626      3, 21, 3.3984
+       1, 361, 3.3262             2, 3762, 4.8626     3, 304, 3.3722
+       1, 92, 3.2311              2, 3663, 4.5415     3, 313, 3.3436
+       1, 3829, 3.1818            2, 3766, 3.9924     3, 3790, 3.1796
+       1, 3420, 3.1273            2, 188, 3.8844      3, 55, 3.0462
+       1, 3734, 3.0561            2, 3360, 3.0988     3, 217, 2.8492
+       1, 3387, 2.9626            2, 3408, 3.0315     3, 361, 2.8348
+       1, 3599, 2.9626            2, 3390, 2.8498     3, 3789, 2.7158
+
+                                                                         5
+    Walid Magdy, TTDS 2025/2026
+
+5
+
+
+
+
+    Configure your system
+       • About the system:
+            • Stopping? Tokenise? Stemming? n-gram char?
+            • Use synonyms improve retrieval performance?
+       • Corresponding experiment?
+            • Run your search for a set of queries with each setup and
+               find which one will achieve the best performance
+       • About the user:
+            • Is letting users weight search terms a good idea?
+       • Corresponding experiment?
+            • Build two different interfaces, one with term weighting
+               functionality, and one without; run a user study
+
+                                                                         6
+    Walid Magdy, TTDS 2025/2026
+
+6
+
+
+
+
+                                                                                   3
+                                                                            10/14/25
+
+
+
+
+    Types of Evaluation Strategies
+       • System-centered studies:
+            • Given documents, queries, and relevance judgments
+            • Try several variations of the system
+            • Measure which system returns the “best” hit list
+            • Laboratory experiment
+
+       • User-centered studies
+            • Given several users, and at least two retrieval systems
+            • Have each user try the same task on both systems
+            • Measure which system works the “best”
+
+                                                                        7
+    Walid Magdy, TTDS 2025/2026
+
+7
+
+
+
+
+    Importance of Evaluation
+       • The ability to measure differences underlies
+          experimental science
+           • How well do our systems work?
+           • Is A better than B?
+           • Is it really?
+           • Under what conditions?
+       • Evaluation drives what to research
+            • Identify techniques that work and don’t work
+
+
+
+
+                                                                        8
+    Walid Magdy, TTDS 2025/2026
+
+8
+
+
+
+
+                                                                                  4
+                                                                                    10/14/25
+
+
+
+
+     The 3-dimensions of Evaluation
+        • Effectiveness
+             • How “good” are the documents that are returned?
+             • System only, human + system
+        • Efficiency
+             • Retrieval time, indexing time, index size
+        • Usability
+             • Learnability, flexibility
+             • Novice vs. expert users
+
+
+                                                                               9
+     Walid Magdy, TTDS 2025/2026
+
+9
+
+
+
+
+     Cranfield Paradigm (Lab setting)
+                                                         Document
+                 Query
+                                                         Collection
+
+
+                                     IR System
+
+
+                                   Search Results
+
+                                    Evaluation
+                                                         Relevance Judgments
+                                     Module
+
+
+                              Measure of Effectiveness
+
+                                                                               10
+     Walid Magdy, TTDS 2025/2026
+
+10
+
+
+
+
+                                                                                          5
+                                                                                     10/14/25
+
+
+
+
+     Reusable IR Test Collection
+        • Collection of Documents
+             • Should be “representative” to a given IR task
+             • Things to consider: size, sources, genre, topics, …
+        • Sample of information need
+             • Should be “randomized” and “representative”
+             • Usually formalized topic statements (query + description)
+        • Known relevance judgments
+             • Assessed by humans, for each topic-document pair
+             • Binary/Graded
+        • Evaluation measure
+
+                                                                                11
+     Walid Magdy, TTDS 2025/2026
+
+11
+
+
+
+
+     Good Effectiveness Measures
+        • Should capture some aspect of what the user wants
+             • IR à Do the results satisfy user’s information need?
+        • Should be easily replicated by other researchers
+        • Should be easily comparable
+             • Optimally, expressed as a single number
+                 • Curves and multiple numbers are still accepted, but single
+                    numbers are much easier for comparison
+
+        • Should have predictive value for other situations
+             • What happens with different queries on a different
+                document collection?
+
+
+                                                                                12
+     Walid Magdy, TTDS 2025/2026
+
+12
+
+
+
+
+                                                                                           6
+                                                                      10/14/25
+
+
+
+
+     Set Based Measures
+        • Assuming IR system returns sets of retrieved results
+           without ranking
+        • Suitable with Boolean Search
+        • No certain number of results per query
+
+
+
+
+                                                                 13
+     Walid Magdy, TTDS 2025/2026
+
+13
+
+
+
+
+     Which looks the best IR system?
+        • For query Q, collection has 8 relevant documents:
+             A           B         C   D   E       F      G
+             R                     R   R   R
+                                   R   R                  R
+             R                         R   R       R      R
+                                                   R      R
+             R                     R   R           R      R
+                         R                         R
+             R           R                 R       R
+                         R
+             R           R         R
+                         R
+                         R                         R
+                                   R
+                                                                 14
+     Walid Magdy, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                            7
+                                                                                                       10/14/25
+
+
+
+
+     Precision and Recall
+                                                                            Relevant
+      • Precision:                                                         documents
+
+         What fraction of these retrieved
+         docs are relevant?                                                                     d
+                                                                                              ve s
+                𝑟𝑒𝑙 ∩ 𝑟𝑒𝑡   𝑇𝑃                                                           rt ie ent
+         𝑃=               =                                                            Re cum
+                𝑟𝑒𝑡𝑟𝑖𝑒𝑣𝑒𝑑 𝑇𝑃 + 𝐹𝑃                                                       do
+
+
+
+
+                                                relevant irrelevant
+                                                                         FP            TN
+
+
+
+                                    Retrieved                            TP            FN
+                                   documents
+                                                                      retrieved   not retrieved
+                                                                                                  15
+     Walid Magdy, TTDS 2025/2026
+
+15
+
+
+
+
+     Precision and Recall
+                                                                            Relevant
+      • Recall:                                                            documents
+
+         What fraction of the relevant
+         docs were retrieved?                                                                   d
+                                                                                              ve s
+                𝑟𝑒𝑙 ∩ 𝑟𝑒𝑡   𝑇𝑃                                                           rt ie ent
+         𝑅=               =                                                            Re cum
+                𝑟𝑒𝑙𝑒𝑣𝑎𝑛𝑡 𝑇𝑃 + 𝐹𝑁                                                        do
+
+
+
+
+                                                relevant irrelevant
+                                                                         FP            TN
+
+                            Relevant
+                           documents                                     TP            FN
+
+                                                                      retrieved   not retrieved
+                                                                                                  16
+     Walid Magdy, TTDS 2025/2026
+
+16
+
+
+
+
+                                                                                                             8
+                                                                                         10/14/25
+
+
+
+
+     Which looks the best IR system?
+        • For query Q, collection has 8 relevant documents:
+              A            B         C             D      E             F     G
+              R                      R             R      R
+                                     R             R                          R
+              R                                    R      R             R     R
+                                                                        R     R
+              R                      R             R                    R     R
+                           R                                            R   P=4/5
+              R            R                              R             R   R=4/8
+
+                           R
+              R            R         R                 P=3/8
+                                                       R=3/8
+     P=5/10                R
+     R=5/8                 R                                            R
+                  P=6/12       P=5/12 R   P=4/12               P=6/12
+                  R=6/8        R=5/8      R=4/8                R=6/8                17
+     Walid Magdy, TTDS 2025/2026
+
+17
+
+
+
+
+     Trade-off between P & R
+       • Precision: The ability to retrieve top-ranked docs that
+           are mostly relevant.
+       • Recall: The ability of the search to find all of the
+           relevant items in the corpus.
+       • Retrieve more docs:
+              • Higher chance to find all relevant docs à R ↑↑
+              • Higher chance to find more irrelevant docs à P ↓↓
+
+
+
+
+                                                                                    18
+     Walid Magdy, TTDS 2025/2026
+
+18
+
+
+
+
+                                                                                               9
+                                                                                                                  10/14/25
+
+
+
+
+     Trade-off between P & R
+         Returns relevant documents but
+         misses many useful ones too                                                       The ideal
+
+                        1
+
+
+
+
+                  Precision
+                                                                                         Returns most relevant
+                                                                                         documents but includes
+                                                                                          lots of junk
+                       0                                                             1
+                                             Recall
+                                                                                                            19
+     Walid Magdy, TTDS 2025/2026
+
+19
+
+
+
+
+     What about Accuracy?
+                                                                                   Relevant
+      • Accuracy:                                                                 documents
+
+         What fraction of docs was
+         classified correctly?                                                                            d
+                                                                                                        ve s
+                    𝑇𝑃 + 𝑇𝑁                                                                        rt ie ent
+           𝐴=                                                                                    Re cum
+               𝑇𝑃 + 𝐹𝑃 + 𝑇𝑁 + 𝐹𝑁                                                                  do
+
+      irrelevant >>>>> relevant
+                              (needle in a haystack)
+
+
+
+
+                                                       relevant irrelevant
+      e.g.: Ndocs = 1M docs, rel=10,                                            FP               TN
+
+      ret=10
+                                                                                TP               FN
+      𝑇𝑃 = 5,    𝐹𝑃 = 5,
+      𝐹𝑁 5,    𝑇𝑁 = 1𝑀 − 15                                                  retrieved      not retrieved
+      à 𝐴 = 99.999%
+                                                                                                            20
+     Walid Magdy, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                                                                       10
+                                                                             10/14/25
+
+
+
+
+     One Measure? F-measure
+                                                 26𝑃6𝑅
+                                        𝐹1 =
+                                                 𝑃+𝑅
+                                           (𝛽 ! + 1)𝑃 6 𝑅
+                                      𝐹𝛽 =
+                                             𝛽! 𝑃 + 𝑅
+       • Harmonic mean of recall and precision
+             • Emphasizes the importance of small values, whereas the
+                arithmetic mean is affected more by outliers that are
+                unusually large
+       • Beta (𝛽) controls relative importance of P and R
+             • 𝛽 = 1, precision and recall equally important à F1
+             • 𝛽 = 5, recall five times more important than precision
+                                                                        21
+     Walid Magdy, TTDS 2025/2026
+
+21
+
+
+
+
+     F-measure?
+        • For query Q, collection has 8 relevant documents:
+            A
+       System         B RecallC F1 D F5 E F0.5 F F0 G
+                 Precision
+            R                    R        R       R
+           A          0.500     0.625
+                                 R       0.556
+                                          R      0.619     0.521  0.500
+                                                                   R
+           BR         0.500     0.750     R
+                                         0.600    R
+                                                 0.736      R
+                                                           0.536   R
+                                                                  0.500
+                                                            R      R
+            C         0.417     0.625    0.500   0.613     0.446  0.417
+             R                   R        R                 R      R
+            D         0.333
+                       R        0.500    0.400   0.491     0.357 P=4/5
+                                                            R     0.333
+                                                                 R=4/8
+            ER         R
+                      0.375     0.375    0.375    R
+                                                 0.375      R
+                                                           0.375  0.375
+                       R
+            FR        0.500
+                       R        0.750
+                                 R       0.600 P=3/8
+                                                 0.736     0.536  0.500
+                                               R=3/8
+     P=5/10 G          R
+                      0.800     0.500    0.615   0.507     0.714  0.800
+     R=5/8             R                                    R
+               P=6/12     P=5/12 R P=4/12            P=6/12
+                 R=6/8        R=5/8      R=4/8              R=6/8       22
+     Walid Magdy, TTDS 2025/2026
+
+22
+
+
+
+
+                                                                                  11
+                                                                                     10/14/25
+
+
+
+
+     Rank-based IR measures
+        • Consider systems A & B                                        A       B
+             • Both retrieved 10 docs, only 5 are relevant                      R
+             • P, R & F are the same for both systems                           R
+                 • Should their performances considered equal?          R       R
+        • Ranked IR requires taking “ranks” into                                R
+           consideration!                                               R       R
+
+        • How to do that?                                               R
+
+                                                                        R
+                                                                        R
+
+                                                                                23
+     Walid Magdy, TTDS 2025/2026
+
+23
+
+
+
+
+     Which is the best ranked list?
+        • For query Q, collection has 8 relevant documents:
+            A           B             C      D        E            F        G
+         1 R          1             1 R    1 R      1 R           1     1
+         2            2             2 R    2 R      2             2     2 R
+         3 R          3             3      3 R      3 R           3 R   3 R
+         4            4             4      4        4             4 R   4 R
+         5 R          5             5 R    5 R      5             5 R   5 R
+         6            6 R           6      6        6             6 R
+         7 R          7 R           7      7        7 R           7 R
+         8            8 R           8      8        8             8
+         9 R          9 R           9 R    9                      9
+         10          10 R          10     10                     10
+                     11 R          11     11                     11 R
+                     12            12 R   12                     12
+                                                                                24
+     Walid Magdy, TTDS 2025/2026
+
+24
+
+
+
+
+                                                                                          12
+                                                                         10/14/25
+
+
+
+
+     Precision @ K
+       • k (a fixed number of documents)
+       • Have a cut-off on the ranked list at rank k, then
+           calculate precision!
+       • Perhaps appropriate for most of web search: most
+           people only check the top k results
+       • But: averages badly, Why?
+
+
+
+
+                                                                    25
+     Walid Magdy, TTDS 2025/2026
+
+25
+
+
+
+
+     P@5
+        • For query Q, collection has 8 relevant documents:
+            A           B             C      D     E     F     G
+         1 R          1             1 R    1 R   1 R    1     1
+         2            2             2 R    2 R   2      2     2 R
+         3 R          3             3      3 R   3 R    3 R   3 R
+         4            4             4      4     4      4 R   4 R
+         5 R          5             5 R    5 R   5      5 R   5 R
+         6            6 R           6      6     6      6 R
+         7 R          7 R           7      7     7 R    7 R
+         8            8 R           8      8     8      8
+         9 R          9 R           9 R    9            9
+         10          10 R          10     10           10
+                     11 R          11     11           11 R
+                     12            12 R   12           12
+                                                                    26
+     Walid Magdy, TTDS 2025/2026
+
+26
+
+
+
+
+                                                                              13
+                                                                         10/14/25
+
+
+
+
+     R-Precision
+       • For a query with known r relevant documents
+           à R-precision is the precision at rank r (P@r)
+       • r is different from one query to another
+       • Concept:
+           It examines the ideal case: getting all relevant
+           documents in the top ranks
+       • Is it realistic?
+
+
+
+                                                                    27
+     Walid Magdy, TTDS 2025/2026
+
+27
+
+
+
+
+     R-Precision
+        • For query Q, collection has 8 relevant documents:
+            A           B             C      D     E     F     G
+         1 R          1             1 R    1 R   1 R    1     1
+         2            2             2 R    2 R   2      2     2 R
+         3 R          3             3      3 R   3 R    3 R   3 R
+         4            4             4      4     4      4 R   4 R
+         5 R          5             5 R    5 R   5      5 R   5 R
+         6            6 R           6      6     6      6 R
+         7 R          7 R           7      7     7 R    7 R
+         8            8 R           8      8     8      8
+         9 R          9 R           9 R    9            9
+         10          10 R          10     10           10
+                     11 R          11     11           11 R
+                     12            12 R   12           12
+                                                                    28
+     Walid Magdy, TTDS 2025/2026
+
+28
+
+
+
+
+                                                                              14
+                                                                     10/14/25
+
+
+
+
+     User Satisfaction??
+       • It is assumed that users needs to find relevant docs at
+           the highest possible ranks
+           à Precision is a good measure
+       • But, user would cut-off (stop inspecting results) at
+           some point, say rank x
+           àP@x
+       • What is the optimal x?
+           When you think a user can stop?
+
+
+
+
+                                                                29
+     Walid Magdy, TTDS 2025/2026
+
+29
+
+
+
+
+     When can a user stop?
+       • IR objective: “satisfy user information need”
+       • Assumption: a user will stop once their information
+           need is satisfied
+       • How? user will keep looking for relevant docs in the
+           ranked list, read them, then stop once they feels
+           satisfied à user will stop at a relevant document
+       • P@x àx can be any rank where a relevant document
+           appeared (assume uniform distribution)
+
+
+
+                                                                30
+     Walid Magdy, TTDS 2025/2026
+
+30
+
+
+
+
+                                                                          15
+                                                                            10/14/25
+
+
+
+
+     When to stop?
+        • For query Q, collection has 8 relevant documents:
+                                       A
+                                    1 R
+                                    2
+                           P=100%                               P=8/1000
+                                    3 R
+                                                                 ≈0
+                                    4
+                                    5 R
+                                    6
+                                    7 R
+                                    8           P=4/7
+                                    9 R
+                                    10
+
+                                                                      31
+     Walid Magdy, TTDS 2025/2026
+
+31
+
+
+
+
+     When a user can stop?
+       • IR objective: “satisfy user information need”
+       • Assumption: a user will stop once his/her information
+           need is satisfied
+       • How? user will keep looking for relevant docs in the
+           ranked list, read them, then stop once he/she feels
+           satisfied à user will stop at a relevant document
+       • P@x àx can be any rank where a relevant document
+           appeared (assume uniform distribution)
+       • What about calculating the averages over all x’s?
+             • every time you find relevant doc, calculate P@x, then take
+                the average at the end
+                                                                      32
+     Walid Magdy, TTDS 2025/2026
+
+32
+
+
+
+
+                                                                                 16
+                                                                                    10/14/25
+
+
+
+
+     Average Precision (AP)
+                 Q1                      Q2                   Q3
+            (has 4 rel. docs)       (has 3 rel. docs)    (has 7 rel. docs)
+
+              1 R 1/1=1.00             1                    1
+              2 R 2/2=1.00             2                    2 R 1/2=0.50
+              3                        3 R 1/3=0.33         3
+              4                        4                    4
+              5 R 3/5=0.60             5                    5 R 2/5=0.40
+              6                        6                    6
+              7                        7 R 2/7=0.29         7
+              8                        8                    8 R 3/8=0.375
+              9 R 4/9=0.44                     "            9
+             10                                #
+                                                 =0
+               AP = 3.04 / 4            AP = 0.62 / 3         AP = 1.275 / 7
+                  = 0.76                   = 0.207               = 0.182
+                                                                               33
+     Walid Magdy, TTDS 2025/2026
+
+33
+
+
+
+
+     Mean Average Precision (MAP)
+                 Q1                      Q2                   Q3
+            (has 4 rel. docs)       (has 3 rel. docs)    (has 7 rel. docs)
+              1 R 1/1=1.00             1                    1
+              2 R 2/2=1.00             2                    2 R 1/2=0.50
+              3                        3 R 1/3=0.33         3
+              4                        4                    4
+              5 R 3/5=0.60             5                    5 R 2/5=0.40
+              6                        6                    6
+              7                        7 R 2/7=0.29         7
+              8                        8                    8 R 3/8=0.375
+              9 R 4/9=0.44                     "            9
+             10                                #
+                                                 =0
+               AP = 0.76                AP = 0.207            AP = 0.182
+
+                            MAP = (0.76+0.207+0.182)/3 = 0.383
+                                                                               34
+     Walid Magdy, TTDS 2025/2026
+
+34
+
+
+
+
+                                                                                         17
+                                                                       10/14/25
+
+
+
+
+     AP & MAP
+
+                                   1 %
+                               𝐴𝑃 = : 𝑃(𝑘)×𝑟𝑒𝑙(𝑘)
+                                   𝑟 "#$
+
+       where, 𝑟: number of relevant docs for a given query
+       𝑛: number of documents retrieved
+       𝑃(𝑘) precision @ 𝑘
+       𝑟𝑒𝑙(𝑘): 1 if retrieved doc @ 𝑘 is relevant, 0 otherwise.
+
+                                           1  /
+                                   𝑀𝐴𝑃 =     : 𝐴𝑃(𝑞)
+                                           𝑄  .#$
+
+       where, 𝑄: number of queries in the test collection
+
+
+                                                                  35
+     Walid Magdy, TTDS 2025/2026
+
+35
+
+
+
+
+     AP/MAP
+                                   1 %
+                               𝐴𝑃 = : 𝑃(𝑘)×𝑟𝑒𝑙(𝑘)
+                                   𝑟 "#$
+       • A mix between precision and recall
+       • Highly focus on finding relevant document as early as
+           possible
+       • When 𝑟=1 à MAP = MRR (mean reciprocal rank "$)
+       • MAP is the most commonly used evaluation metric for
+           most IR search tasks
+       • Uses binary relevance: rel = 0/1
+                                                                  36
+     Walid Magdy, TTDS 2025/2026
+
+36
+
+
+
+
+                                                                            18
+                                                                            10/14/25
+
+
+
+
+     MAP
+        • For query Q, collection has 8 relevant documents:
+            A3          B6     C2       D1      E7        F4      G5
+         1 R          1
+                    System   1 R Recall
+                           Precision  1 R F1 1 R MAP   1         1
+         2            2 A    2 0.500
+                               R      2 0.625
+                                        R     2 0.556 2 0.424    2 R
+         3 R          3      3        3 R     3 R      3 R       3 R
+         4            4 B    4 0.500  4 0.750 4 0.600 4 0.290
+                                                          R      4 R
+         5 R          5 C    5 R
+                               0.417 5 R0.625 5 0.500 5 R0.433   5 R
+         6            6 R    6        6       6        6 R
+                        D      0.333    0.500   0.400    0.475
+         7 R          7 R    7        7       7 R      7 R
+         8            8 ER   8 0.375 8 0.375 8 0.375 8 0.262
+         9 R          9 FR   9 0.500
+                               R      9 0.750   0.600 9 0.420
+         10          10 R   10       10               10
+                        G
+                     11 R   11 0.800 11 0.500   0.615 110.340
+                                                          R
+                     12     12 R     12               12
+                                                                       37
+     Walid Magdy, TTDS 2025/2026
+
+37
+
+
+
+
+     Binary vs. Graded Relevance
+       • Some docs are more relevant to a query than other
+           relevant ones!
+             • We need non-binary relevance
+       • Binary Relevance:
+             • Relevant 1
+             • Irrelevant 0
+       • Graded Relevance:
+             • Perfect 4
+             • Excellent 3
+             • Good      2
+             • Fair      1
+             • Bad       0
+                                                                       38
+     Walid Magdy, TTDS 2025/2026
+
+38
+
+
+
+
+                                                                                 19
+                                                                                         10/14/25
+
+
+
+
+     Binary vs. Graded Relevance
+       • Two assumptions:
+             • Highly relevant documents are more useful than marginally
+                relevant
+             • The lower the ranked position of a relevant document, the
+                less useful it is for the user, since it is less likely to be
+                examined
+       • Discounted Cumulative Gain (DCG)
+             • Uses graded relevance as a measure of the usefulness
+             • The most popular for evaluating web search
+
+
+
+
+                                                                                 39
+     Walid Magdy, TTDS 2025/2026
+
+39
+
+
+
+
+     Discounted Cumulative Gain (DCG)
+       • Gain is accumulated starting at the top of the ranking
+           and may be reduced (discounted) at lower ranks
+       • Users care more about high-ranked documents, so
+           we discount results by 1/log2(rank)
+            • the discount at rank 4 is 1/2, and at rank 8 is 1/3
+       • DCGk is the total gain accumulated at a particular rank
+           k (sum of DG up to rank k):                                0,
+                                                                           1,
+                                                                               2,
+                                                   3                       (g ra 3 , …
+                                                         𝑟𝑒𝑙5                   ded
+                          𝐷𝐶𝐺3 = 𝑟𝑒𝑙4 + )                                           )
+                                                   567 𝑙𝑜𝑔7 (𝑖)
+
+                                                                                 40
+     Walid Magdy, TTDS 2025/2026
+
+40
+
+
+
+
+                                                                                              20
+                                                                               10/14/25
+
+
+
+
+     DCG
+
+         k     G        DG         DCG@k   iG   iDG    iDCG@k    NDCG@k
+         1     3        3          3       3    3.00   3         1.00
+         2     2        2          5       3    3.00   6         0.83
+         3     3        1.89       6.89    3    1.89   7.89      0.87
+         4     0        0          6.89    2    1.00   8.89      0.78
+         5     0        0          6.89    2    0.86   9.75      0.71
+         6     1        0.39       7.28    2    0.77   10.52     0.69
+         7     2        0.71       7.99    1    0.36   10.88     0.73
+         8     2        0.67       8.66    0    0.00   10.88     0.80
+         9     3        0.95       9.61    0    0.00   10.88     0.88
+         10    0        0          9.61    0    0.00   10.88     0.88
+
+                                                                          41
+     Walid Magdy, TTDS 2025/2026
+
+41
+
+
+
+
+     Normalized DCG (nDCG)
+       • DCG numbers are averaged across a set of queries at
+             specific rank values (DCG@k)
+              • e.g., DCG at rank 5 is 6.89 and at rank 10 is 9.61
+              • Can be any positive real number!
+       • DCG values are often normalized by comparing the DCG
+             at each rank with the DCG value for the perfect ranking
+              • makes averaging easier for queries with different numbers
+                   of relevant documents
+       • nDCG@k = DCG@k / iDCG@k (divide actual by ideal)
+       • nDCG ≤ 1 at any rank position
+       • To compare DCGs, normalize values so that a ideal
+             ranking would have a normalized DCG of 1.0
+                                                                          42
+     Walid Magdy, TTDS 2025/2026
+
+42
+
+
+
+
+                                                                                    21
+                                                                                  10/14/25
+
+
+
+
+     nDCG                                       ÷
+         k     G        DG         DCG@k   iG       iDG    iDCG@k   nDCG@k
+         1     3        3          3       3        3.00   3        1.00
+         2     2        2          5       3        3.00   6        0.83
+         3     3        1.89       6.89    3        1.89   7.89     0.87
+         4     0        0          6.89    2        1.00   8.89     0.78
+         5     0        0          6.89    2        0.86   9.75     0.71
+         6     1        0.39       7.28    2        0.77   10.52    0.69
+         7     2        0.71       7.99    1        0.36   10.88    0.73
+         8     2        0.67       8.66    0        0.00   10.88    0.80
+         9     3        0.95       9.61    0        0.00   10.88    0.88
+         10    0        0          9.61    0        0.00   10.88    0.88
+
+                                                                             43
+     Walid Magdy, TTDS 2025/2026
+
+43
+
+
+
+
+     Summary:
+       • IR test collection:
+              • Document collection
+              • Query set
+              • Relevant judgements
+              • IR measures
+       • IR measures:
+              • R, P, F à not commonly used
+              • P@k, R-precision à used sometimes
+              • MAP à the most used IR measure
+              • nDGC à the most used measure for web search
+
+                                                                             44
+     Walid Magdy, TTDS 2025/2026
+
+44
+
+
+
+
+                                                                                       22
+                                                        10/14/25
+
+
+
+
+     Resources
+        • Text book 1: Intro to IR, Chapter 8
+        • Text book 2: IR in Practice, Chapter 8
+
+
+
+
+                                                   45
+     Walid Magdy, TTDS 2025/2026
+
+45
+
+
+
+
+                                                             23
+

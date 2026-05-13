@@ -1,0 +1,141 @@
+{
+  "lecture": "TTDS 10",
+  "source_pdf": "ttds25_10evaluation2.pdf",
+  "title": "IR Evaluation 2: Test Collections、Pooling 与显著性检验",
+  "one_sentence": "这节课一句话：TTDS 10 不是继续发明新指标，而是解释这些指标背后的“标准答案”从哪里来，以及平均分差异何时才算真实改进。",
+  "concept_chain": [
+    "Cranfield paradigm 回顾",
+    "test collection 的来源：web logs 或 evaluation campaigns",
+    "TREC tracks 与 task",
+    "topic 不等于 query：description 与 narrative 定义相关性",
+    "relevance judgments 的成本问题",
+    "pooling 用多个系统的 top results 构造可评估候选集",
+    "Cohen's kappa 衡量标注者一致性",
+    "web A/B testing 与 offline evaluation 互补",
+    "significance testing 判断分数提升是否可靠"
+  ],
+  "slides": [
+    {
+      "page": 1,
+      "reason": "目标页列出 test collection、topic/query、judgments、pooling，是整讲框架。",
+      "caption": "Evaluation 2：从指标转向评测资源如何构建。"
+    },
+    {
+      "page": 2,
+      "reason": "回顾 Cranfield paradigm 和 reusable IR test collection，为后续问题铺垫。",
+      "caption": "Cranfield 回顾：固定 collection、queries/topics、judgments 与 measure。"
+    },
+    {
+      "page": 3,
+      "reason": "说明 web search 与其他搜索任务的 test collection 来源不同。",
+      "caption": "Where do test collections come from：公司内部日志 vs evaluation campaigns。"
+    },
+    {
+      "page": 5,
+      "reason": "TREC topic 示例展示 query、description、narrative 的区别。",
+      "caption": "Topic vs query：title 是短查询，description/narrative 才定义信息需求。"
+    },
+    {
+      "page": 6,
+      "reason": "Pooling 步骤和前提条件是本讲最核心考试点。",
+      "caption": "Pooling：多个系统提交 top results，合并、去重、人工判断。"
+    },
+    {
+      "page": 7,
+      "reason": "Cohen's kappa 公式页，用于解释 relevance judgments 的主观性。",
+      "caption": "Inter-annotator agreement：相关性不是天上掉下来的唯一真理。"
+    },
+    {
+      "page": 9,
+      "reason": "A/B testing 页解释大型搜索引擎最信任的在线实验逻辑。",
+      "caption": "A/B testing：把少量真实流量导向新系统，看用户行为是否改善。"
+    },
+    {
+      "page": 10,
+      "reason": "Significance test 页引出 null hypothesis、test power 和 query 数量的影响。",
+      "caption": "Significance testing：平均分更高不等于用户会感到差异。"
+    },
+    {
+      "page": 13,
+      "reason": "Summary 页浓缩了最低 25 topics、pooling、多样系统与显著性检验。",
+      "caption": "全讲总结：test collection、pooling、proper measure、significance test。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "1. Test collection 从哪里来",
+      "slide_page": 3,
+      "intuition": "评价系统需要“考卷”和“答案”。Google 这类公司可以从真实用户行为里造题，学术社区则常靠大型评测活动一起造题。",
+      "explanation": "Web search companies 可以监控 traffic、click/session logs，并对 selected queries 做人工标注；非 web search 任务通常没有现成大规模日志，所以需要 evaluation campaigns 构建 collection、topics 和 judgments。第 3 页强调 test collection 很贵，campaigns 的价值就是把成本集中投入，形成可复用资源。",
+      "exam_angle": "若问 why evaluation campaigns，答构建标准 test collections 成本高，需要社区共享任务、数据和 judgments 来比较系统。",
+      "formula_latex": null
+    },
+    {
+      "title": "2. TREC 与 track：不是一个比赛，而是一套任务生态",
+      "slide_page": 4,
+      "intuition": "TREC 像 IR 的标准化考场；不同 track 是不同科目的试卷，比如 medical、legal、microblog、CLIR。",
+      "explanation": "TREC 是由 NIST 赞助的主要 IR evaluation campaign。一个 track 围绕特定文档类型、领域或任务组织搜索任务，提供 collection、topics、judgments 和评估协议。它的核心价值不是让某个系统赢一次，而是让不同方法在同一任务定义下可比较、可复现、可累积。",
+      "exam_angle": "若问 TREC track 是什么，答特定 domain/genre/task 的评测任务集合，并给 Medical/Legal/Microblog/CLIR 例子。",
+      "formula_latex": null
+    },
+    {
+      "title": "3. Topic vs Query：考试最容易混淆的一对",
+      "slide_page": 5,
+      "intuition": "query 是用户打在搜索框里的几个字；topic 是给 assessor 的完整案件说明书，告诉他什么算相关、什么不算。",
+      "explanation": "TREC topic 通常包含 num、title/query、description 和 narrative。title 是短 query；description 解释信息需求；narrative 明确 relevance criteria，减少 assessor 之间的理解差异。第 5 页的 Health and Computer Terminals 示例展示了同一短标题背后还需要细化的判定边界。",
+      "exam_angle": "若问 topic 为什么比 query 更适合评测，答它降低歧义，让人工 judgments 更一致、更可复现。",
+      "formula_latex": null
+    },
+    {
+      "title": "4. Relevance judgments 为什么不能 exhaustive",
+      "slide_page": 6,
+      "intuition": "如果 50 个 topics、百万文档，每个 topic-document pair 都人工判断，就像让老师批五千万份卷子，现实上不可行。",
+      "explanation": "Exhaustive assessment 的规模是 topics × documents，成本巨大；random sampling 又因为 relevant documents 稀少，可能抽不到足够相关样本。因此需要一种聪明的候选收集方法：只判断最可能被系统返回、也最可能影响排名指标的文档。这正是 pooling 的动机。",
+      "exam_angle": "若问为什么不用 random sampling，答 relevant docs sparse，随机抽样效率低且可能无法覆盖真正重要的相关文档。",
+      "formula_latex": null
+    },
+    {
+      "title": "5. Pooling：用多个系统帮 assessor 找候选答案",
+      "slide_page": 6,
+      "intuition": "Pooling 像让很多学生先交出他们觉得可能正确的答案，老师只批这些高频候选；不是批完整宇宙，但覆盖了最可能影响比较的区域。",
+      "explanation": "典型流程是：系统每个 topic 提交 top 1000，取每个系统 top 100 进入 pool，去重并随机排序，由 topic creator 判断；未评估文档通常视为 irrelevant，再计算 MAP 等指标到 rank 1000。Pooling 要有效，需要大量 reasonable systems，而且系统不能全做同一件事，否则 pool 会偏向单一方法。",
+      "exam_angle": "若考 pooling，必须写步骤、未评估文档处理方式、为什么需要 many diverse systems，以及它不是 exhaustive 但在实践中可用。",
+      "formula_latex": null
+    },
+    {
+      "title": "6. Cohen's kappa：相关性判断也要测可靠性",
+      "slide_page": 7,
+      "intuition": "两个 assessor 同意很多次不一定厉害；如果数据极不平衡，他们可能靠碰巧也常同意。Kappa 要扣掉 chance agreement。",
+      "explanation": "Cohen's kappa 衡量两个 judges 的 agreement 超过随机一致性的程度。P(A) 是 observed agreement，P(E) 是 by chance 的 expected agreement。κ=1 表示完全一致，κ=0 表示只达到随机水平，κ<0 比随机还差；第 8 页给出经验阈值：>0.8 good，0.67–0.8 fair，<0.67 评测基础可疑。",
+      "exam_angle": "若问公式，解释每个项；若问 relevance judgments 的问题，答主观性 + multiple assessors + agreement measure。",
+      "formula_latex": "\\kappa = \\frac{P(A)-P(E)}{1-P(E)}"
+    },
+    {
+      "title": "7. Web Search A/B Testing：真实用户流量里的实验",
+      "slide_page": 9,
+      "intuition": "Offline evaluation 像模拟考；A/B testing 像把新菜单给 1% 真顾客试吃，直接看他们会不会更满意。",
+      "explanation": "A/B testing 的目的通常是测试单个 innovation。大多数用户继续用 old system，少量流量导向 new system，用 clickthrough on first result 等 automatic measures 观察用户满意度是否改善。它需要已有大型 search engine 和足够流量，因此是大公司最信任但不是所有任务都能使用的方法。",
+      "exam_angle": "若问 web search 公司如何评估，答 traffic、logs、selected query labeling、A/B testing；若问为什么 recall 难测，说明 web 全体 relevant docs 不可知。",
+      "formula_latex": null
+    },
+    {
+      "title": "8. Significance Testing：平均分高不是结案陈词",
+      "slide_page": 12,
+      "intuition": "系统 B 平均 MAP 高一点，可能是真强，也可能只是这组 queries 运气好。显著性检验是在问：这个差异像不像随机波动？",
+      "explanation": "Null hypothesis 通常是假设两个系统没有真实差异，observed differences 只是随机波动。Significance test 试图拒绝 null hypothesis；test power 是正确拒绝 null 的概率，增加 query 数量通常提高 power。IR 中常用 two-tailed t-test，α=0.05；如果不能假设 per-query differences 近似正态，可以考虑 Wilcoxon。",
+      "exam_angle": "若问为什么平均分更高还不够，答需要统计显著性；若问 t-test 假设，答 per-query effectiveness differences 来自 normal distribution 且均值差为 0 是 null。",
+      "formula_latex": null
+    }
+  ],
+  "quick_revision": [
+    "Test collection = documents + topics + relevance judgments + measure。",
+    "Topic = query/title + description + narrative；query 只是短文本。",
+    "Pooling = 多系统 top results 合并去重后人工判断。",
+    "Pooling 需要 many reasonable and diverse systems。",
+    "Unevaluated docs 通常当作 irrelevant。",
+    "Cohen's kappa 扣除 chance agreement 后衡量 assessor agreement。",
+    "A/B testing 适合已有大规模真实流量的 web search。",
+    "Significance test 用来判断平均分提升是否可能只是随机波动。"
+  ],
+  "exam_answer": "A reusable IR test collection is normally built from a document collection, a set of topics, relevance judgments and an evaluation measure. In TREC-style evaluation, a topic is richer than a query because it includes a short title/query, a description of the information need, and a narrative specifying relevance criteria. Since exhaustive judging is too expensive and random sampling rarely finds enough relevant documents, pooling is used: multiple diverse systems submit top-ranked documents, the top results are merged and de-duplicated, assessors judge the pool, and unjudged documents are usually treated as non-relevant. Finally, a higher average score is not sufficient evidence that one system is better; a significance test, often a two-tailed t-test at α=0.05 or a non-parametric alternative such as Wilcoxon, is needed to assess whether the improvement is likely to be real."
+}

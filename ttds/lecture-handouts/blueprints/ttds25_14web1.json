@@ -1,0 +1,164 @@
+{
+  "lecture": "TTDS 14",
+  "source_pdf": "ttds25_14web1.pdf",
+  "title": "Web Search (1): Massive Web Data, PageRank, Anchor Text, and Link Spam",
+  "one_sentence": "这节课一句话：Web search 的难点不是“有没有网页”，而是如何在巨大、混乱、可被操纵的 web graph 中，把 relevance、authority 和 anchor descriptions 变成可排序的信号。",
+  "concept_chain": [
+    "web collection massive and messy",
+    "relevance ambiguity and subjective intent",
+    "massive data can improve top precision",
+    "web as directed graph",
+    "links as votes and anchor text as descriptions",
+    "PageRank models random surfer authority",
+    "anchor text enriches target representation",
+    "ranking signals invite spam and gaming",
+    "modern ranking uses PageRank as one feature among many"
+  ],
+  "slides": [
+    {
+      "page": 2,
+      "reason": "Web collection 的规模、质量和工程挑战是全讲背景。",
+      "caption": "Web：没有统一设计、增长极快、质量参差。"
+    },
+    {
+      "page": 3,
+      "reason": "relevance ambiguity 与 massive data effect 解释为什么 web search 不只是传统 IR。",
+      "caption": "query 语义模糊，web 规模既是麻烦也是机会。"
+    },
+    {
+      "page": 4,
+      "reason": "用 precision@10 例子说明更大 index 可能直接提升 top results。",
+      "caption": "更多数据让高分区出现更多 relevant documents。"
+    },
+    {
+      "page": 6,
+      "reason": "Web as directed graph 是 PageRank 和 anchor text 的共同基础。",
+      "caption": "链接是 vote，anchor 是指向目标页的文字描述。"
+    },
+    {
+      "page": 7,
+      "reason": "random surfer intuition 和 Microsoft 示例解释为什么 term frequency 不够。",
+      "caption": "高词频页面不一定权威，链接结构提供另一种证据。"
+    },
+    {
+      "page": 8,
+      "reason": "PageRank 公式和初始化在此页集中出现。",
+      "caption": "PageRank：teleportation 加 incoming-link contribution。"
+    },
+    {
+      "page": 9,
+      "reason": "收敛观察和 anchor text 用法是考试核心。",
+      "caption": "高 PR inlink 更值钱；anchor text 像人工 query expansion。"
+    },
+    {
+      "page": 10,
+      "reason": "Hawthorne/Goodhart/Cobra 引出 ranking signal 被操纵。",
+      "caption": "一旦 measure 变成 target，spam 就会出现。"
+    },
+    {
+      "page": 11,
+      "reason": "comment spam、nofollow、link farms 是典型 vulnerability。",
+      "caption": "link-based ranking 的漏洞：评论链接、nofollow、link farms。"
+    },
+    {
+      "page": 14,
+      "reason": "总结页压缩了 PageRank、anchor text、link spam 三个核心。",
+      "caption": "Web search 1 的考试速记总览。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "1. Web collection：搜索引擎面对的是野生互联网",
+      "slide_page": 2,
+      "intuition": "传统数据库像图书馆书架，web 更像全城便利贴：没人统一编号、每天疯长、还混着广告、谣言、spam 和机器生成内容。",
+      "explanation": "Web document collection 没有 design/co-ordination，规模极大且持续增长；对 search engine 来说，挑战包括 storage、processing、networking，以及更棘手的 quality control。大量 apparently relevant pages 可能低质量，甚至故意迎合排名算法。这里的关键是：web search 同时是 IR 问题、工程问题和对抗问题。",
+      "exam_angle": "若问 web search challenges，按三类答：scale/technicalities、quality control、spam/SEO 对抗；再补一句 massive data 也是 opportunity。",
+      "formula_latex": null
+    },
+    {
+      "title": "2. Relevance ambiguity：同一个 query 可以有很多意图",
+      "slide_page": 3,
+      "intuition": "用户搜“Apple”，可能想买手机、查公司股价、找水果营养；搜“William Shakespeare”，也可能要传记、作品列表或某一部戏。query 短，意图长。",
+      "explanation": "Web relevance 没有清晰语义，语言本身有 polysemy，且 relevance highly subjective。web 上还有 counter SEOs/spam 试图让页面看起来相关。课件提出 potential solution: wisdom of the crowds，也就是从大量用户和网页作者行为中提取信号，例如 links、anchor text、clicks 等。",
+      "exam_angle": "考 relevance challenge 时，不要只说“query ambiguous”；要提 no clear semantics、polysemy、subjectivity，以及 web-specific spam/SEO。",
+      "formula_latex": null
+    },
+    {
+      "title": "3. Massive data effect：大索引会把好结果往前推",
+      "slide_page": 4,
+      "intuition": "如果好网页像沙子里的金粒，铲四倍沙子不保证每粒更纯，但 top 10 里更容易出现更多金粒。",
+      "explanation": "课件比较两个好搜索引擎：A 抓 N 个 docs，precision@10=40%；B 抓 4N 个 docs。在相关/非相关 score distribution 类似时，给定 score threshold 的 precision/recall 可相近，但因为 corpus 更大，top score 区域可包含更多 relevant docs，于是 P@n 可能上升。这里强调 web search 中 larger index often beats a cleverer retrieval algorithm。",
+      "exam_angle": "若问 big data vs clever algorithm，答：更大 index 通常增加 top-ranked relevant candidates，改善 precision@k；但前提是 retrieval system decent 且 score distributions roughly comparable。",
+      "formula_latex": "P@k=\\frac{|\\{\\text{relevant documents in top }k\\}|}{k}"
+    },
+    {
+      "title": "4. Web as directed graph：链接既是 vote，也是文本线索",
+      "slide_page": 6,
+      "intuition": "网页之间的 hyperlink 像论文引用：A 链到 B，至少说明 A 的作者认为 B 有某种价值；链接文字 anchor 则像给 B 贴的外部标签。",
+      "explanation": "把 web 看成 directed graph：pages 是 nodes，hyperlinks 是 directed edges。课件给出两个 assumptions：link denotes author perceived relevance/quality signal；anchor text describes target page textual context。PageRank 利用第一点，把 links 当 votes；anchor text 利用第二点，把链接文字加入目标页的表示。",
+      "exam_angle": "若问 PageRank/anchor text 的基础假设，分别答 link as vote/quality signal 和 anchor as target description。注意方向：A 的 anchor text 描述的是 B，而不是 A。",
+      "formula_latex": null
+    },
+    {
+      "title": "5. PageRank intuition：随机冲浪者停在哪里",
+      "slide_page": 7,
+      "intuition": "想象一个无聊网友随机打开网页，然后不断随机点出链；偶尔厌倦了就随机跳到别处。长期看，他更常停留的页面就是更有 authority 的页面。",
+      "explanation": "PageRank 将 page importance 定义为 random surfer 当前在 page x 的稳态概率。一个 page 的 PR 来自两部分：teleportation 的均匀基础概率，以及所有 incoming pages 按各自 outgoing links 平分后传来的 authority。高 PR 页面的一条链接，比很多低 PR 页面的链接更有分量。",
+      "exam_angle": "PageRank 定义题要说 random surfer steady-state probability；机制题要说 incoming links contribute PR(y)/L_out(y)，source 的权威越高、outlinks 越少，贡献越大。",
+      "formula_latex": null
+    },
+    {
+      "title": "6. PageRank algorithm：teleportation 防止图里迷路",
+      "slide_page": 8,
+      "intuition": "如果只沿链接走，用户可能被困在小圈子或走到没有出链的死胡同；teleportation 就像“重新打开一个随机网页”的逃生按钮。",
+      "explanation": "初始化时每个 page 可设 PR_0(x)=1/N。每轮更新时，page x 得到 (1-λ)/N 的随机跳转概率，再加上所有指向 x 的 pages y 传来的 λ·PR_i(y)/L_out(y)。λ 是继续沿 hyperlink 浏览的概率，1-λ 是 random jump。迭代到收敛后，PageRank scores 总和应为 1。没有 inlinks 的页面只得到 teleportation 部分。",
+      "exam_angle": "公式题要解释每个符号：N total pages，λ continuation probability，L_out(y) outgoing links count，sum over y→x。不要忘记 teleportation term。",
+      "formula_latex": "PR_{i+1}(x)=\\frac{1-\\lambda}{N}+\\lambda\\sum_{y\\to x}\\frac{PR_i(y)}{L_{out}(y)}"
+    },
+    {
+      "title": "7. Anchor text：别人怎样称呼你，比你自我介绍更有用",
+      "slide_page": 9,
+      "intuition": "IBM 页面自己未必反复写“Big Blue”，但很多外部网页可能用“Big Blue”链接它。anchor text 把这种群众描述收集起来，补进目标页。",
+      "explanation": "Anchor text 是 hyperlink 中可见的链接文本，常是 target page 的 concise description。搜索引擎可把所有指向某页的 anchor texts 加入该页的 index representation，相当于 human query expansion。不同 linking pages 的 anchor text 还可按 source page 的 PageRank 或质量加权。它能显著提升 retrieval，因为它提供目标页自身可能没有的描述性词。",
+      "exam_angle": "若问 anchor text 为什么有用：答 external concise description、adds terms to target page index、helps match queries absent from page content；注意它也会带来 anchor text spam。",
+      "formula_latex": null
+    },
+    {
+      "title": "8. Vulnerabilities：排名信号一公开，就会被当成游戏规则",
+      "slide_page": 10,
+      "intuition": "如果学生知道老师只按关键词数量给分，作文就会变成关键词堆砌；如果网页知道 links 能涨排名，就会制造 links。",
+      "explanation": "课件用 Hawthorne Effect、Goodhart's Law、Cobra Effect 概括 ranking signal 的脆弱性：被观察会改变行为；measure 成为 target 后不再是好 measure；错误激励会让问题变糟。PageRank 与 anchor text 一旦影响排名，网站就会围绕它们优化甚至作弊。",
+      "exam_angle": "可用一句高级答法：web ranking is adversarial because signals are endogenous; once used for ranking, publishers optimize/gamify them。再接具体例子。",
+      "formula_latex": null
+    },
+    {
+      "title": "9. Link spam：comment、trackback、link farm 的共同套路",
+      "slide_page": 11,
+      "intuition": "所有 link spam 都在做同一件事：伪造“别人推荐我”的社会证明，让搜索引擎误以为目标页受欢迎。",
+      "explanation": "Trackback link spam 利用 blogs that link to me 等机制制造 artificial feedback loops；comment spam 在高 PR 网站评论区放 spam links，解决方式之一是 rel=nofollow，使 link 不参与 PR 计算；link farms 则由大量 fake densely-connected pages/domains 组成 clique，人工制造链接权威。Anchor text spam 则通过大量特定 anchor text 操纵某 query 排名。",
+      "exam_angle": "若考 vulnerability，至少举两个例子并说明它们操纵的是 link signal 或 anchor text signal；再说明 nofollow、spam detection 和多特征 ranking 是应对方向。",
+      "formula_latex": null
+    },
+    {
+      "title": "10. Reality：PageRank 很重要，但不是现代排名的全部",
+      "slide_page": 14,
+      "intuition": "PageRank 是搜索史上的发动机，不是今天整辆车。现代搜索还要刹车、导航、传感器和反作弊系统。",
+      "explanation": "课件总结 PageRank 曾是重大突破，核心价值是利用 collective linking behavior 估计 page authority；但现在它只是众多 ranking features 之一。现代 web ranking 还会使用 content features、user behaviour、spam signals、machine-learned ranking、Learning to Rank 等。",
+      "exam_angle": "若问 PageRank 是否仍是 Google ranking 全部，明确答 no；说明它是 authority/link feature，现代系统会结合多种 features 与 ML ranking。",
+      "formula_latex": null
+    }
+  ],
+  "quick_revision": [
+    "Web challenges：scale、quality、spam/SEO、storage/processing/networking。",
+    "Relevance 难：query ambiguous、polysemy、subjective、web spam。",
+    "Massive data can improve P@k because more relevant candidates appear near top.主",
+    "Web graph：page=node，link=edge；link as vote，anchor as target description。",
+    "PageRank = random surfer steady-state probability。",
+    "公式核心：teleportation + incoming PR divided by source outdegree。",
+    "Anchor text = human query expansion for target page indexing。",
+    "Goodhart：ranking measure 成为 target 后会被 gaming。",
+    "Spam examples：trackback spam、comment spam、link farms、anchor text spam。",
+    "Modern ranking: PageRank is one feature, not the whole story."
+  ],
+  "exam_answer": "如果考 PageRank，可以这样答：PageRank 把 web 建模为 directed graph，把 page 的 importance 定义为 random surfer 长期停留在该 page 的概率。初始化可令每个 page 的 PR 为 1/N；每次迭代中，page x 获得 teleportation 部分 (1-λ)/N，并从所有指向 x 的 pages y 获得 λ·PR(y)/L_out(y) 的贡献。λ 表示继续沿 hyperlink 浏览的概率，L_out(y) 是 y 的 outgoing links 数量。因此，来自 high-PageRank page 的 inlink 比来自很多 low-PageRank pages 的 links 更有价值。PageRank 利用群众链接行为估计 authority，但 link/anchor signals 会被 comment spam、trackback spam、link farms 等操纵，所以现代 ranking 只把 PageRank 作为众多 features 之一。"
+}

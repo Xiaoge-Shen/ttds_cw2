@@ -1,0 +1,1017 @@
+                  Text Technologies for Data Science
+                                    INFR11145
+
+
+           Comparing Text Corpora (2)
+
+                                      Instructor:
+                                     Björn Ross
+    29-Oct-2025
+
+
+
+1
+
+
+
+
+                                  LDA Overview
+
+
+
+
+                                                       2
+     Björn Ross, TTDS 2025/2026
+
+2
+
+
+
+
+                                                           1
+     Background: Plate Notation
+
+
+
+
+                                          3
+                                              3
+    Björn Ross, TTDS 2025/2026
+
+3
+
+
+
+
+     Background: Plate Notation
+
+
+
+
+                                 Make a
+                                 basket
+
+
+
+
+                                                  4
+
+                                              4
+    Björn Ross, TTDS 2025/2026
+
+4
+
+
+
+
+                                                      2
+     Background: Plate Notation
+
+
+
+
+        Basketball
+                                 Make a
+         shooting
+                                 basket
+        accuracy
+
+
+
+
+                                                       5
+
+                                                   5
+    Björn Ross, TTDS 2025/2026
+
+5
+
+
+
+
+     Background: Plate Notation
+
+                                          Make
+                                           first
+                                          basket
+
+
+        Basketball                         Make
+         shooting                         second
+                                          basket
+        accuracy
+
+                                          Make
+                                           third
+                                          basket
+
+
+                                                       6
+
+                                                   6
+    Björn Ross, TTDS 2025/2026
+
+6
+
+
+
+
+                                                           3
+     Background: Plate Notation
+
+
+
+
+               Basketball         Make
+                shooting           nth
+               accuracy           basket
+
+                                             N
+
+
+                                                          7
+
+                                                      7
+    Björn Ross, TTDS 2025/2026
+
+7
+
+
+
+
+    Latent Dirichlet Allocation
+    • Let’s start with a very simple model
+    • We will work our way up to the full LDA model
+
+
+
+
+                                                      8
+    Björn Ross, TTDS 2025/2026
+
+8
+
+
+
+
+                                                              4
+      Unigram Model
+
+
+
+
+      w is a word
+      N words in a document
+
+
+
+                                  Figure from
+                                  Blei et al 2003
+
+
+                                               9
+
+                                       9
+     Björn Ross, TTDS 2025/2026
+
+9
+
+
+
+
+      Unigram Model
+
+
+
+
+      w is a word
+      N words in a document
+      M documents in a corpus
+
+
+                                  Figure from
+                                  Blei et al 2003
+
+
+                                             10
+
+                                       10
+     Björn Ross, TTDS 2025/2026
+
+10
+
+
+
+
+                                                    5
+      Unigram Model
+
+
+
+
+      w is a word
+      N words in a document
+      M documents in a corpus
+      w is a vector of words (i.e. doc)
+
+                                                                   Figure from
+                                                                   Blei et al 2003
+
+
+                                                                              11
+
+                                                                        11
+     Björn Ross, TTDS 2025/2026
+
+11
+
+
+
+
+      Probability with a Unigram Model
+
+
+
+
+             What is the probability of the example sentence?
+                        “My dog barked at another dog.”
+
+word                  my          at    dog   another     barked
+probability           .10         .10   .05   .04         .03
+                                                                              12
+
+                                                                        12
+     Björn Ross, TTDS 2025/2026
+
+12
+
+
+
+
+                                                                                     6
+      Probability with a Unigram Model
+
+
+word                  my          at       dog          another      barked
+probability           .1          .1       .05          .04          .03
+
+
+      Solution:
+
+      My dog barked at another dog.
+      .1 * .05 * .03 * .1 * .04 * .05 = 3e-8
+                                                                                             13
+
+                                                                                        13
+     Björn Ross, TTDS 2025/2026
+
+13
+
+
+
+
+     Unigram Model…
+
+     • What is the point of making these models more
+       complex?
+     • Why not just use the basic unigram model for
+       everything?
+
+     • Remember:
+           • Higher text probability doesn’t imply a better model
+           • We want to accurately describe the data
+               • à higher probability for real documents, lower probability for noise
+
+
+
+                                                                                        14
+     Björn Ross, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                                                  7
+      Mixture of Unigrams Model
+
+
+
+
+      z is the topic of a document
+
+
+
+                                     Figure from
+                                     Blei et al 2003
+
+
+                                                15
+
+                                          15
+     Björn Ross, TTDS 2025/2026
+
+15
+
+
+
+
+      Mixture of Unigrams Model
+
+
+
+
+      z is the topic of a document
+
+
+
+                                     Figure from
+                                     Blei et al 2003
+
+
+                                                16
+
+                                          16
+     Björn Ross, TTDS 2025/2026
+
+16
+
+
+
+
+                                                       8
+      Probability with Mixture of Unigrams
+
+
+
+
+ What is the probability of the sentence?
+ Ignore stopwords: “my”, “after”, “the”
+                                    “My dog chased after the bus.”
+           𝒘𝒊           cat             dog     chased     car        bus
+ 𝑷(𝒘𝒊 | z = pets)       .20             .30     .10        .01        .01
+𝑷(𝒘𝒊 | z = vehicles) .01                .01     .10        .30        .20
+ 𝑝 𝑧 = 𝑝𝑒𝑡𝑠 = 0.6,                                                               17
+ 𝑝 𝑧 = 𝑣𝑒ℎ𝑖𝑐𝑙𝑒𝑠 = 0.4
+                                                                            17
+     Björn Ross, TTDS 2025/2026
+
+17
+
+
+
+
+      Probability with Mixture of Unigrams
+word                          cat     dog      chased     car        bus
+      𝑷(𝒘𝒊 | z = pets         .2      .3       .1         .01        .01
+ 𝑷(𝒘𝒊 | z = vehicles)         .01     .01      .1         .3         .2
+
+
+      Solution:
+
+         My dog chased after the bus.
+      .6(    .3 * .1   *         .01 ) = .00018
+      .4( .01 * .1      *         .2 ) = .00008
+      Total = .00026
+                                                                                 18
+
+                                                                            18
+     Björn Ross, TTDS 2025/2026
+
+18
+
+
+
+
+                                                                                      9
+      Probabilistic Latent Semantic Indexing
+
+
+
+
+      d is a
+      document ID
+
+
+
+                                               Figure from
+                                               Blei et al 2003
+
+
+                                                          19
+
+                                                    19
+     Björn Ross, TTDS 2025/2026
+
+19
+
+
+
+
+      Probabilistic Latent Semantic Indexing
+
+
+
+
+      d is a
+      document ID
+
+
+
+                                               Figure from
+                                               Blei et al 2003
+
+
+                                                          20
+
+                                                    20
+     Björn Ross, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                 10
+      Probability
+      with pLSI
+
+                                                    𝑝(𝑑 = 𝑑! )      .01
+         𝑑! “The cat sat down.”                𝑝(𝑧 = 𝑡! |𝑑 = 𝑑! )   .6
+                                               𝑝(𝑧 = 𝑡" |𝑑 = 𝑑! )   .4
+
+
+              𝑤#           cat    sat   down   car         broke
+      𝑝(𝑤# |𝑧 = 𝑡! ) .2           .1    .05    .01         .1
+      𝑝(𝑤# |𝑧 = 𝑡" ) .01          .05   .1     .3          .1
+                                                                          21
+     What is the joint probability of the document and the word “cat”?
+                                                                     21
+     Björn Ross, TTDS 2025/2026
+
+21
+
+
+
+
+      Probability with pLSI
+
+
+
+
+      Solution:
+
+              The cat sat down.
+      0.01 * (0.2 * 0.6 + 0.01 * 0.4) = 0.00124
+
+
+
+                                                                          22
+
+                                                                     22
+     Björn Ross, TTDS 2025/2026
+
+22
+
+
+
+
+                                                                               11
+      Latent Dirichlet Allocation
+
+
+
+
+      θ is the distribution over topics in a document
+      α is the parameter of a Dirichlet distribution giving
+      possible topic distributions within documents           Figure from
+
+      β gives word distributions within topics
+                                                              Blei et al 2003
+
+
+                                                                         23
+
+                                                                   23
+     Björn Ross, TTDS 2025/2026
+
+23
+
+
+
+
+      Latent Dirichlet Allocation
+
+
+
+
+                                                              Figure from
+                                                              Blei et al 2003
+
+
+                                                                         24
+
+                                                                   24
+     Björn Ross, TTDS 2025/2026
+
+24
+
+
+
+
+                                                                                12
+      Model Inference
+
+      • Want to learn the model parameters
+      • Exact inference becomes intractable
+
+                                                         k
+                                                      Docume
+                                                      nt-Topic   d
+                                                       Matrix
+                                            Topic
+                                  Corpus   Modeling          v
+                                           Method      Topic-Word
+                                                         Matrix       k
+
+                                                                          26
+
+                                                                     26
+     Björn Ross, TTDS 2025/2026
+
+26
+
+
+
+
+      Model Inference
+
+      • Instead, use an approximate method such as:
+           •   Gibbs sampling
+           •   Variational Inference
+
+
+
+
+                                                                          27
+
+                                                                     27
+     Björn Ross, TTDS 2025/2026
+
+27
+
+
+
+
+                                                                               13
+      Gibbs Sampling for LDA
+      Goal: Learn Φ, θ given a set of documents D
+
+      Φ = topic-word probabilities
+      θ = document-topic probabilities
+
+      Known:
+      corpus, α, β and the probability that a word is from a
+      topic conditional on the assignments of all other words to
+      topics
+
+
+                                                                                                    28
+      Note: the ∝ symbol means “proportional to”
+
+                                                                                               28
+     Björn Ross, TTDS 2025/2026
+
+28
+
+
+
+
+      Gibbs Sampling for LDA
+      Want to learn Φ, θ given a set of documents D
+
+      1. Assign each word a topic randomly
+      2. Calculate count matrices
+      3. Repeat until convergence:
+             • For every document d
+                  • For every word i
+                       • Decrement count matrices 𝐶 #$ and 𝐶 %$ for current topic assignment
+                       • Sample a new topic assignment
+                       • Increment count matrices 𝐶 #$ and 𝐶 %$ for new topic assignment
+      4. Calculate Φ and θ
+                                                                                                    29
+
+                                                                                               29
+     Björn Ross, TTDS 2025/2026
+
+29
+
+
+
+
+                                                                                                         14
+      Gibbs Sampling for LDA
+
+         d1 Green eggs and ham.
+         d2 Ham and green peppers.
+         d3 Ham and cheese.
+                                                    Random
+         d1 Green eggs and ham.                     initialization.
+         d2 Ham and green peppers.
+         d3 Ham and cheese.
+
+
+
+                                                                                     30
+
+                                                                                30
+     Björn Ross, TTDS 2025/2026
+
+30
+
+
+
+
+      Gibbs Sampling for LDA
+
+
+ 𝐶 $%          green        eggs   and        ham        peppers           cheese
+ t1            1            1      1          1          1                 1
+ t2            1            0      2          2          0                 0
+
+
+ Green eggs and ham.                     𝐶 &%       d1       d2       d3
+ Ham and green peppers.                  t1         2        2        2
+ Ham and cheese.
+                                         t2         2        2        1              31
+
+                                                                                31
+     Björn Ross, TTDS 2025/2026
+
+31
+
+
+
+
+                                                                                          15
+      Gibbs Sampling for LDA
+                                                     Assume (for the moment) 𝛼 = 𝛽 = 0
+
+
+ θ              green         eggs   and         ham        peppers         cheese
+ t1             0.17          0.17   0.17        0.17       0.17            0.17
+ t2             0.20          0.00   0.40        0.40       0.00            0.00
+
+
+ Green eggs and ham.                        Φ        d1         d2     d3
+ Ham and green peppers.                     t1       0.50       0.50   0.66
+ Ham and cheese.
+                                            t2       0.50       0.50   0.33             32
+
+                                                                                   32
+     Björn Ross, TTDS 2025/2026
+
+32
+
+
+
+
+      Gibbs Sampling for LDA
+
+
+ 𝐶 $%           green         eggs   and         ham        peppers         cheese
+ t1             1             1      1           1          1               1
+ t2             1             0      2           2          0               0
+
+
+ Green eggs and ham.                        𝐶 &%     d1         d2     d3
+ Ham and green peppers.                     t1       2          2      2
+ Ham and cheese.
+                                            t2       2          2      1                33
+
+                                                                                   33
+     Björn Ross, TTDS 2025/2026
+
+33
+
+
+
+
+                                                                                             16
+      Gibbs Sampling for LDA
+
+
+ 𝐶 $%           green         eggs   and        ham      peppers        cheese
+ t1             1             1      1          1        1              1
+ t2             1             0      2          2        0              0
+
+
+ Green eggs and ham.                       𝐶 &%     d1       d2    d3
+ Ham and green peppers.                    t1       2        2     2
+ Ham and cheese.
+                                           t2       2        2     1             34
+
+                                                                            34
+     Björn Ross, TTDS 2025/2026
+
+34
+
+
+
+
+      Gibbs Sampling for LDA
+
+ Assume (for the moment) 𝛼 = 𝛽 = 0
+
+ 𝐶 $%           green         eggs   and        ham      peppers        cheese
+ t1             0             1      1          1        1              1
+ t2             1             0      2          2        0              0
+
+
+ Green eggs and ham.                       𝐶 &%     d1       d2    d3
+ Ham and green peppers.                    t1       1        2     2
+ Ham and cheese.
+                                           t2       2        2     1             35
+
+                                                                            35
+     Björn Ross, TTDS 2025/2026
+
+35
+
+
+
+
+                                                                                      17
+      Gibbs Sampling for LDA
+
+
+ 𝐶 $%           green         eggs   and        ham      peppers        cheese
+ t1             0             1      1          1        1              1
+ t2             2             0      2          2        0              0
+
+
+ Green eggs and ham.                       𝐶 &%     d1       d2    d3
+ Ham and green peppers.                    t1       1        2     2
+ Ham and cheese.
+                                           t2       3        2     1             36
+
+                                                                            36
+     Björn Ross, TTDS 2025/2026
+
+36
+
+
+
+
+      Gibbs Sampling for LDA
+
+
+ 𝐶 $%           green         eggs   and        ham      peppers        cheese
+ t1             0             1      1          1        1              1
+ t2             2             0      2          2        0              0
+
+
+ Green eggs and ham.                       𝐶 &%     d1       d2    d3
+ Ham and green peppers.                    t1       1        2     2
+ Ham and cheese.
+                                           t2       3        2     1             37
+
+                                                                            37
+     Björn Ross, TTDS 2025/2026
+
+37
+
+
+
+
+                                                                                      18
+      Gibbs Sampling for LDA
+
+ Assume (for the moment) 𝛼 = 𝛽 = 0
+
+ 𝐶 $%           green         eggs       and          ham       peppers           cheese
+ t1             0             0          1            1         1                 1
+ t2             2             0          2            2         0                 0
+
+
+ Green eggs and ham.                             𝐶 &%     d1        d2       d3
+ Ham and green peppers.                          t1       0         2        2
+ Ham and cheese.
+                                                 t2       3         2        1                38
+
+                                                                                         38
+     Björn Ross, TTDS 2025/2026
+
+38
+
+
+
+
+      Gibbs Sampling for LDA
+
+
+ 𝐶 $% + 𝛼             green       eggs   and          ham       peppers           cheese
+ t1                   0.01        0.01   1.01         1.01      1.01              1.01
+ t2                   2.01        0.01   2.01         2.01      0.01              0.01
+
+
+ Green eggs and ham.                            𝐶 &% + 𝛽 d1             d2   d3
+ Ham and green peppers.                         t1            0.01 2.01 2.01
+ Ham and cheese.
+                                                t2            3.01 2.01 1.01                  39
+
+                                                                                         39
+     Björn Ross, TTDS 2025/2026
+
+39
+
+
+
+
+                                                                                                   19
+     Gibbs Sampling for LDA
+
+     • Repeat until convergence
+
+     • Probabilistic algorithm – results depend on random
+         initialisation and random samples!
+
+
+
+
+                                                            40
+     Björn Ross, TTDS 2025/2026
+
+40
+
+
+
+
+                         Topic Modeling Examples
+
+
+
+
+                                                            41
+     Björn Ross, TTDS 2025/2026
+
+41
+
+
+
+
+                                                                 20
+     What do students look for in a professor?
+
+
+
+
+Azab, Mihalcea, and Abernathy, 2016
+                                             42
+     Björn Ross, TTDS 2025/2026
+
+42
+
+
+
+
+     What do students look for in a professor?
+
+
+
+
+Azab, Mihalcea, and Abernathy, 2016
+                                             43
+     Björn Ross, TTDS 2025/2026
+
+43
+
+
+
+
+                                                  21
+     What do students look for in a professor?
+
+
+
+
+Azab, Mihalcea, and Abernathy, 2016
+                                                   44
+     Björn Ross, TTDS 2025/2026
+
+44
+
+
+
+
+How do personal attributes
+relate to values?
+
+
+
+
+     Wilson, Mihalcea, Boyd, and Pennebaker 2016
+                                                   45
+     Björn Ross, TTDS 2025/2026
+
+45
+
+
+
+
+                                                        22
+                       Annotation + Classification
+
+
+
+
+                                                                     46
+     Björn Ross, TTDS 2025/2026
+
+46
+
+
+
+
+     Annotation + Classification
+     • Method 1: Traditional Supervised Learning
+        • Annotate representative samples
+        • Train a classifier
+        • Apply to rest of data
+     • Method 2: Transfer Learning
+        • Find another large, but similar dataset
+        • Train a classifier on that dataset
+        • Optionally: fine-tune classifier to your smaller dataset
+        • Apply to rest of your data
+
+
+
+
+                                                                     47
+     Björn Ross, TTDS 2025/2026
+
+47
+
+
+
+
+                                                                          23
+     After Classification
+     • Which features are most relevant for each class?
+     • What are common words/topics for each class?
+     • How do predicted classes relate to other variables?
+     • More about text classification coming up next week!
+
+
+
+
+                                                             48
+     Björn Ross, TTDS 2025/2026
+
+48
+
+
+
+
+     Wrap-up
+        • Content analysis background
+        • Word-level differences
+        • Dictionaries and Lexica
+        • Topic modeling
+        • Annotation + classification
+
+
+
+
+                                                             49
+     Björn Ross, TTDS 2025/2026
+
+49
+
+
+
+
+                                                                  24
+     Readings
+     • Manning: IR book section 13.5
+     • “Probabilistic Topic Models” by David Blei
+     • “Latent Dirichlet Allocation” by David Blei, Andrew Y. Ng,
+       and Michael I. Jordan
+     • “Probabilistic Topic Models” by Mark Steyvers and Tom
+       Griffiths
+
+     To watch:
+     • Guest lecture (2017) by David Blei at University of
+       Edinburgh School of Informatics
+
+
+                                                              50
+     Björn Ross, TTDS 2025/2026
+
+50
+
+
+
+
+                                                                    25
+

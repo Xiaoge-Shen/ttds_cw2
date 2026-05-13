@@ -1,0 +1,918 @@
+                                                            10/7/25
+
+
+
+
+                   Text Technologies for Data Science
+                                   INFR11145
+
+
+                      Ranked Retrieval (2)
+
+                                    Instructor:
+                                   Walid Magdy
+    08-Oct-2025
+
+
+
+1
+
+
+
+
+     Lecture Objectives
+        • Learn about Probabilistic models
+                  • BM25
+
+        • Learn about LM for IR
+
+
+
+
+                                                        2
+     Walid Magdy, TTDS 2025/2026
+
+2
+
+
+
+
+                                                                 1
+                                                                                     10/7/25
+
+
+
+
+    Recall: VSM & TFIDF term weighting
+      • Combines TF and IDF to find the weight of terms
+                                               𝑁
+               𝑤!.# = 1 + 𝑙𝑜𝑔$%𝑡𝑓 𝑡, 𝑑 ×𝑙𝑜𝑔$%(     )
+                                              𝑑𝑓 𝑡
+      • For a query q and document d, retrieval score f(q,d):
+                              𝑆𝑐𝑜𝑟𝑒(𝑞, 𝑑) = 5 𝑤!.#
+                                               !∈'∩#
+      • TFIDF observations                 Can we do better?
+            • Term appearing more in a doc gets higher weight (TF)
+            • First occurrence is more important (log)
+            • Rare terms are more important (IDF)
+            • Bias towards longer documents
+                                                                              3
+    Walid Magdy, TTDS 2025/2026
+
+3
+
+
+
+
+    IR Model
+       • VSM is very heuristic in nature
+            • No notion of relevance is there (still works well)
+            • Any weighting scheme, similarity measure can be used
+              • Components not interpretable à no guide for what to try next
+              • More engineering rather than theory à tweak, run, observe, tweak …
+            • Very popular, hard to beat, strong baseline
+              • Easy to adapt good ideas from other models
+
+       • Probabilistic Model of retrieval
+            • Mathematical formulisation for relevant / irrelevant sets
+              • Explicitly defines random variables (R,Q,D)
+              • Specific about what their values are
+              • State the assumptions behind each step
+              • Watch out for contradictions
+                                                                              4
+    Walid Magdy, TTDS 2025/2026
+
+4
+
+
+
+
+                                                                                          2
+                                                                           10/7/25
+
+
+
+
+    Probabilistic Models
+       • Concept: Uncertainty is inherent part of IR process
+       • Probability theory is strong foundation for representing
+          and manipulating uncertainty
+
+
+
+       • Probability Ranking Principle
+          (1977)
+
+
+
+                                                   Stephan Robertson
+                                                                       5
+    Walid Magdy, TTDS 2025/2026
+
+5
+
+
+
+
+    Probability Ranking Principle
+       • “If a reference retrieval system’s response to each request
+          is a ranking of the documents in the collection in order of
+          decreasing probability of relevance to the user who
+          submitted the request,
+       • where the probabilities are estimated as accurately as
+          possible on the basis of whatever data have been made
+          available to the system for this purpose,
+       • the overall effectiveness of the system to its user will be the
+          best that is obtainable on the basis of those data.”
+
+
+       • Basis for most probabilistic approaches for IR
+                                                                       6
+    Walid Magdy, TTDS 2025/2026
+
+6
+
+
+
+
+                                                                                3
+                                                                     10/7/25
+
+
+
+
+    Formulation of PRP
+       • Rank docs by probability of relevance
+            • P(R|Dr1) > P(R|Dr2) > P(R|Dr3) > P(R|Dr4) > ….
+       • Estimate probability as accurate as possible
+            • Pest(R|D) ≈ Ptrue(R|D)
+       • Estimate with all possibly available data
+            • Pest(R | doc, session, context, user profile, …)
+       • Best possible accuracy can be achieved with that data
+            • à the perfect IR system
+            • Is it really doable?
+
+       • How to estimate the probability of relevance?
+                                                                 7
+    Walid Magdy, TTDS 2025/2026
+
+7
+
+
+
+
+    PRP Concept
+       • Imagine IR as a classification problem
+
+
+
+
+                P(R|D) + P(NR|D) = 1
+
+
+       • Document D is relevant if P(R|D) > P(NR|D)
+                                                                 8
+    Walid Magdy, TTDS 2025/2026
+
+8
+
+
+
+
+                                                                          4
+                                                                                         10/7/25
+
+
+
+
+     Probability of Relevance
+        • What is Ptrue(rel | doc, query, session, user, …)?
+             • Isn’t relevance just the user’s opinion?
+                 • User decides relevant or not, what is the “probability” thing?
+        • Search algorithm cannot look into your head (yet!)
+             • Relevance depends on factors that algorithm cannot observe
+                 • SIGIR 2016 best paper award: Understanding Information Need: an
+                    fMRI Study
+
+        • Different users may disagree on relevance of the same doc
+             • Even similar users, doing the same task, in the same context
+        • Ptrue (rel | Q, D):
+             • Proportion of all unseen users / context / tasks
+                 for which D would have judged relevant to Q
+        • Similar to: P(die=6 | even and not square)
+                                                                                    9
+     Walid Magdy, TTDS 2025/2026
+
+9
+
+
+
+
+     Okapi BM25 Model
+        • Based on the probabilistic model
+             • A document D is relevant if P(R=1|D) > P(R=0|D)
+        • Extension to the “binary independence model”
+             • Binary features: Document represented by a vector of
+               binary features indicating term occurrence
+             • Assume term independence (Naïve Bayes assumption)
+               à BOW trick
+        • In 1995, Stephan Robertson with his group came up
+           with the BM25 Formula as part of the Okapi project.
+        • It outperformed all other systems in TREC
+        • Popular and effective ranking algorithm
+                                                                                    10
+     Walid Magdy, TTDS 2025/2026
+
+10
+
+
+
+
+                                                                                              5
+                                                                                                                                          10/7/25
+
+
+
+
+     Okapi BM25 Ranking Function
+        • Let 𝐿! be the number of terms in document 𝑑
+        • Let 𝐿* be the average number of terms in a document
+
+                                                       𝑡𝑓!,#                                       𝑁 − 𝑑𝑓! + 0.5
+                     𝑤!.# =                                                   ×𝑙𝑜𝑔$%
+                                     𝐿                                                               𝑑𝑓! + 0.5
+                                   𝑘. 9# + 𝑡𝑓!,# + 0.5
+                                      𝐿
+
+        • Best practices: 𝑘=1.5
+
+
+                                                                                                                                11
+     Walid Magdy, TTDS 2025/2026
+
+11
+
+
+
+
+     Okapi BM25 Ranking Function
+                                                        𝑡𝑓!,#                                     𝑁 − 𝑑𝑓! + 0.5
+                             𝑤!.# =                                                ×𝑙𝑜𝑔%&
+                                            𝐿                                                       𝑑𝑓! + 0.5
+                                         1.5 )# + 𝑡𝑓!,# + 0.5
+                                             𝐿
+
+                                  tf component                                                   idf component
+                   '"!                                                             #"C
+
+                                                                                   %"$
+                   !"&
+                                                                                   %"#
+
+
+                   !"%
+                                                                     !!!           %"!
+                                                                       !"(
+
+        '("F*$%&
+                                                                                                                                )*+,,-.
+                                                                       '"!   D%&   %"'
+                                                                                                                                /0+1-
+                                                                       #"!
+                   !"$
+                                                                                   %"C
+
+                                                                                   !"$
+                   !"#
+                                                                                   !"#
+
+                   !"!                                                             !"!
+                         !    (     '!            '(    #!      #(                       C   %     (C            (%   'C   '%
+                                         !"#$%&                                                         !"#$%&
+
+
+
+                                                                                                                                12
+     Walid Magdy, TTDS 2025/2026
+
+12
+
+
+
+
+                                                                                                                                               6
+                                                                                                      10/7/25
+
+
+
+
+     Probabilistic Model in IR
+        • Focuses on the probability of relevance of docs
+        • Could be mathematically proved
+        • Different ways to apply it
+        • BM25 is the most common formula for it
+
+
+
+        • What other models could be still used in IR?
+
+
+                                                                                                 13
+     Walid Magdy, TTDS 2025/2026
+
+13
+
+
+
+
+     “Noisy-Channel” Model of IR
+
+            Information
+               need                                          Machine’s task:           d1
+                                                             Given the query,
+                                                             guess which document
+                                                             matches the query.
+                                                                                       d2
+                                                 Query
+
+                                                                                       …
+             User has a information need   and writes down
+                                           a query                                     dn
+
+
+                                                                                    document
+                                                                                    collection
+
+                                                                                                 14
+     Walid Magdy, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                                                           7
+                                                                                                  10/7/25
+
+
+
+
+     IR based on Language Model (LM)
+              Relevant
+             document
+                                                                              " !!     d1
+                                                             $## " " ! !
+                                                         generation
+                                                                              " !!     d2
+                                        query
+                                                                                 …      …
+             thinks of a relevant   writes down query
+             document …             words likely to appear
+                                    in that document                          # "!     dn
+
+
+                                                                           document collection
+        • The LM approach directly exploits that idea!
+        ¢ a document is a good match to a query if the
+            document model is likely to generate the query
+                                                                                             15
+     Walid Magdy, TTDS 2025/2026
+
+15
+
+
+
+
+     Concept
+        • Coming up with good queries?
+             • Think of words that would likely appear in a relevant doc
+             • Use those words as the query
+        • The language modeling approach to IR directly models
+           that idea
+             • a document is a good match to a query if the document
+                 model is likely to generate the query
+                 • happens if the document contains the query words often.
+        • Build a probabilistic language model Md from each
+           document d
+        • Rank documents based on the probability of the model
+           generating the query: P(q|Md).
+                                                                                             16
+     Walid Magdy, TTDS 2025/2026
+
+16
+
+
+
+
+                                                                                                       8
+                                                                               10/7/25
+
+
+
+
+     Language Model (LM)
+        • A language model is a probability distribution over
+           strings drawn from some vocabulary
+        • A topic in a document or query can be represented as
+           a language model
+             • i.e., words that tend to occur often when discussing a topic
+                 will have high probabilities in the corresponding language
+                 model
+
+
+
+
+                                                                          17
+     Walid Magdy, TTDS 2025/2026
+
+17
+
+
+
+
+     Unigram LM
+        • Terms are randomly drawn from a document (with
+           replacement)
+
+
+                             Doc
+                                                     words
+
+
+
+
+                   P(              ) = P ( )´ P ( ) ´ P ( ) ´ P ( )
+                                     = (4/9) ´ (2/9) ´ (4/9) ´ (3/9)
+
+                                                                          18
+     Walid Magdy, TTDS 2025/2026
+
+18
+
+
+
+
+                                                                                    9
+                                                                                        10/7/25
+
+
+
+
+     Example
+
+
+
+
+        • This is a one-state probabilistic finite-state automaton –
+           a unigram language model.
+        • S = “frog said that toad likes frog STOP”
+           P(S) = 0.01×0.03×0.04×0.01×0.02×0.01×0.02
+                = 0.0000000000048
+
+                                                                                   19
+     Walid Magdy, TTDS 2025/2026
+
+19
+
+
+
+
+     Comparing LMs
+                                                 Model Md1            Model Md2
+        • Md1                                    P(w)     w          P(w)    w
+           LM generated from Doc 1               0.2      the        0.2     the
+        • Md2                                    0.0001 yon          0.1     yon
+                                                 0.01     class      0.001   class
+           LM generated from Doc 2
+                                                 0.0005 maiden       0.01    maiden
+        • Try to generate sentence               0.0003 sayst        0.03    sayst
+                                                 0.0001 pleaseth     0.02    pleaseth
+           S from Md1 & Md2
+                                                 …                   …
+
+
+           text:    the    class pleaseth yon    maiden         P(S)
+           Md1:     0.2    0.01  0.0001   0.0001 0.0005         0.00000000000001
+           Md2:     0.2    0.001 0.02     0.1    0.01           0.000000004
+
+                            P(text|Md2) > P(text|Md1)
+                                                                                   20
+     Walid Magdy, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                                            10
+                                                                                10/7/25
+
+
+
+
+     Stochastic Language Models
+        • A statistical model for generating text
+             • Probability distribution over strings in a given language
+
+
+                                   M
+              P(             |M) =P(     |M)
+                                   P(    | M,      )
+                                   P(     | M,         )
+                                   P(     | M,             )
+                                                                           21
+     Walid Magdy, TTDS 2025/2026
+
+21
+
+
+
+
+     Unigram and Higher-order LM
+             P(              )
+               =P(        ) P( | ) P( |          ) P( |        )
+
+           • Unigram Language Models
+                            P( )P( )P( ) P( )
+
+
+           • Bigram (generally, n-gram) Language Models
+                        P( )P( | )P( | ) P( | )
+
+
+                                                                           22
+     Walid Magdy, TTDS 2025/2026
+
+22
+
+
+
+
+                                                                                    11
+                                                                                           10/7/25
+
+
+
+
+     LM in IR
+        • Each document is treated as basis for a LM.
+        • Given a query q, rank documents based on P(d|q)
+                                                𝑃 𝑞 𝑑 𝑃(𝑑)
+                                   𝑃 𝑑𝑞 =
+                                                   𝑃(𝑞)
+             • P(q) is the same for all documents è ignore
+             • P(d) is the prior – often treated as the same for all d
+                 • But we can give a prior to “high-quality” documents, e.g., those with
+                    high PageRank (later to be discussed).
+             • P(q|d) is the probability of q given d.
+        • So to rank documents according to relevance to q,
+           ranking according to P(q|d) and P(d|q) is equivalent
+                                                                                     23
+     Walid Magdy, TTDS 2025/2026
+
+23
+
+
+
+
+     LM in IR: Basic idea
+        • We attempt to model the query generation process.
+        • Then we rank documents by the probability that a
+           query would be observed as a random sample from the
+           respective document model.
+
+
+        • That is, we rank according to P(q|d).
+
+
+
+
+                                                                                     24
+     Walid Magdy, TTDS 2025/2026
+
+24
+
+
+
+
+                                                                                               12
+                                                                                   10/7/25
+
+
+
+
+     P(q|d)                                               Query Likelihood Model
+
+        • We will make the conditional independence
+           assumption.
+                𝑃 𝑞 𝑀# = 𝑃 𝑡% , … , 𝑡|(| 𝑀# = : 𝑃( 𝑡* |𝑀# )
+                                                                 %)*)|(|
+        |q|: length of q;           tk : token occurring at position k in q
+
+        • This is equivalent to:
+                         𝑃 𝑞 𝑀# =               :            𝑃(𝑡|𝑀# )!4!,#
+                                          +,-. !+01 ! 23 (
+        tft,q: term frequency (# occurrences) of t in q
+
+        • Multinomial model (omitting constant factor)
+                                                                              25
+     Walid Magdy, TTDS 2025/2026
+
+25
+
+
+
+
+     Parameter estimation
+        • Probability of a term t in a LM Md using Maximum
+           Likelihood Estimation (MLE)
+                                                         𝑡𝑓!,#
+                                        𝑃 𝑡 𝑀# =
+                                                          |𝑑|
+        |d|: length of d;
+        tft,d : # occurrences of t in d
+
+
+        • Probability of a query q to be noticed in a LM Md:
+                                                 𝑡𝑓!,# !4!,#
+                                   𝑃 𝑞 𝑀#    = :
+                                                  |𝑑|
+                                                 ∀ !∈(
+
+                                                                              26
+     Walid Magdy, TTDS 2025/2026
+
+26
+
+
+
+
+                                                                                       13
+                                                                                                   10/7/25
+
+
+
+
+     Example
+                                                                                      Doc d
+           P(                ) = P ( )2 ´ P ( ) ´ P ( )
+                               = (4/9)2 ´ (2/9) ´ (3/9) = 0.0146
+
+           P(                ) = P ( )´ P ( ) ´ P ( ) ´ P ( )
+                               = (4/9) ´ (2/9) ´ (0/9) ´ (3/9) = 0
+
+     • Is that fair?
+           • In VSM, S(Q,D) was summation, works more like OR in
+             Boolean search. Missing one term reduces score only
+           • In language model, S(Q,D) is P(Q|D) à Multiplication of
+             probabilities à missing one term makes score = 0
+           • Is there a better way to handle unseen terms?
+                                                                                              27
+     Walid Magdy, TTDS 2025/2026
+
+27
+
+
+
+
+     Smoothing
+        • Problem: Zero frequency
+        • Solution: “Smooth” terms probability
+                      P(t)
+
+
+                                   Maximum Likelihood Estimate
+                                     L-. ", ! = )"*+,)"*+, "( ,
+                                                       "( &'' !"#$%
+
+
+                                                        Smoothed probability distribution
+
+
+
+
+                                                                                        t
+
+                                                                                              28
+     Walid Magdy, TTDS 2025/2026
+
+28
+
+
+
+
+                                                                                                       14
+                                                                                      10/7/25
+
+
+
+
+     Smoothing
+        • Document texts are a sample from the language model
+        • Missing words should not have zero probability of occurring
+        • A missing term is possible (even though it didn’t occur)
+             • but no more likely than would be expected by chance in the
+                 collection.
+        • A technique for estimating probabilities for missing (or
+           unseen) words
+            • Overcomes data-sparsity problem
+            • lower (or discount) the probability estimates for words that are
+               seen in the document text
+             • assign that “left-over” probability to the estimates for the words
+               that are not seen in the text (and also on the seen ones)
+
+                                                                                 29
+     Walid Magdy, TTDS 2025/2026
+
+29
+
+
+
+
+     Mixture Model
+                           P(t|d) = λP(t|Md) + (1 - λ)P(t|Mc)
+        • Mixes the probability from the document with the
+           general collection frequency of the word.
+        • Estimate for unseen words is (1-λ) P(t|Mc)
+             • Based on collection language model (background LM)
+             • P(t|Mc) is the probability for query word i in the collection
+               language model for collection C (background probability)
+             • λ is a parameter controlling probability for unseen words
+        • Estimate for observed words is                                   CF
+                                   λ P(t|Md) + (1-λ) P(t|Mc)
+
+                                                                                 30
+     Walid Magdy, TTDS 2025/2026
+
+30
+
+
+
+
+                                                                                          15
+                                                                                10/7/25
+
+
+
+
+     Jelinek-Mercer Smoothing
+                            P(t|d) = λP(t|Md) + (1 - λ)P(t|Mc)
+        • High value of λ: “conjunctive-like” search – tends to
+           retrieve documents containing all query words.
+        • Low value of λ: more disjunctive, suitable for long
+           queries
+        • Correctly setting λ is important for good performance.
+
+        • Final Ranking function:
+           𝑃 𝑞 𝑀# ∝                :       𝜆 > 𝑃 𝑡* 𝑀# + 1 − 𝜆 > 𝑃 𝑡* 𝑀-
+                             % ) * ) |(|
+                                                                           31
+     Walid Magdy, TTDS 2025/2026
+
+31
+
+
+
+
+     Example
+        • Collection: d1 and d2
+        • d1 : “Jackson was one of the most talented entertainers
+           of all time”
+        • d2: “Michael Jackson anointed himself King of Pop”
+        • Query q: Michael Jackson
+        • Use mixture model with λ = 1/2
+
+        • P(q|d1) = [(0/11 + 1/18)/2] · [(1/11 + 2/18)/2] ≈ 0.003
+        • P(q|d2) = [(1/7 + 1/18)/2] · [(1/7 + 2/18)/2] ≈ 0.013
+        • Ranking: d2 > d1
+                                                                           32
+     Walid Magdy, TTDS 2025/2026
+
+32
+
+
+
+
+                                                                                    16
+                                                                                10/7/25
+
+
+
+
+     Notes on Query Likelihood Model
+        • It has similar effectiveness to BM25
+        • With more sophisticated techniques, it outperforms
+           BM25
+            • Topic models
+        • There are several alternative smoothing techniques
+             • That was just an example
+
+
+
+
+                                                                          33
+     Walid Magdy, TTDS 2025/2026
+
+33
+
+
+
+
+     n-grams LMs
+        • Unigram language model
+             • probability distribution over the words in a language
+               • associates a probability of occurrence with every word
+             • generation of text consists of pulling words out of a “bucket”
+               according to the probability distribution and replacing them
+
+
+        • N-gram language model
+             • some applications use bigram and trigram language models
+               where probabilities depend on previous words
+             • predicts a word based on the previous n-1 words
+
+
+                                                                          34
+     Walid Magdy, TTDS 2025/2026
+
+34
+
+
+
+
+                                                                                    17
+                                                                    10/7/25
+
+
+
+
+     LMs for IR: 3 possibilities
+        • Probability of generating the query text from a
+           document language model
+        • Probability of generating the document text from a
+           query language model
+        • Comparing the language models representing the
+           query and document topics
+
+
+
+
+                                                               35
+     Walid Magdy, TTDS 2025/2026
+
+35
+
+
+
+
+     Summary
+        • Three ways to model IR
+        • VSM
+           How query vector aligns with document vector?
+        • Probabilistic Model
+           What is the relevance probability of document D given
+           query Q?
+        • LM
+           How likely is it possible to observe/generate sequence
+           of terms Q in a language model of document D?
+
+
+                                                               36
+     Walid Magdy, TTDS 2025/2026
+
+36
+
+
+
+
+                                                                        18
+                                                                                 10/7/25
+
+
+
+
+     Resources
+        • Text book 1: Intro to IR, Chapter 12
+        • Text book 2: IR in Practice, Chapter 7.2, 7.3
+        • Readings:
+             • Robertson, Stephen E., et al.
+                 "Okapi at TREC-3.“
+                 Nist Special Publication Sp 109 (1995): 109.
+             • J. Ponte and W. B. Croft.
+                 A language modeling approach toinformation retrieval.
+                 In Proceedings on the 21st annualinternational ACM SIGIR
+                 conference, pages 275–281, 1998
+
+
+
+
+                                                                            37
+     Walid Magdy, TTDS 2025/2026
+
+37
+
+
+
+
+                                                                                     19
+

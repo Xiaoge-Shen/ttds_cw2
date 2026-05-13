@@ -1,0 +1,549 @@
+                                                                                           10/1/25
+
+
+
+
+                  Text Technologies for Data Science
+                                      INFR11145
+
+                                   Indexing (2)
+                                       Instructor:
+                                      Walid Magdy
+
+
+    01-Oct-2025
+
+
+
+1
+
+
+
+
+     Lecture Objectives
+        • Learn more about indexing:
+           • Structured documents
+           • Extent index
+           • Index compression
+        • Data structure
+        • Wild-card search and applications
+
+
+
+        * You are not asked to implement any of the content in this lecture, but you
+        might think of using some for your course project J
+
+                                                                                       2
+     Walid Magdy, TTDS 2025/2026
+
+2
+
+
+
+
+                                                                                                1
+                                                                                                   10/1/25
+
+
+
+
+     Structured Documents
+        • Document are not always flat:
+             • Meta-data: title, author, time-stamp
+             • Structure: headline, section, body
+             • Tags: link, hashtag, mention
+
+        • How to deal with it?
+             • Neglect!
+             • Create separate index for each field
+             • Use “extent index”
+
+
+                                                                                               3
+     Walid Magdy, TTDS 2025/2026
+
+3
+
+
+
+
+     Extent Index
+        • Special “term” for each element/field/tag
+             • Index all terms in a structured document as plain text
+             • Terms in a given field/tag get special additional entry
+             • Posting: spans of window related to a given field
+             • Allows multiple overlapping spans of different types
+       he            1,1     1,5   2,1   3,3   4,3    5,1
+    drink            1,8     2,4   2,6   2,8   3,6    4,5    5,6
+       ink           3,8     4,2   5,8               D1: He likes to wink, he likes to drink
+     pink            4,8     5,7                     D2: He likes to drink, and drink, and drink
+     Link            3,1:2     4,1:4     5,7:8       D3: The thing he likes to drink is ink
+                                                     D4: The ink he likes to drink is pink
+                                                     D5: He likes to wink, and drink pink ink
+                                                                                               4
+     Walid Magdy, TTDS 2025/2026
+
+4
+
+
+
+
+                                                                                                        2
+                                                                            10/1/25
+
+
+
+
+    Using Extent
+       • Doc: 1 à          1            2     3
+          Headline: “Information retrieval lecture”
+          Text: “this is lecture 6 of the TTDS course on IR”
+                            4    5          6    7        8
+
+       • Query à Headline: lecture
+
+                       lecture      1,3     1,4   2,9     3,7   3,11
+
+                    Headline        1,1:3         2,1:5         3,1:4
+
+
+
+                                                                        5
+    Walid Magdy, TTDS 2025/2026
+
+5
+
+
+
+
+    Index Compression
+       • Inverted indices are big
+            • Large disk space à large I/O operations
+       • Index compression
+            • Reduce space à less I/O
+            • Allow more chunks of index to be cached in memory
+       • Large size goes to:
+            • terms? document numbers?
+            • Ideas:
+                • Compress document numbers, how?
+
+                                                                        6
+    Walid Magdy, TTDS 2025/2026
+
+6
+
+
+
+
+                                                                                 3
+                                                                                               10/1/25
+
+
+
+
+    Delta Encoding
+       • Large collections à large sequence of doc IDs
+            • e.g. Doc IDs: 1, 2, 3, … 66,032, ……, 5,323,424,235
+       • Large ID number à more bytes to store
+            • 1 byte: 0à255
+            • 2 bytes: 0 à 65,535
+            • 4 bytes: 0 à 4.3 B
+                                                                                 3 bytes
+       • Idea: delta in ID instead of full ID
+            • Very useful, especially for frequent terms
+
+      term                  100002      100007         100008   100011       100019
+
+
+      term                  ?       5   1   3      7        321     15       2
+
+                  1 byte                        2 bytes
+                                                                                           7
+    Walid Magdy, TTDS 2025/2026
+
+7
+
+
+
+
+    v-byte Encoding
+       • Have different byte storage for each delta in index
+            • Use fewer bits to encode
+            • High bit in a byte à 1/0 = terminate/continue
+            • Remaining 7 bits à binary number
+            • Examples:
+                • “6” à 10000110
+                • “127” à 11111111
+                • “128” à 0000000110000000 à 00000010000000
+       • Real example sequence:
+                 100001010000000011000001010000111
+                0000101 à 000000010000010 à 0000111
+                     5          à               130             à        7
+                                                                                           8
+    Walid Magdy, TTDS 2025/2026
+
+8
+
+
+
+
+                                                                                                    4
+                                                                            10/1/25
+
+
+
+
+     Index Compression
+        • There are more sophisticated compression
+           algorithms:
+            • Elias gamma code
+        • The more compression
+             • Less storage
+             • More processing
+        • In general
+             • Less I/O + more processing > more I/O + no processing
+               “>” = faster
+             • With new data structures, problem is less severe
+
+                                                                       9
+     Walid Magdy, TTDS 2025/2026
+
+9
+
+
+
+
+     Dictionary Data Structures
+        • The dictionary data structure stores the term
+           vocabulary, document frequency, pointers to each
+           postings list …
+        • For small collections, load full dictionary in memory.
+           In real-life, cannot load all index to memory!
+             • Then what to load?
+             • How to reach quickly?
+             • What data structure to use for inverted index?
+
+
+
+                                                                       10
+     Walid Magdy, TTDS 2025/2026
+
+10
+
+
+
+
+                                                                                 5
+                                                                                        10/1/25
+
+
+
+
+     Hashes
+          • Each vocabulary term is hashed to an integer
+          • Pros
+                • Lookup is faster than for a tree: O(1)
+          • Cons
+                • No easy way to find minor variants:
+                   • judgment/judgement
+                • No prefix search
+                • If vocabulary keeps growing, need to occasionally do the
+                  expensive operation of rehashing everything
+
+
+
+                                                                                   11
+     Walid Magdy, TTDS 2025/2026
+
+11
+
+
+
+
+     Trees: Binary Search Tree
+                                                   Root
+                                             a-m          n-z
+
+
+
+
+                     a-hu            hy-m                       n-sh     si-z
+
+
+
+
+                                   huy                          sic             zyg
+     aar                              gen
+                                                                   kle             ot
+        dva                              s
+           rk
+
+                                                                                   12
+     Walid Magdy, TTDS 2025/2026
+
+12
+
+
+
+
+                                                                                             6
+                                                                           10/1/25
+
+
+
+
+     Trees: B-tree
+
+                                           n-z
+                             a-hu
+                                    hy-m
+
+
+
+
+           Every internal node has a number of children in the
+           interval [a,b] where a, b are appropriate natural
+           numbers, e.g., [2,4].
+                                                                      13
+     Walid Magdy, TTDS 2025/2026
+
+13
+
+
+
+
+     Trees
+        • Pros?
+             • Solves the prefix problem (terms starting with “ab”)
+        • Cons?
+             • Slower: O(log M) [and this requires balanced tree]
+             • Rebalancing binary trees is expensive
+                 • But B-trees mitigate the rebalancing problem
+
+
+
+
+                                                                      14
+     Walid Magdy, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                                7
+                                                                                10/1/25
+
+
+
+
+     Wild-Card Queries: *
+        • mon*: find all docs containing any word beginning
+           “mon”.
+        • Easy with binary tree (or B-tree) lexicon
+        • *mon: find words ending in “mon”: harder
+             • Maintain an additional B-tree for terms backwards.
+        • How can we enumerate all terms meeting the wild-
+           card query pro*cent ?
+        • Query processing: se*ate AND fil*er ?
+             • Expensive
+
+
+                                                                           15
+     Walid Magdy, TTDS 2025/2026
+
+15
+
+
+
+
+     Permuterm Indexes
+        • Transform wild-card queries so that the * occurs at
+           the end
+        • For term hello, index under:
+             • hello$, ello$h, llo$he, lo$hel, o$hell, $hello
+                 where $ is a special symbol.
+        • Rotate query wild-card to the end
+        • Queries:                   Example
+             •   X lookup on       X$       hello   à hello$
+             •   X* lookup on      $X*      hel*    à hel*$     à $hel*
+             •   *X lookup on      X$*      *llo    à *llo$     à llo$*
+             •   X*Y lookup on     Y$X*     he*lo   à he*lo$    à lo$he*
+
+        • Index Size?
+                                                                           16
+     Walid Magdy, TTDS 2025/2026
+
+16
+
+
+
+
+                                                                                     8
+                                                                                           10/1/25
+
+
+
+
+     Character n-gram Indexes
+        • Enumerate all n-grams (sequence of n chars)
+           occurring in any term
+            • e.g., from text “April is the cruelest month” we get the 2-
+                 grams (bigrams) à
+                 $a,ap,pr,ri,il,l$,$i,is,s$,$t,th,he,e$,$c,cr,ru,ue,el,le,es,st,t$,
+                 $m,mo,on,nt,h$
+             • $ is a special word boundary symbol
+        • Maintain a second inverted index from bigrams to
+           dictionary terms that match each bigram.
+            • Character n-grams à terms
+            • terms à documents
+
+                                                                                   17
+     Walid Magdy, TTDS 2025/2026
+
+17
+
+
+
+
+     Character n-gram Indexes
+        • The n-gram index finds terms based on a query
+           consisting of n-grams (here n=2).
+                    $m               mace madden
+                    mo                among amortize
+                     on              almond             among
+
+ Wild card         Find possible    Filter unmatching      Search collection
+  query                                                                        Documents
+                      terms                terms             for all terms
+
+
+
+                   Index of char                            Collection index
+                     bigrams                                    of terms
+
+                                                                                   18
+     Walid Magdy, TTDS 2025/2026
+
+18
+
+
+
+
+                                                                                                9
+                                                                                    10/1/25
+
+
+
+
+     Character n-gram Indexes: Query time
+        • Step 1: Query mon* à $m AND mo AND on
+             • It would still match moon.
+        • Step 2: Must post-filter these terms against query.
+             • Phrase match, or post-step1 match
+        • Step 3: Surviving enumerated terms are then looked
+           up in the term-document inverted index.
+           à Montreal OR monster OR monkey
+        • Wild-cards can result in expensive query execution
+           (very large disjunctions…)
+
+
+                                                                               19
+     Walid Magdy, TTDS 2025/2026
+
+19
+
+
+
+
+     Character n-gram Indexes: Applications
+        • Spelling Correction
+             • Create n-gram representation for words
+             • Build index for words:
+                 • Dictionary of words à documents (each word is a document)
+                 • Character n-grams à terms
+             • When getting a search term that is misspelled (OOV or
+                 not frequent), find possible corrections
+                 • Possible corrections = most matching results
+                    Query: elepgant à $e el le ep pg ga an nt t$
+                    Results:
+                       elegant à $e el le eg ga an nt t$
+                       elephant à $e el le ep ph ha an nt t$
+                                                                               20
+     Walid Magdy, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                                        10
+                                                                                         10/1/25
+
+
+
+
+     Character n-gram Indexes: Applications
+        • Char n-grams can be used as direct index terms for
+           some applications:
+            • Arabic IR, when no stemmer/segmenter is available
+            • Documents with spelling mistakes: OCR documents
+        • Word char representation can by with multiple n’s
+             • “elephant” à 2/3-gram à
+                 “$e el le ep ph ha an nt t$ $el $ele lep eph pha han ant nt$”
+       The children behaved well        ‫اﻷﺑﻨﺎء ﺗﺼﺮﻓﻮا ﺟﯿﺪا‬     $‫ا ال ﻷ أب ﺑﻦ ﻧﺎ اء ء‬$
+       Her children are cute                   ‫أﺑﻨﺎءھﺎ ﻟﻄﺎف‬    $‫أ أب ﺑﻦ ﻧﺎ اء ءه ھﺎ ا‬$
+       Document: Elepbant à $e el le ep pb ba an nt t$
+       Query: Elephant à $e el le ep ph ha an nt t$
+
+                                                                                    21
+     Walid Magdy, TTDS 2025/2026
+
+21
+
+
+
+
+     Summary
+        • Index can by multilayer
+             • Extent index (multi-terms in one position in document)
+        • Index does not have to be formed of words
+             • Character n-grams representation of words
+        • Two indexes are sometimes used
+             • Index of character n-grams to find matching words
+             • Index of terms to search for matched words
+
+
+
+
+                                                                                    22
+     Walid Magdy, TTDS 2025/2026
+
+22
+
+
+
+
+                                                                                             11
+                                                             10/1/25
+
+
+
+
+     Resources
+        • Text book 1: Intro to IR, Chapter 3.1 – 3.4
+        • Text book 2: IR in Practice, Chapter 5
+
+
+
+
+                                                        23
+     Walid Magdy, TTDS 2025/2026
+
+23
+
+
+
+
+                                                                 12
+

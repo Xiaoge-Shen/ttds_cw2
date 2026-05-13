@@ -1,0 +1,177 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 03}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}Laws of Text：词频长尾、词表增长与文本聚集性}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily Word 是 IR 的基本表示单位 $\rightarrow$ 词频分布极不均匀：少数高频词 + 大量低频词 $\rightarrow$ Zipf's law：rank 与 frequency/probability 近似反比 $\rightarrow$ Benford's law：自然数字首位也非均匀 $\rightarrow$ Heaps' law：collection 变大时 vocabulary 持续增长但变慢 $\rightarrow$ Clumping/contagion：词是稀有但会局部聚集的事件 $\rightarrow$ 应用：估计 index size、query processing cost、preprocessing 效果
+\end{chainbox}
+\slideimage{1}{0.72}{/Users/huez/Documents/ttds/lec/ttds25_03laws.pdf}
+\begin{callout}{这节课一句话}
+这节课告诉你文本不是随机沙子，而是有稳定统计脾气：少数词极高频、大量词极低频、词表一直长、词一出现就容易在附近再出现。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. 为什么 IR 要关心 text laws}
+\slideimage{2}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_03laws.pdf}
+\begin{callout}{人话直觉}
+如果你要建搜索引擎，不能只问“文本里有什么词”，还要问“这些词通常怎样分布”。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} IR 通常以 word/term 作为表示文本的基本单位。讲义强调词的某些 characteristics 在不同语言和不同领域中都很一致，因此可以用 laws 描述。了解这些规律能帮助估计 vocabulary size、index size、postings list 长度、query processing 代价，也能解释 stop words、rare terms 和 preprocessing 的系统影响。
+
+\noindent\textbf{考试问法：} 若问为什么学 text laws，答统计规律帮助理解和设计 indexing、compression、query processing、preprocessing 与大规模文本系统。
+
+\Needspace{0.38\textheight}
+\section{2. 词频长尾：文本世界不是平均分配}
+\slideimage{3}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_03laws.pdf}
+\begin{callout}{人话直觉}
+英语里 the、of、to 像城市主干道，车流巨大；schizophrenia、bazinga 像偏僻小巷，偶尔才有人经过。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 词频分布高度不均匀：少数词非常 frequent，大量词 less frequent，讲义指出约 50\% terms appear once。频率随 rank 呈 hard exponential decay。这解释了为什么高频 stop words 对主题区分能力弱但处理代价高，而低频词往往更有判别力。
+
+\noindent\textbf{考试问法：} 可考“词频分布特点”或“为什么 stop words 高频但不区分主题”：回答少数高频词 + 大量 singleton/rare terms + 长尾。
+
+\Needspace{0.38\textheight}
+\section{3. Zipf's law：rank \(\times\) probability 近似常数}
+\slideimage{3}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_03laws.pdf}
+\begin{callout}{人话直觉}
+把词按频率排队，第一名大概比第二名多，第二名比第三名多；名次越靠后，频率按反比例掉下去。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Zipf's law 描述：在给定文本集合中，unique terms 按 frequency 排序后，term 的 rank r 与其出现概率 P\_t 的乘积近似为常数。若用 frequency 而不是 probability，也常写成 r \(\times\) freq\_t 近似常数。它是理解 inverted index 稀疏性和 postings list 长短差异的核心规律。
+
+\[
+r \times P_t \approx \text{constant}\quad\text{or}\quad r \times \operatorname{freq}_t \approx \text{constant}
+\]
+\noindent\textbf{考试问法：} 若考 Zipf，必须写公式、解释 r 和 P\_t/freq\_t，并说明意义：少数高频词、长尾低频词、index postings 极不均匀。
+
+\Needspace{0.38\textheight}
+\section{4. Zipf 对索引和查询处理的影响}
+\slideimage{4}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_03laws.pdf}
+\begin{callout}{人话直觉}
+查 the 像翻全城电话簿，查 bazinga 可能只看几条记录；同样是一个词，系统成本完全不同。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Wikipedia abstracts 示例显示 rank \(\times\) frequency 在同一量级波动，说明真实 collection 里高频词 postings list 很长，低频词 postings list 很短。对于 inverted index，这意味着 dictionary 中大量 term 很稀疏，而少数 term 占据大量 occurrences。查询处理时通常优先利用更短、更有判别力的 postings list。
+
+\noindent\textbf{考试问法：} 系统题可问 Zipf 如何影响 index/query：高频词存储与处理成本高，低频词更 discriminative，排序和优化需利用 term statistics。
+
+\Needspace{0.38\textheight}
+\section{5. Benford's law：首位数字也有偏见}
+\slideimage{5}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_03laws.pdf}
+\begin{callout}{人话直觉}
+如果数字真平均，1 到 9 当首位应差不多；但很多自然数据里，1 开头远比 9 开头常见。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Benford's law 说明许多自然数据的 first digit distribution 不是 uniform，而是小数字更常出现。讲义列出 term frequencies、physical constants、energy bills、population numbers 等例子。它与 Zipf 有相似精神：自然数据常呈非均匀、长尾、跨数量级分布。
+
+\[
+P(d) = \log\left(1 + \frac{1}{d}\right)
+\]
+\noindent\textbf{考试问法：} 若考 Benford，写 P(d)=log(1+1/d)，解释 d 是首位数字，并说明它可出现在 term frequencies 等自然统计中。
+
+\Needspace{0.38\textheight}
+\section{6. Heaps' law：词表会长，但越长越慢}
+\slideimage{6}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_03laws.pdf}
+\begin{callout}{人话直觉}
+刚开始读一本书，几乎每行都有新词；读到后面，大多数词见过了，但人名、地名、专业词、拼写噪声还会不断冒出来。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Heaps' law 描述随着读入 words 数 n 增加，observed vocabulary size v(n) 持续增长但速度下降。公式为 v(n)=k n\textasciicircum{}b，其中 b<1，通常 0.4<b<0.7。k 和 b 取决于 collection、language、domain 与 preprocessing。它可用于估计 dictionary size 和 index memory。
+
+\[
+v(n) = k n^b,\quad 0.4 < b < 0.7,\quad b < 1
+\]
+\noindent\textbf{考试问法：} 若考 Heaps，写公式，解释 n、v、k、b，强调 b<1 表示 sublinear growth；用途是估计 vocabulary/index size。
+
+\Needspace{0.38\textheight}
+\section{7. 为什么 vocabulary 不会很快饱和}
+\slideimage{6}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_03laws.pdf}
+\begin{callout}{人话直觉}
+语言像活水：新闻人物、新产品、拼写错误、URL、代码、外语词会一直往词表里倒。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 讲义指出即使 n 达到 80+ million，vocabulary 仍在增长。原因是大集合不断引入新实体、罕见专业词、拼写变体、数字代码和噪声。Heaps' law 对多数 collection 准确，但 k、b 不同；当 n 很小时不太准确。preprocessing 越激进，例如 stemming、case folding、stop removal，观察到的 vocabulary growth 可能越小。
+
+\noindent\textbf{考试问法：} 可考“为什么 Heaps 不 saturate”：答大型真实文本源不断产生新词、实体、噪声与变体；小集合上 law 不稳定。
+
+\Needspace{0.38\textheight}
+\section{8. Clumping/contagion：词是稀有但传染的事件}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_03laws.pdf}
+\begin{callout}{人话直觉}
+lightning 是独立闪一下就没了；疾病会传染。词更像疾病：一篇文章开始聊 mitochondria，附近很可能又出现 mitochondria。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 从 Zipf 可知多数词出现很少，但 once you see a word once, expect to see again。Clumping/contagion 指词项出现具有局部聚集性：词是 rare events, but contagious。原因是文本有 topic locality；同一主题在段落、文档或 passage 内连续展开。
+
+\noindent\textbf{考试问法：} 若考 contagion，关键词是 local burstiness/topic locality；说明它启发 proximity search、passage retrieval、positional index 和 compression。
+
+\Needspace{0.38\textheight}
+\section{9. Occurrence distance：怎样观察 clumping}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_03laws.pdf}
+\begin{callout}{人话直觉}
+如果一个只出现两次的词，两次位置总是离得很近，就说明它不是均匀撒在整本书里的。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 讲义用 Wiki abstract collection 做实验：找只出现两次的 terms，测两次 occurrences 的距离 d，并画 d 的 density function。结果显示多数只出现两次的词出现距离较近。这为“文本按主题局部组织”提供了统计证据。
+
+\[
+d = n_{\text{occurrence }2} - n_{\text{occurrence }1}
+\]
+\noindent\textbf{考试问法：} 若问如何验证 clumping，回答：选择 frequency=2 的 terms，计算两次 occurrence position 的距离，观察距离分布是否集中在小 d。
+
+\Needspace{0.38\textheight}
+\section{10. Text laws 的 practical 用法}
+\slideimage{8}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_03laws.pdf}
+\begin{callout}{人话直觉}
+这些 law 不是数学装饰，而是工程估算器：还没建索引，就能预判词表和处理成本。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 讲义用 Heaps' law 估算 20 billion terms、k=0.25、b=0.7 时 unique terms 约 4M。实践中可用 cat、zcat/gzcat、more、tr、sort、uniq、redirection 和 pipe 统计词频、观察 Zipf、统计 singleton terms 与 vocabulary growth。不同语言/领域也应重新实验，因为参数会变化。
+
+\[
+v(20\text{B}) = 0.25 \times (20\text{B})^{0.7} \approx 4\text{M}
+\]
+\noindent\textbf{考试问法：} 应用题可能给 n、k、b 让你估 v(n)，或问如何用 shell 观察词频分布；回答时连接 law 与 index size/query cost。
+
+\section{考试速记版}
+\begin{itemize}
+\item Text laws 描述词频、词表增长和词项位置的稳定统计规律。
+\item 约 50\% terms 可能只出现一次，词频呈长尾。
+\item Zipf：r \(\times\) P\_t \(\approx\) constant，rank 越低频率越高。
+\item Benford：P(d)=log(1+1/d)，自然数字首位非均匀。
+\item Heaps：v(n)=k n\textasciicircum{}b，b<1，vocabulary sublinear growth。
+\item Vocabulary 不会快速饱和，因为新实体、拼写、噪声、专业词不断出现。
+\item Clumping：词是 rare but contagious，出现后附近更可能再出现。
+\item 应用：估 index size、postings length、query cost、preprocessing effect。
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+Text laws describe stable statistical patterns in large text collections. Zipf's law says that when terms are ranked by frequency, rank times term probability or frequency is approximately constant, producing a few very frequent words and a long tail of rare terms. Heaps' law says vocabulary grows as v(n)=k n\textasciicircum{}b with b<1, so new terms keep appearing but at a decreasing rate, which helps estimate dictionary and index size. Clumping or contagion says words are rare but locally bursty: once a term appears, it is more likely to appear again nearby because text has topic locality.
+\end{callout}
+\end{document}

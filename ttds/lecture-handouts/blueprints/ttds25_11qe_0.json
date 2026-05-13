@@ -1,0 +1,154 @@
+{
+  "lecture": "TTDS 11",
+  "source_pdf": "ttds25_11qe_0.pdf",
+  "title": "Query Expansion: 让短查询学会说出用户真正想找的东西",
+  "one_sentence": "这节课一句话：Query expansion 试图把用户短而不完美的 query 推向真正 information need，但每加一个词都在 precision、recall 和 query drift 之间下注。",
+  "concept_chain": [
+    "用户 query 往往短、不完整、词不达意",
+    "stemming/lemmatisation 只能解决形态变化，不能解决 synonym/abbreviation",
+    "thesaurus-based QE：manual、co-occurrence、parallel corpus",
+    "relevance feedback：用户标记相关/不相关文档",
+    "Rocchio：把 query 向 relevant centroid 拉、远离 non-relevant centroid",
+    "权重 α、β、γ 和 top terms selection 控制改写力度",
+    "pseudo relevance feedback：假设 top docs relevant，自动扩展",
+    "modern term representation：dense embeddings 与 term-based first-stage retrieval 互补"
+  ],
+  "slides": [
+    {
+      "page": 1,
+      "reason": "目标页列出 QE、relevance feedback、Rocchio、PRF，是本讲考试范围。",
+      "caption": "Query Expansion：从方法谱系到 PRF 实现。"
+    },
+    {
+      "page": 2,
+      "reason": "解释 query suboptimal 与 stemming/lemmatisation 的边界，是 QE 动机。",
+      "caption": "Query expansion 的动机：car/vehicle/automobile 不是词形变化能解决的。"
+    },
+    {
+      "page": 3,
+      "reason": "co-occurrence thesaurus 的矩阵公式 C=A A^T 是重要机制。",
+      "caption": "Automatic thesaurus：共现词可能语义相关。"
+    },
+    {
+      "page": 4,
+      "reason": "parallel corpus 方法说明 supervised/resource-dependent 的 thesaurus 构造方式。",
+      "caption": "Parallel corpus：同译词可暗示源语言 synset。"
+    },
+    {
+      "page": 6,
+      "reason": "Relevance feedback 的流程和用户认知优势在此页集中呈现。",
+      "caption": "Relevance feedback：用户更容易判断文档相关性，而不是一次写出完美 query。"
+    },
+    {
+      "page": 10,
+      "reason": "Rocchio 理论公式页，是本讲最关键公式锚点。",
+      "caption": "Rocchio theory：optimal query 靠近 relevant centroid，远离 irrelevant centroid。"
+    },
+    {
+      "page": 11,
+      "reason": "α、β、γ、negative weights、top nt terms 等实践细节集中在此页。",
+      "caption": "Rocchio weights：正反馈通常比负反馈更有价值。"
+    },
+    {
+      "page": 13,
+      "reason": "引出 PRF，说明如何在没有用户输入时自动化反馈。",
+      "caption": "Pseudo relevance feedback：盲目相信 top results，自动改写 query。"
+    },
+    {
+      "page": 16,
+      "reason": "现代 term representation 历史页连接 word embeddings、BERT 与 dense retrieval。",
+      "caption": "From embeddings to dense retrieval：语义表示增强但不取代 term-based search。"
+    },
+    {
+      "page": 17,
+      "reason": "总结 term-based search 仍不可或缺，并常作为 reranking 的 first stage。",
+      "caption": "BM25/PRF/inverted index 仍是高效可扩展的第一阶段。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "1. Query Expansion 的根本动机",
+      "slide_page": 2,
+      "intuition": "用户常常只给系统几个关键词，就像给出租车司机说“机场附近那个酒店”——司机需要补全语义，系统也需要补全 query。",
+      "explanation": "Query 是 information need 的表示，但经常 suboptimal：太短、用词不准、缺少同义词或缩写展开。Stemming/lemmatisation 可处理 replacement/replace 或 go/went 这类词形规范化，但不能自然处理 car/vehicle/automobile、US/USA/the states。QE 的基本动作是向 query 添加相同或相关意义的词，提高 relevant documents 与 query 的匹配机会。",
+      "exam_angle": "若问 why QE，答 query mismatch + vocabulary mismatch；若问 stemming 不能解决什么，答 synonyms、abbreviations、context-dependent semantic variants。",
+      "formula_latex": null
+    },
+    {
+      "title": "2. QE 的收益与风险：recall 诱惑和 query drift",
+      "slide_page": 2,
+      "intuition": "扩展 query 像撒更大的网：可能捞到漏掉的鱼，也可能把水草和垃圾一起捞上来。",
+      "explanation": "QE 通常希望增加 recall，尤其在 relevant documents 用不同词表达同一需求时很有用。但错误扩展会让 query 偏离原始 information need，称为 query drift。考试中要避免把 QE 写成无条件好事：它的成败取决于扩展词是否与当前 query context 匹配，以及扩展后 ranking 是否仍能保持 precision。",
+      "exam_angle": "若问 QE main risk，答 query drift；若问 evaluation，说明必须在 held-out/test collection 上比较扩展前后指标，而不是只看 query 变长。",
+      "formula_latex": null
+    },
+    {
+      "title": "3. Co-occurrence Thesaurus：从一起出现推测语义相关",
+      "slide_page": 3,
+      "intuition": "如果很多文档里“satellite”和“launch”总一起出现，我们可能猜它们在这个 collection 里关系密切；但“相关”不一定等于“同义”。",
+      "explanation": "Automatic co-occurrence thesaurus 基于假设：在同一 document/paragraph 中共现的词可能语义相似或相关。若 A 是 term-document matrix，A_{t,d} 是 term t 在 document d 中的 normalized weight，则 C=A A^T 可得到 term-term similarity matrix，C_{u,v} 越高表示 u 与 v 越相似。优点是 unsupervised；缺点是常得到 related words 而非真正 synonyms。",
+      "exam_angle": "若问 co-occurrence thesaurus 公式，写 C=A A^T 并解释 C_{u,v}；若问缺点，强调 context 与 true synonym 问题。",
+      "formula_latex": "C = A A^T;\\quad C_{u,v}=\\sum_d A_{u,d}A_{v,d}"
+    },
+    {
+      "title": "4. Parallel Corpus Thesaurus：翻译作为语义桥",
+      "slide_page": 4,
+      "intuition": "如果英文里 motor 和 engine 都常被翻成另一种语言中的同一个词，它们可能在某些语境下是一组近义词。",
+      "explanation": "Parallel corpus 是机器翻译的训练资源，由源语言和目标语言的平行句对组成。该方法利用“语言 X 中多个词翻译成语言 Y 中同一词”这一现象，把这些 X 词视为潜在 synsets。它依赖 parallel corpus，因此不是纯 unsupervised，而是 resource-dependent/supervised。第 5 页的例子也提醒：词表可能产生有用联想，但仍需注意语境。",
+      "exam_angle": "若问 parallel corpus method 的核心思想，答同译词形成候选 synset；若问 supervised/unsupervised，答需要 parallel corpus 资源。",
+      "formula_latex": null
+    },
+    {
+      "title": "5. Relevance Feedback：让用户用判断文档来改写 query",
+      "slide_page": 6,
+      "intuition": "用户可能说不清自己要什么，但看到结果时常能说“这个对、那个不对”。系统把这种判断转成新的 query 表示。",
+      "explanation": "Relevance feedback 流程是：用户发出短 query，系统返回初始结果，用户标记一些 relevant/non-relevant documents，系统基于反馈计算更好的 information need representation，并可迭代多轮。它符合用户认知：不了解 collection 时难以写好 query，但判断具体文档往往更容易。",
+      "exam_angle": "若问 relevance feedback 的流程，按 initial query、judge docs、compute new query、reretrieve 回答；若问 usefulness，强调常提高 recall 和 precision，但最常用于 recall-important 场景。",
+      "formula_latex": null
+    },
+    {
+      "title": "6. Rocchio 理论：靠近相关文档，远离不相关文档",
+      "slide_page": 10,
+      "intuition": "把 query 想成向量空间里的一个点；Rocchio 做的事就是把这个点从原位置推向 relevant documents 的重心，同时推离 irrelevant documents 的重心。",
+      "explanation": "Rocchio 的理论 optimal query 最大化与 relevant class 的相似度并最小化与 irrelevant class 的相似度。在 cosine similarity 下，最优方向可写成 relevant document centroid 减去 irrelevant document centroid。现实中我们不知道所有真正 relevant docs，因此用用户标注或 pseudo feedback 的样本近似。",
+      "exam_angle": "若考 Rocchio core idea，必须说 vector space、centroid、towards relevant、away from non-relevant，而不是只背公式。",
+      "formula_latex": "\\vec{q}_{opt}=\\arg\\max_{\\vec{q}}[sim(\\vec{q},C_{rel})-sim(\\vec{q},C_{irrel})];\\quad \\vec{q}_{opt}=\\vec{\\mu}_{C_{rel}}-\\vec{\\mu}_{C_{irrel}}"
+    },
+    {
+      "title": "7. Rocchio 实践：α、β、γ 是三只旋钮",
+      "slide_page": 11,
+      "intuition": "α 保留原 query 的自我，β 听取正反馈，γ 听取负反馈；调得太猛，query 就可能变成另一个人。",
+      "explanation": "实践公式把原始 query、relevant feedback documents 的平均向量和 non-relevant feedback documents 的平均向量组合起来。α 控制原 query 权重，β 控制向 relevant docs 靠近，γ 控制远离 non-relevant docs。正反馈通常更可靠，因此常设 β>γ；许多系统只用 positive feedback，令 γ=0。为避免 query 过长，实践中只选择 relevant documents 中 top nt terms，nt 常在 5 到 50 之间。",
+      "exam_angle": "若问 α/β/γ，逐一定义；若问为什么 β>γ 或 γ=0，答正反馈更有价值，负反馈可能噪声大且产生负权重。",
+      "formula_latex": "\\vec{q}_m = \\alpha\\vec{q}_0 + \\frac{\\beta}{|D_r|}\\sum_{\\vec{d}_j\\in D_r}\\vec{d}_j - \\frac{\\gamma}{|D_{nr}|}\\sum_{\\vec{d}_j\\in D_{nr}}\\vec{d}_j"
+    },
+    {
+      "title": "8. PRF：没有用户反馈时，先假装 top docs 是 relevant",
+      "slide_page": 13,
+      "intuition": "PRF 是一种大胆假设：第一次检索排在前面的文档大概率不错，于是先把它们当老师，让它们教 query 该加什么词。",
+      "explanation": "Pseudo/Blind Relevance Feedback 自动化了 relevance feedback 的人工部分：先用原 query 检索，假设 top-ranked documents relevant，从中选扩展词，构造 expanded query 后重新检索。它是基本、unsupervised、language-independent 的 QE 方法，常用于 news search、social media search、web search 等；但如果初始 top docs 不相关，就会强化错误方向，造成 query drift。Patent search 更难，因为 top docs 常不相关且文本晦涩。",
+      "exam_angle": "若考 PRF，答 algorithm + solves user feedback burden + risk query drift + evaluate carefully；若问是否 cheating，说明只用系统初始返回结果，不用 test judgments。",
+      "formula_latex": null
+    },
+    {
+      "title": "9. Dense Retrieval 时代：term-based search 仍是地基",
+      "slide_page": 17,
+      "intuition": "神经表示像更懂语义的翻译官，但 inverted index/BM25 像高速公路；真实系统常先快速召回，再让复杂模型精排。",
+      "explanation": "第 16 页回顾 word embeddings、BERT/Transformer、dense retrieval 与 dual encoders 的发展；第 17 页明确 term-based search is indispensable，因为它 efficient、scalable。现代系统常把 BM25/PRF 作为 first-stage retrieval，再用 neural reranking 或 dense methods 改善 top results。考试中不要写“dense retrieval 取代一切”，而应写“互补”。",
+      "exam_angle": "若问 term-based search 是否过时，答 no：高效可扩展，常作为 first step；advanced methods 用于 reranking 或 semantic matching。",
+      "formula_latex": null
+    }
+  ],
+  "quick_revision": [
+    "QE = 给 query 加相关/同义词以缓解 vocabulary mismatch。",
+    "Stemming/lemmatisation 处理词形；QE 处理 synonyms、abbreviations、semantic variants。",
+    "Co-occurrence thesaurus：C=A A^T，unsupervised，但常找 related words。",
+    "Parallel corpus：同译词暗示 synsets，需要平行语料。",
+    "Relevance feedback：用户标记相关/不相关，系统改写 query。",
+    "Rocchio：towards relevant centroid, away from non-relevant centroid。",
+    "实践中 β 通常大于 γ，很多系统 γ=0。",
+    "PRF 自动假设 top docs relevant，最大风险是 query drift。",
+    "Term-based search 仍是 efficient first-stage retrieval。"
+  ],
+  "exam_answer": "Query expansion addresses vocabulary mismatch: users often issue short or suboptimal queries, while relevant documents may use synonyms, abbreviations or related terms. Thesaurus-based methods can add terms from manual resources, co-occurrence statistics such as C=A A^T, or parallel corpora, but they often ignore context and may add merely related rather than synonymous words. Relevance feedback improves the query using documents judged relevant or non-relevant by the user. Rocchio represents this in vector space by keeping part of the original query, moving toward the centroid of relevant documents and away from the centroid of non-relevant documents. Pseudo relevance feedback automates this by assuming top-ranked documents are relevant, which is efficient and unsupervised but risks query drift if the initial ranking is poor."
+}

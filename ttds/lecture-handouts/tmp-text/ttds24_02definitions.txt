@@ -1,0 +1,698 @@
+                                                           9/18/24
+
+
+
+
+                  Text Technologies for Data Science
+                                     INFR11145
+
+                                   Definitions
+                                      Instructor:
+                                     Walid Magdy
+
+
+    18-Sep-2024
+
+
+
+1
+
+
+
+
+     Lecture Objectives
+        • Learn about main concepts in IR
+              • Document
+              • Information need
+              • Query
+              • Index
+              • BOW
+
+
+
+
+                                                       2
+     Walid Magdy, TTDS 2024/2025
+
+2
+
+
+
+
+                                                                1
+                                                                                                               9/18/24
+
+
+
+
+    IR in a nutshell                                           A System and
+                                                               Method for …
+                                                               ……………………
+                                                        A System and
+                                                        Method ……………………
+                                                                 for …
+                                                               ……………………
+                                                        ……………………
+                                                    ……………………
+                                                               ……………………
+                                                        ……………………
+                                                    ……………………
+                                                               ……………………
+                                                        ……………………
+                                                    ……………………
+                                                        ……………………………….
+                                                    ……………………
+                                                               .
+                                                        ……………………
+                                                    ……………………
+                                                        …………………….
+                                                    …………………….
+
+                                                                              Documents
+                                                        .
+                                                    .
+
+
+
+
+                                    Query
+                                                           Search
+                                          ……………
+                                                           Engine
+                                          ……………
+                                          ……………
+                                          ……………
+
+
+
+
+                                    Relevant Documents
+
+
+                 User
+                                                                                                         3
+    Walid Magdy, TTDS 2024/2025
+
+3
+
+
+
+
+    RAG in a nutshell                                                               A System and
+                                                                                    Method for …
+                                                                                    ……………………
+                                                                             A System and
+                                                                             Method ……………………
+                                                                                      for …
+                                                                                    ……………………
+                                                                             ……………………
+                                                                         ……………………
+                                                                                    ……………………
+                                                                             ……………………
+                                                                         ……………………
+                                                                                    ……………………
+                                                                             ……………………
+                                                                         ……………………
+                                                                             ……………………………….
+                                                                         ……………………
+                                                                                    .
+                                                                             ……………………
+                                                                         ……………………
+                                                                             …………………….
+                                                                         …………………….
+
+                                                                                                   Documents
+                                                                             .
+                                                                         .
+
+
+
+
+                                  Query/Question
+                                                                                Search
+                                                        ……………
+                                                                                Engine
+                                                        ……………
+                                                        ……………
+
+                                   Extract &            ……………
+
+
+
+
+                                  Summarise       Relevant Documents
+
+
+           User                                          LLM
+                                                                                                         4
+    Walid Magdy, TTDS 2024/2025
+
+4
+
+
+
+
+                                                                                                                    2
+                                                                   9/18/24
+
+
+
+
+    IR, basic form
+    • Given Query Q, find relevant documents D
+
+
+
+
+                                                               5
+    Walid Magdy, TTDS 2024/2025
+
+5
+
+
+
+
+    Two main Issues in IR
+
+
+       • Effectiveness
+            • need to find relevant documents
+            • needle in a haystack
+            • very different from relational DBs (SQL)
+
+       • Efficiency
+            • need to find them quickly
+            • vast quantities of data (100’s billions pages)
+            • thousands queries per second (Google, 99,000)
+            • data constantly changes, need to keep up
+            • compared with other NLP areas, IR is very fast
+                                                               6
+    Walid Magdy, TTDS 2024/2025
+
+6
+
+
+
+
+                                                                        3
+                                                                      9/18/24
+
+
+
+
+    IR main components
+       • Documents
+       • Queries
+
+       • Relevant documents
+
+
+
+
+                                                                  7
+    Walid Magdy, TTDS 2024/2025
+
+7
+
+
+
+
+    Documents
+                                                  …………………………………
+                                                  …………………………………
+
+
+       • The element to be retrieved
+                                                  …………………………………
+                                                  …………………………………
+                                                  …………………………………
+                                                  …………………………………
+
+
+            • Unstructured nature                 …………………...
+
+
+
+
+            • Unique ID
+            • N documents à Collection
+       • web-pages, emails, book, page, sentence, tweets
+       • photos, videos, musical pieces, code
+       • answers to questions
+       • product descriptions, advertisements
+       • may be in a different language
+       • may not have words at all (e.g. DNA)
+                                                                  8
+    Walid Magdy, TTDS 2024/2025
+
+8
+
+
+
+
+                                                                           4
+                                                                                      9/18/24
+
+
+
+
+     Queries
+        • Free text to express user’s information need
+        • Same information need can be described by multiple
+           queries
+            • Latest news on the hurricane in the US
+            • North Carolina storm
+            • Florence
+        • Same query can represent multiple information needs
+             • Apple
+             • Jaguar
+
+
+
+                                                                                 9
+     Walid Magdy, TTDS 2024/2025
+
+9
+
+
+
+
+     Queries – different forms
+        • Web search à keywords, narrative …
+        • Image search à keywords, sample image
+        • QA à question
+        • Music search à humming a tune
+        • Filtering/recommendation à user’s interest/history
+        • Scholar search à structured (author, title ..)
+        • Advanced search
+             #wsyn(0.9 #field (title, #phrase (homer,simpson)) 0.7 #and (#>
+             (pagerank,3), #ow3 (homer,simpson)) 0.4 #passage (homer, simpson,
+             dan, castellaneta))
+
+
+
+                                                                                 10
+     Walid Magdy, TTDS 2024/2025
+
+10
+
+
+
+
+                                                                                           5
+                                                                      9/18/24
+
+
+
+
+     Relevance
+        • At an abstract level, IR is about:
+             • does item D match item Q? …or…
+             • is item D relevant to item Q?
+        • Relevance a tricky notion
+             • will the user like it / click on it?
+             • will it help the user achieve a task?
+               (satisfy information need)
+             • is it novel (not redundant)?
+        • Relevance = what is the topic about?
+             • i.e. D,Q share similar “meaning”
+             • about the same topic / subject / issue
+
+                                                                 11
+     Walid Magdy, TTDS 2024/2025
+
+11
+
+
+
+
+     What is the challenge in relevance?
+        • No clear semantics, contrast:
+             • “William Shakespeare”
+             • Author history’s? list of plays? a play by him?
+        • Inherent ambiguity of language:
+             • synonymy: “Edinburgh festival” = “The fringe”
+             • polysemy: “Apple”, “Jaguar”
+        • Relevance highly subjective
+             • Relevance: yes/no
+             • Relevance: perfect/excellent/good/fair/bad
+        • On the web: counter SEOs / spam
+
+                                                                 12
+     Walid Magdy, TTDS 2024/2025
+
+12
+
+
+
+
+                                                                           6
+                                                                                            9/18/24
+
+
+
+
+     Relevant Items are Similar
+        • Key idea:
+             • Use similar vocabulary à similar meaning
+             • Similar documents relevant to same queries
+
+        • Similarity
+             • String match
+             • Word overlap
+             • P(D|Q) à retrieval model
+
+
+
+
+                                                                                       13
+     Walid Magdy, TTDS 2024/2025
+
+13
+
+
+
+
+     IR vs. DB
+                            Databases                IR
+        What we’re          Structured data. Clear   Mostly unstructured.
+        retrieving          semantics based on a     Free text with some
+                            formal model.            metadata.
+        Queries we’re Formally-defined               Free text (“natural
+        posing        (relational algebra, SQL).     language”), Boolean
+                      Unambiguous.
+        Results we get Exact (always “correct”)      Imprecise (need to
+                                                     measure relevance)
+        Interaction         One-shot queries.        Interaction is important.
+        with system
+                                                                        Tamer Elsayed, QU
+
+
+                                                                                       14
+     Walid Magdy, TTDS 2024/2025
+
+14
+
+
+
+
+                                                                                                 7
+                                                                    9/18/24
+
+
+
+
+     How IR sees documents?
+
+
+
+
+                                                               15
+     Walid Magdy, TTDS 2024/2025
+
+15
+
+
+
+
+     Bag-of-words trick
+        • Can you guess what this is about:
+             • per is salary hour €25,000 Ronaldo’s
+               Mbappe’s salary per hour is €25,000
+             • obesity French is of full cause and fat fries
+               French fries is full of fat and cause obesity
+               French fries cause obesity and is full of fat
+
+
+        • Re-ordering doesn’t destroy the topic
+             • individual words – “building blocks”
+             • “bag” of words: a “composition” of “meanings”
+
+                                                               16
+     Walid Magdy, TTDS 2024/2025
+
+16
+
+
+
+
+                                                                         8
+                                                                                  9/18/24
+
+
+
+
+     Bag-of-words trick
+        • Most search engines use BOW
+             • treat documents, queries as bags of words
+        • A “bag” is a set with repetitions
+             • match = “degree of overlap” between D,Q
+        • Retrieval models
+             • statistical models (function) that use words as features
+             • decide which documents most likely to be relevant
+        • What should be the top results for Q?
+             • BOW makes these models tractable
+
+
+
+                                                                             17
+     Walid Magdy, TTDS 2024/2025
+
+17
+
+
+
+
+     Bag-of-words: Criticism
+        • word meaning lost without context
+             • True, but BOW doesn’t really discard context
+                 • it discards surface form / well-formedness of text
+        • what about negations, etc.?
+             • {no, climate change is real} vs. {climate change is no real}
+                 • still discusses the same subject (climate change, real)
+                 • restrict negations to words: {“not real”}
+        • does not work for all languages
+             • No natural “word” unit for Chinese, images, music
+             • Solve by “segmentation” or “feature induction”
+                 • break/aggregate until units reflect “aboutness”
+                    e.g.: Germanàdecompounding, ChineseàSegmentation
+
+                                                                             18
+     Walid Magdy, TTDS 2024/2025
+
+18
+
+
+
+
+                                                                                       9
+                                                                                                       9/18/24
+
+
+
+
+     IR Black Box
+                            Query                            Documents
+
+
+                                            online offline
+                         Representation                      Transformation
+                           Function                             Function
+
+
+                     Query Representation                       BOW
+       Retrieval
+        Model
+                          Comparison
+                           Function                             Index
+
+
+
+
+                                                                              Tamer Elsayed, QU
+                            Hits
+
+                                                                                                  19
+     Walid Magdy, TTDS 2024/2025
+
+19
+
+
+
+
+     Systems perspective on IR
+        • Indexing Process: (offline)
+           à get the data into the system
+            • acquire the data from crawling, feeds, etc.
+            • store the originals (if needed)
+            • transform to BOW and “index”
+        • Search (retrieval) Process: (online)
+           à satisfy users’ requests
+            • assist user in formulating query
+            • retrieve a set of results
+            • help user browse / re-formulate
+            • log user’s actions, adjust retrieval model
+
+
+                                                                                                  20
+     Walid Magdy, TTDS 2024/2025
+
+20
+
+
+
+
+                                                                                                           10
+                                                                                                                    9/18/24
+
+
+
+
+     Indexing Process
+                                                                document à unique ID
+                                                  Document       what can you store?
+                       web-crawling                              disk space? rights?
+                       provider feeds             data store
+                                                                    compression?
+                        RSS “feeds”
+          A System
+                       desktop/email
+          and
+          Method for
+       …………………
+          …
+                                 Documents                       Index
+       …………………
+          …………………
+       …………………
+          …………………
+       …………………
+          …………………
+       …………………
+          ………..                  acquisition                    creation                   Index
+
+      what data
+     do we want?                                                                   a lookup table for
+                                                                                 quickly finding all docs
+                                                 Text                              containing a word
+                                             transformation
+                                 format conversion. international?
+                                  which part contains “meaning”?                          © Addison W esley, 2008
+
+
+                                 word units? stopping? stemming?
+                                                                                                             21
+     Walid Magdy, TTDS 2024/2025
+
+21
+
+
+
+
+     Search Process
+
+                       help user formulate              Document
+                          the query by                  data store
+                       suggesting what he                            fetch a set of results,
+                        could search for                              present to the user
+
+                                           User
+                                                                     Ranking
+                                        Interaction                                              Index
+
+
+
+     log user’s actions:                                                       Iterate!
+      clicks, hovering,      Log data
+                                                   Evaluation
+           giving up
+                                                                                          © Addison W esley, 2008
+
+
+
+
+                                                                                                             22
+     Walid Magdy, TTDS 2024/2025
+
+22
+
+
+
+
+                                                                                                                        11
+                                                                           9/18/24
+
+
+
+
+     Summary
+        • Information Retrieval (IR): core technology
+             • selling point: IR is very fast, provides context
+        • Main issues: effectiveness and efficiency
+        • Documents, queries, relevance
+        • Bag-of-words trick
+        • Search system architecture:
+             • indexing: get data into the system
+             • searching: help users find relevant data
+
+
+
+                                                                      23
+     Walid Magdy, TTDS 2024/2025
+
+23
+
+
+
+
+     Resources
+        • Search Engines: Information Retrieval in Practice,
+           chapter 1 & 2
+
+        • Lab 0:
+             • You have to be confident doing it!
+             • If you have trouble finishing it, think twice before
+                 committing to the course
+
+
+
+
+                                                                      24
+     Walid Magdy, TTDS 2024/2025
+
+24
+
+
+
+
+                                                                               12
+                                                                          9/18/24
+
+
+
+
+     Questions
+        • Next time:
+             • Laws of text (Zipf ….)
+             • Vector space models
+        • Skill to learn by next time:
+             • Read text file from disk
+             • Read word by word
+        • Videos:
+             • The Zipf Mystery, Vsauce
+        • Tools:
+             • Regular expressions:
+                 https://www.w3schools.com/python/python_regex.asp
+
+
+
+                                                                     25
+     Walid Magdy, TTDS 2024/2025
+
+25
+
+
+
+
+                                                                              13
+

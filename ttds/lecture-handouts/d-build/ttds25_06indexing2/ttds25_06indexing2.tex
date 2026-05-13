@@ -1,0 +1,157 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 06}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}Indexing 2：结构化文档、压缩与通配查询}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily structured documents $\rightarrow$ extent index $\rightarrow$ compression motivation $\rightarrow$ delta encoding $\rightarrow$ v-byte encoding $\rightarrow$ lexicon data structures $\rightarrow$ wild-card queries $\rightarrow$ character n-gram indexes
+\end{chainbox}
+\slideimage{2}{0.72}{/Users/huez/Documents/ttds/lec/ttds25_06indexing2.pdf}
+\begin{callout}{这节课一句话}
+这节课是在 inverted index 上“加装备”：让它懂字段、少占空间、还能处理 mon* 这种模糊词形查询。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. 结构化文档：文档不是一块纯文本}
+\slideimage{2}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_06indexing2.pdf}
+\begin{callout}{人话直觉}
+网页像一栋楼：标题、正文、链接、hashtag 是不同房间；同一个词出现在标题里和角落脚注里，分量可能不一样。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} structured documents 有 metadata、headline、section、body、tags 等结构。处理方式包括忽略结构、为每个 field 建独立 index，或使用 extent index 把结构 span 也纳入索引。
+
+\noindent\textbf{考试问法：} 若问 structured documents 如何处理，列出 neglect、separate field indexes、extent index，并说明各自直觉。
+
+\Needspace{0.38\textheight}
+\section{2. Extent index：把字段也当成特殊 term}
+\slideimage{3}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_06indexing2.pdf}
+\begin{callout}{人话直觉}
+extent 像给文本贴彩色胶带：headline 从 1 到 3，body 从 4 到 8；查询时看词有没有落在胶带范围里。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} extent index 为每个 element/field/tag 建特殊 entry，同时普通 terms 仍按 plain text 索引。posting 可记录某字段在文档中的 span，例如 Headline 1,1:3。这样可以支持 Headline:lecture 这类字段约束查询，也允许不同类型 span overlap。
+
+\noindent\textbf{考试问法：} 考试答 extent index 时，关键词是 special term、field/tag spans、overlapping spans、支持 fielded search。
+
+\Needspace{0.38\textheight}
+\section{3. 为什么要压缩 index}
+\slideimage{5}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_06indexing2.pdf}
+\begin{callout}{人话直觉}
+索引太大像背着砖头跑步：不只是占硬盘，还会让每次从磁盘搬数据都变慢。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} inverted indices 很大，存储空间和 I/O 都昂贵。压缩能减少 disk space、降低 I/O，并让更多 index chunks 缓存在内存。代价是查询时需要解码，形成 less I/O + more processing 与 more I/O + no processing 的权衡。
+
+\noindent\textbf{考试问法：} 若问 index compression 好处，不要只说省空间；一定加上减少 I/O 和提升 cache 命中。
+
+\Needspace{0.38\textheight}
+\section{4. Delta encoding：存 gap 而不是存完整 docID}
+\slideimage{4}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_06indexing2.pdf}
+\begin{callout}{人话直觉}
+如果朋友住 100002、100007、100008 号，记“100002 后面 +5、+1”比每次写完整门牌轻多了。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} postings list 中 docIDs 递增排列。对大 collection，完整 docID 可能很大，需要多字节存储；delta encoding 存相邻 docID 的差值。频繁 term 的 postings list 通常 gap 较小，因此特别适合压缩。
+
+\[
+gap_i=docID_i-docID_{i-1}
+\]
+\noindent\textbf{考试问法：} 若给 docID 序列让你压缩，第一项常保留或作为起点，后续写相邻差值。
+
+\Needspace{0.38\textheight}
+\section{5. v-byte encoding：小 gap 少用字节}
+\slideimage{4}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_06indexing2.pdf}
+\begin{callout}{人话直觉}
+不是每个数字都发一个大箱子；小数字用小信封，大数字才用多几个信封。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} variable-byte encoding 为每个 delta 使用不同数量的 byte。每个 byte 中高位作为 continue/terminate 标志，其余 7 bits 存数值。它比固定长度整数更节省空间，同时解码比极端 bit-level 编码简单。
+
+\noindent\textbf{考试问法：} 考试通常考概念：v-byte 用 continuation bit + 7-bit payload，以变长方式存 gap。
+
+\Needspace{0.38\textheight}
+\section{6. 压缩不是越狠越无脑}
+\slideimage{5}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_06indexing2.pdf}
+\begin{callout}{人话直觉}
+把衣服压缩进真空袋很省空间，但每次取衣服要放气；压缩算法也是这样。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 更复杂的压缩如 Elias gamma code 可进一步减少空间，但会增加编码/解码成本。IR 中常见判断是：如果减少 I/O 带来的收益大于额外 CPU 解码成本，压缩就是划算的。
+
+\noindent\textbf{考试问法：} 若问 trade-off，答 storage/I/O 降低 vs processing 增加，并说明实际常常 I/O 是瓶颈。
+
+\Needspace{0.38\textheight}
+\section{7. Lexicon data structures：hash 快，tree 顺}
+\slideimage{6}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_06indexing2.pdf}
+\begin{callout}{人话直觉}
+hash 像知道门牌直接瞬移；B-tree 像按字母排好的电话簿，虽然慢一点，但能顺着找 mon 开头的一串名字。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} lexicon 存 vocabulary terms 及 postings pointers。hash lookup 平均 O(1)，但不支持前缀、范围或通配遍历；tree/B-tree lookup 为 O(log M)，但保留字典序，适合 prefix search、range traversal 和磁盘友好访问。
+
+\[
+hash:O(1),\quad B\text{-}tree:O(\log M)
+\]
+\noindent\textbf{考试问法：} 若问 hash vs B-tree，不要只背复杂度；要联系 wildcard/prefix query 的需求。
+
+\Needspace{0.38\textheight}
+\section{8. Wildcard queries：mon* 容易，*mon 麻烦}
+\slideimage{8}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_06indexing2.pdf}
+\begin{callout}{人话直觉}
+按姓氏找人容易，因为电话簿按姓排；按名字最后一个字找人，就得换一本反向电话簿。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} mon* 可在有序 lexicon 中定位 mon 前缀区间；*mon 需要 reverse lexicon 才方便；m*n 这类中间通配更复杂，通常需要把候选 terms 先找出来再过滤。wild-card search 的核心不是直接查文档，而是先在 vocabulary 中展开匹配的 terms。
+
+\noindent\textbf{考试问法：} 若问 wildcard processing，要说两阶段：在 lexicon 找匹配 terms，然后把这些 terms 的 postings 合并。
+
+\Needspace{0.38\textheight}
+\section{9. Character n-gram index：给词项拆零件}
+\slideimage{10}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_06indexing2.pdf}
+\begin{callout}{人话直觉}
+把 month 拆成 mo、on、nt、th；查询 mon* 时先找含这些零件的候选词，再验明正身。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} character n-gram index 枚举 vocabulary terms 中出现的字符 n-grams。query time 把 wildcard pattern 转成 n-gram 约束，例如 mon* 可产生 \$m、mo、on 等约束，先求候选 terms，再用原 pattern post-filter，避免 moon 等误匹配。char n-grams 还可用于 OCR 错误、拼写变体或无成熟 stemmer 的语言。
+
+\noindent\textbf{考试问法：} 常考 n-gram index 的 false positives：第一步只产生候选，必须 post-filter。
+
+\section{考试速记版}
+\begin{itemize}
+\item Structured documents 可忽略结构、分 field 建 index，或用 extent index。
+\item Extent index 把 field/tag span 作为特殊 term，支持字段约束查询。
+\item Index compression 主要收益是省空间、少 I/O、更多缓存；代价是解码 CPU。
+\item Delta encoding 存相邻 docID 的 gap，频繁 term 尤其受益。
+\item v-byte 用变长 byte 表示 gap，高位做继续/终止标记。
+\item Wildcard query 先在 lexicon 展开匹配 terms，再合并 postings。
+\item Character n-gram index 会产生候选，需要 post-filter。
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+Indexing 2 扩展了基本 inverted index。对于 structured documents，可以忽略结构、为字段分别建索引，或用 extent index 把 headline、body、tag 等字段 span 作为特殊 term 存入索引，从而支持 fielded search。由于 inverted index 很大，compression 通过 delta encoding 和 v-byte 等方法减少存储与 I/O，让更多数据进入 cache，但会增加解码处理。对于 wildcard queries，系统通常先在 lexicon 中找出匹配词项，再合并 postings；prefix 查询适合 B-tree，复杂 wildcard 可借助 character n-gram index 生成候选并 post-filter。
+\end{callout}
+\end{document}

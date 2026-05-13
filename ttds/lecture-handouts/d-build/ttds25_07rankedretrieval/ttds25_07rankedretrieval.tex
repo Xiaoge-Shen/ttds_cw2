@@ -1,0 +1,182 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 07}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}Ranked Retrieval 1：从 match/no match 到排序分数}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily Boolean retrieval limitation $\rightarrow$ top-k ranked output $\rightarrow$ Jaccard baseline $\rightarrow$ TF/DF/IDF $\rightarrow$ TF-IDF weighting $\rightarrow$ Vector Space Model $\rightarrow$ length normalization $\rightarrow$ cosine similarity $\rightarrow$ SMART notation
+\end{chainbox}
+\slideimage{2}{0.72}{/Users/huez/Documents/ttds/lec/ttds25_07rankedretrieval.pdf}
+\begin{callout}{这节课一句话}
+这节课把检索从 Boolean 的“进不进名单”，升级为 ranked retrieval 的“谁最应该排在前面”。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. Boolean retrieval 的天花板}
+\slideimage{2}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_07rankedretrieval.pdf}
+\begin{callout}{人话直觉}
+Boolean 像门口保安：只说“能进/不能进”；但搜索引擎需要前台排序：谁最值得先见。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Boolean retrieval 给每个 document match/no match，适合专家用户和精确约束，但普通用户通常输入 free text query，并期待系统返回 top-k ranked results。ranked retrieval 给每个 document 一个 score，再按分数排序。
+
+\noindent\textbf{考试问法：} 若问 ranked vs Boolean，核心区别是 binary decision vs score-based ranking/top-k。
+
+\Needspace{0.38\textheight}
+\section{2. Ranking output：score(d,q)}
+\slideimage{3}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_07rankedretrieval.pdf}
+\begin{callout}{人话直觉}
+不是把所有候选文档倒在桌上，而是给每份卷子打分，从高到低发给用户。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} ranked retrieval 通常输出 query\_id、document\_id 和 score。score(d,q) 表示 document d 与 query q 的匹配程度或相关性估计。系统可以只返回 top-k，因为用户一般只看前几条。
+
+\[
+d_1 \succ d_2 \quad \text{if}\quad score(q,d_1)>score(q,d_2)
+\]
+\noindent\textbf{考试问法：} 答 ranked retrieval pipeline 时要出现 score、sort、top-k 三个词。
+
+\Needspace{0.38\textheight}
+\section{3. Jaccard：一个太朴素的 overlap 分数}
+\slideimage{4}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_07rankedretrieval.pdf}
+\begin{callout}{人话直觉}
+Jaccard 只数两袋词有多少交集，不管“the”和“serendipity”谁更珍贵，也不管某个词出现多少次。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Jaccard coefficient 衡量两个集合 overlap，取 intersection 除以 union。它能作为简单 similarity，但不考虑 term frequency，所有 terms 权重相同，也缺少良好的 length normalization。
+
+\[
+J(A,B)=\frac{|A\cap B|}{|A\cup B|}
+\]
+\noindent\textbf{考试问法：} 若问 Jaccard limitations，答不考虑 tf、不区分 rare/common terms、length normalization 弱。
+
+\Needspace{0.38\textheight}
+\section{4. TF：一个词在本文档里有多响}
+\slideimage{5}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_07rankedretrieval.pdf}
+\begin{callout}{人话直觉}
+如果一篇文章反复提到 indexing，它大概率真的在讲 indexing；但第 10 次出现没有第 1 次那么惊艳。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} term frequency tf(t,d) 是 term t 在 document d 中出现次数。TF-IDF 常用 log-scaled tf，让第一次出现贡献很大，后续出现仍加分但边际收益递减。
+
+\[
+tf\text{-}weight(t,d)=1+\log_{10}tf(t,d)
+\]
+\noindent\textbf{考试问法：} 若问为什么用 log TF，答 dampen repeated occurrences，避免重复词无限加分。
+
+\Needspace{0.38\textheight}
+\section{5. DF/IDF：越常见越不稀罕}
+\slideimage{6}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_07rankedretrieval.pdf}
+\begin{callout}{人话直觉}
+“the” 像空气，哪里都有，不能帮你定位；稀有词像门牌号，越少见越能指路。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} df(t) 是包含 term t 的 document 数量，cf(t) 是 term 在 collection 中出现总次数。inverse document frequency 用 N/df(t) 的 log 衡量词的区分能力：出现在越多文档中的词 IDF 越低。
+
+\[
+idf(t)=\log_{10}\frac{N}{df(t)}
+\]
+\noindent\textbf{考试问法：} 考试常让区分 df 与 cf：df 数 documents，cf 数 occurrences。
+
+\Needspace{0.38\textheight}
+\section{6. TF-IDF：本文档高频 \(\times\) 全集合稀有}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_07rankedretrieval.pdf}
+\begin{callout}{人话直觉}
+好关键词要同时满足两件事：在这篇文档里声音大，在别的文档里不吵。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} TF-IDF term weight 同时奖励 document 内高频和 collection 中稀有。它是经典强 baseline，简单、可解释、易实现。query-document score 可对共有 query terms 的权重求和，也可作为 VSM 中的向量权重。
+
+\[
+w_{t,d}=(1+\log_{10}tf(t,d))\log_{10}\frac{N}{df(t)}
+\]
+\noindent\textbf{考试问法：} 若考 TF-IDF，必须定义 tf、df/idf，再解释“文档内多、集合中少”这一直觉。
+
+\Needspace{0.38\textheight}
+\section{7. Vector Space Model：把文本放进几何空间}
+\slideimage{8}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_07rankedretrieval.pdf}
+\begin{callout}{人话直觉}
+query 和 document 都变成箭头；相关性不是看箭头绝对多长，而是看它们指向是不是相近。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} VSM 将 documents 和 queries 表示为同一 term space 中的 weighted vectors。每个维度是 term，值可由 TF-IDF 等 weighting 给出。匹配时比较 query vector 与 document vector 的相似度。
+
+\noindent\textbf{考试问法：} 答 VSM 时要说 shared term space、weighted vectors、similarity/ranking。
+
+\Needspace{0.38\textheight}
+\section{8. Length normalization：别奖励“啰嗦”}
+\slideimage{9}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_07rankedretrieval.pdf}
+\begin{callout}{人话直觉}
+一篇文档复制粘贴一遍，语义没变，但长度翻倍；如果直接按点积或欧氏距离，就会被长度骗。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 长文档包含更多 terms，容易得到更高 raw score。L2 normalization 将向量除以其长度，使比较更关注方向而非规模。复制文档后向量长度变大，但 normalized direction 基本不变。
+
+\[
+\|\vec{x}\|_2=\sqrt{\sum_i x_i^2},\quad \vec{x}'=\frac{\vec{x}}{\|\vec{x}\|_2}
+\]
+\noindent\textbf{考试问法：} 若问为什么不用 Euclidean distance，答 document length 会扭曲相似度；cosine/normalization 更稳。
+
+\Needspace{0.38\textheight}
+\section{9. Cosine similarity：看夹角，不看体重}
+\slideimage{10}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_07rankedretrieval.pdf}
+\begin{callout}{人话直觉}
+两个箭头方向越一致，说明 query 想要的词权重模式和 document 越接近。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} cosine similarity 是 query vector 与 document vector 的点积除以各自长度。若 vectors 已归一化，cosine 就等于 dot product。它是 VSM 中最常见的 ranking score。
+
+\[
+\cos(\vec q,\vec d)=\frac{\vec q\cdot\vec d}{\|\vec q\|\|\vec d\|}
+\]
+\noindent\textbf{考试问法：} 公式题要写 numerator 是 dot product，denominator 是两个 L2 norms；归一化后直接点积。
+
+\Needspace{0.38\textheight}
+\section{10. SMART notation：给 weighting scheme 起缩写名}
+\slideimage{11}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_07rankedretrieval.pdf}
+\begin{callout}{人话直觉}
+SMART 像配方标签：document 怎么处理、query 怎么处理，用六个字母浓缩写清楚。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} SMART notation 用 ddd.qqq 描述 document 和 query 的 term weighting scheme，包括 tf scaling、idf usage、normalization 等。例如 lnc.ltc 表示 documents 和 queries 使用不同组合。它帮助系统化比较 weighting variants。
+
+\noindent\textbf{考试问法：} 若问 SMART，不必背所有组合细节，但要知道它描述 query/document 的 weighting scheme。
+
+\section{考试速记版}
+\begin{itemize}
+\item Ranked retrieval 给 document 打 score 并返回 top-k；Boolean 只有 match/no match。
+\item Jaccard 是 |交集|/|并集|，缺点是不看 tf、idf 和长度。
+\item TF 表示词在文档中出现次数；log TF 体现边际收益递减。
+\item IDF 表示词的集合稀有性：df 越大，idf 越小。
+\item TF-IDF = 文档内高频 \(\times\) 集合中稀有，是强 baseline。
+\item VSM 把 query/document 表示为 term vectors，用 cosine similarity 排序。
+\item Length normalization 防止长文档仅因更长而占便宜。
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+Ranked retrieval 解决 Boolean retrieval 只有 match/no match、不能排序的问题。系统为每个 document 对 query 计算 score，并返回 top-k。最简单的 Jaccard 只看集合 overlap，但不考虑 term frequency、term rarity 和 length normalization。TF-IDF 用 tf 衡量 term 在文档中的重要性，用 idf 衡量它在 collection 中的区分能力，常写为 (1+log tf)log(N/df)。在 Vector Space Model 中，query 和 document 都表示为 TF-IDF weighted vectors，再用 cosine similarity 比较方向相似度；L2 normalization 可减少文档长度差异造成的偏置。
+\end{callout}
+\end{document}

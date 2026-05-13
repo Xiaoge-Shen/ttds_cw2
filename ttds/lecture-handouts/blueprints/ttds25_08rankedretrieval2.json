@@ -1,0 +1,165 @@
+{
+  "lecture": "TTDS 08",
+  "source_pdf": "ttds25_08rankedretrieval2.pdf",
+  "title": "Ranked Retrieval 2：概率模型、BM25 与语言模型",
+  "one_sentence": "这节课把 ranking 从 TF-IDF 的工程配方推进到概率视角：文档为什么相关、BM25 为什么稳、语言模型为什么能用“生成 query”的概率排序。",
+  "concept_chain": [
+    "VSM heuristic",
+    "probabilistic uncertainty",
+    "PRP",
+    "relevance probability",
+    "BM25",
+    "language model for IR",
+    "query likelihood",
+    "MLE zero problem",
+    "smoothing",
+    "model comparison"
+  ],
+  "slides": [
+    {
+      "page": 2,
+      "reason": "回顾 TF-IDF 的优点和 length bias，为概率模型引入动机。",
+      "caption": "TF-IDF 有效但 heuristic，仍有长文档偏置。"
+    },
+    {
+      "page": 3,
+      "reason": "概率模型与 PRP 的理论起点。",
+      "caption": "IR 天生有不确定性，概率论给出表示方式。"
+    },
+    {
+      "page": 4,
+      "reason": "PRP 的形式化：按 relevance probability 排序。",
+      "caption": "如果估计足够准，按 P(R|D) 排就是最优。"
+    },
+    {
+      "page": 5,
+      "reason": "relevance probability 的语义解释。",
+      "caption": "相关性不是窥探大脑，而是在不可见用户/场景上的比例。"
+    },
+    {
+      "page": 6,
+      "reason": "BM25 ranking function 的关键公式。",
+      "caption": "BM25 = saturated TF + IDF + length normalization。"
+    },
+    {
+      "page": 8,
+      "reason": "LM for IR 的 noisy-channel/生成视角。",
+      "caption": "好文档的语言模型应该能生成用户 query。"
+    },
+    {
+      "page": 13,
+      "reason": "query likelihood model 的独立假设公式。",
+      "caption": "把 query probability 拆成各 term probability 的乘积。"
+    },
+    {
+      "page": 15,
+      "reason": "zero probability 和 smoothing 动机。",
+      "caption": "没观察到不等于不可能出现。"
+    },
+    {
+      "page": 16,
+      "reason": "Jelinek-Mercer smoothing 公式与 lambda 行为。",
+      "caption": "document LM 与 collection LM 的线性混合。"
+    },
+    {
+      "page": 18,
+      "reason": "LM for IR 的三种可能方向总结。",
+      "caption": "document 生成 query、query 生成 document、topic LM 比较。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "TF-IDF 很强，但理论感偏弱",
+      "slide_page": 2,
+      "intuition": "TF-IDF 像一套经验丰富的厨师配方：很好吃，但你还想知道每个调料为什么该这么放。",
+      "explanation": "VSM/TF-IDF 没有显式建模 relevance，只是组合 weighting scheme 和 similarity measure。它非常流行、强 baseline、难以击败，但 components 不完全可解释，也容易依赖 tweak-run-observe 的工程循环。",
+      "exam_angle": "若问为什么引入 probabilistic model，答 VSM heuristic、缺少 explicit relevance notion、概率模型能定义 random variables 和 assumptions。"
+    },
+    {
+      "title": "PRP：按相关概率排序",
+      "slide_page": 4,
+      "intuition": "如果你能估计每篇文档“正中用户意图”的概率，那么最合理的事就是从最高概率开始排。",
+      "explanation": "Probability Ranking Principle 认为，在可用数据下，如果系统能尽可能准确估计每个 document 对请求的 relevance probability，那么按该概率递减排序能获得最佳 effectiveness。",
+      "exam_angle": "PRP 答题核心：rank by decreasing probability of relevance，probabilities estimated as accurately as possible from available data。",
+      "formula_latex": "P(R=1\\mid d_1,q)>P(R=1\\mid d_2,q)\\Rightarrow d_1\\succ d_2"
+    },
+    {
+      "title": "相关概率不是读心术",
+      "slide_page": 5,
+      "intuition": "系统看不到你脑子里的真实 need，只能根据 query、document、context、user profile 等影子去猜。",
+      "explanation": "真实 relevance 受用户、任务、上下文影响，不同用户可能对同一 document 判断不同。P_true(rel|Q,D) 可理解为在未观察用户/情境/任务中，D 会被判 relevant 的比例；系统只能估计 P_est。",
+      "exam_angle": "若问 relevance probability 如何理解，不要说用户主观就没概率；要说是对不可见用户/场景的比例性估计。"
+    },
+    {
+      "title": "BM25：概率模型落地成强公式",
+      "slide_page": 6,
+      "intuition": "BM25 像 TF-IDF 的升级款避震车：仍奖励关键词出现和稀有性，但更稳地处理重复词和长文档。",
+      "explanation": "BM25 源于 probabilistic retrieval/Binary Independence Model 的扩展，是经典且强大的 ranking function。它包含 term frequency saturation、IDF 和 document length normalization；k 控制 tf saturation，文档长度用 L_d/L_avg 调整。",
+      "exam_angle": "若考 BM25，答 saturated TF、IDF、length normalization，并说明 k 控制 tf 增长饱和。",
+      "formula_latex": "w_{t,d}=\\frac{tf_{t,d}}{tf_{t,d}+k\\left((1-b)+b\\frac{L_d}{L_{avg}}\\right)}\\log_{10}\\frac{N-df_t+0.5}{df_t+0.5}"
+    },
+    {
+      "title": "BM25 为什么比朴素 TF-IDF 稳",
+      "slide_page": 7,
+      "intuition": "一个词出现 2 次比 1 次重要，但出现 200 次不该比 100 次再重要一倍；BM25 会让这种增长慢慢饱和。",
+      "explanation": "BM25 与 TF-IDF 都奖励 document 内 query term 出现和 collection rare terms，但 BM25 更明确地处理 tf saturation 和 document length bias。长文档不会仅因词多而持续占优，重复词也不会无限加分。",
+      "exam_angle": "比较 BM25 vs TF-IDF 时，重点说 BM25 显式加入 saturation 与 length normalization。"
+    },
+    {
+      "title": "Language Model for IR：好文档会“说出” query",
+      "slide_page": 8,
+      "intuition": "如果一篇文档的语言习惯很容易吐出你的 query，那么它很可能在讲你要找的东西。",
+      "explanation": "LM approach 为每个 document 建 language model，并按 query likelihood P(q|M_d) 排序。Bayes rule 下 P(d|q) 与 P(q|d) 相关，若 P(q) 对所有 documents 相同、P(d) 作为相同 prior 或另行处理，就可以比较 P(q|M_d)。",
+      "exam_angle": "若问 LM for IR 核心思想，答 document language model 生成 query 的概率越高，document 越相关。",
+      "formula_latex": "P(d\\mid q)=\\frac{P(q\\mid d)P(d)}{P(q)}"
+    },
+    {
+      "title": "Unigram LM 与 query likelihood",
+      "slide_page": 13,
+      "intuition": "先假装 query 里的词像从一个词袋里独立抽球，这样复杂句子概率就能拆成单词概率乘积。",
+      "explanation": "unigram LM 假设 terms 条件独立，不考虑顺序。query likelihood model 将 P(q|M_d) 分解为 query terms 在 document model 下概率的乘积，也可按 query term frequency 写成幂次形式。",
+      "exam_angle": "公式题要写 conditional independence assumption，并说明 M_d 是 document language model。",
+      "formula_latex": "P(q\\mid M_d)=\\prod_{t\\in q}P(t\\mid M_d)^{tf(t,q)}"
+    },
+    {
+      "title": "MLE 的零概率问题",
+      "slide_page": 14,
+      "intuition": "一篇文章没出现某个词，不代表它的主题模型绝不可能说这个词；样本没见到不等于世界不存在。",
+      "explanation": "MLE 通常用 tf(t,d)/|d| 估计 document LM。若 query term 没出现在 document 中，概率为 0，整个 query likelihood 乘积变 0。这对检索过于严厉，因为 document text 只是语言模型的一个 sample。",
+      "exam_angle": "若问为什么需要 smoothing，答 zero frequency/data sparsity：unseen query term 会让 P(q|M_d)=0。",
+      "formula_latex": "P_{MLE}(t\\mid M_d)=\\frac{tf(t,d)}{|d|}"
+    },
+    {
+      "title": "Smoothing：给没见过的词留一口气",
+      "slide_page": 15,
+      "intuition": "没在这篇文档里见过的词，不该判死刑；可以向整个 collection 借一点背景概率。",
+      "explanation": "smoothing 给 unseen terms 分配非零概率，同时降低 observed terms 的过度自信估计。mixture/Jelinek-Mercer smoothing 将 document LM 与 collection LM 线性混合，lambda 控制文档证据和背景语言的权衡。",
+      "exam_angle": "若考 smoothing，说明目标是解决 zero probability，并写 document LM 与 collection LM 的混合。",
+      "formula_latex": "P(t\\mid d)=\\lambda P(t\\mid M_d)+(1-\\lambda)P(t\\mid M_c)"
+    },
+    {
+      "title": "λ 的检索行为：conjunctive vs disjunctive",
+      "slide_page": 16,
+      "intuition": "λ 高时更执着于本文档有没有这些词，像 AND；λ 低时更宽容，像 OR 风格的长 query 检索。",
+      "explanation": "Jelinek-Mercer 中高 lambda 更依赖 document LM，倾向检索包含所有 query words 的 documents，表现为 conjunctive-like。低 lambda 更多借 collection background，行为更 disjunctive，适合 long queries。",
+      "exam_angle": "lambda 行为常考：高 λ 更 conjunctive-like；低 λ 更 disjunctive/long-query friendly。"
+    },
+    {
+      "title": "三种模型问的是不同问题",
+      "slide_page": 18,
+      "intuition": "VSM 问“向量像不像”，概率模型问“相关概率多大”，LM 问“这篇文档能不能生成这个 query”。",
+      "explanation": "VSM 使用 weighting 与 similarity；probabilistic model 显式建模 relevance probability；LM for IR 则用 language model 的生成概率解释匹配。三者都可有效，BM25 和 query likelihood LM 往往效果相近，更复杂方法可能超过 BM25。",
+      "exam_angle": "模型比较题要按核心问题区分：alignment、relevance probability、query generation likelihood。"
+    }
+  ],
+  "quick_revision": [
+    "VSM/TF-IDF 很强但 heuristic，没有显式 relevance probability。",
+    "PRP：按 decreasing probability of relevance 排序，估计越准越好。",
+    "P_true(rel|Q,D) 可理解为跨未观察用户/情境的相关比例。",
+    "BM25 = saturated TF + IDF + document length normalization。",
+    "LM for IR：document language model 生成 query 的概率越高，排名越靠前。",
+    "MLE 会让 unseen query term 概率为 0，因此需要 smoothing。",
+    "Jelinek-Mercer：λP(t|M_d)+(1-λ)P(t|M_c)，λ 控制 conjunctive/disjunctive 行为。"
+  ],
+  "exam_answer": "Probabilistic retrieval 的核心是把 IR 中的不确定性形式化，并按 relevance probability 排序。PRP 认为，如果能基于可用数据尽可能准确估计 P(R=1|d,q)，按该概率递减排序可获得最优 effectiveness。BM25 是概率检索思想中最重要的实际公式之一，它结合 saturated term frequency、IDF 和 document length normalization，因此比朴素 TF-IDF 更稳。Language Model for IR 则为每个 document 建 LM，并按 P(q|M_d) 即 document model 生成 query 的概率排序；MLE 会导致 unseen terms 概率为 0，所以需要 smoothing，如 Jelinek-Mercer 用 λP(t|M_d)+(1-λ)P(t|M_c) 混合文档模型和 collection 背景模型。"
+}

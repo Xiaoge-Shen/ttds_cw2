@@ -1,0 +1,587 @@
+                                                           10/7/25
+
+
+
+
+                  Text Technologies for Data Science
+                                    INFR11145
+
+                                   Ranked IR
+                                     Instructor:
+                                    Walid Magdy
+
+
+    8-Oct-2025
+
+
+
+1
+
+
+
+
+     Lecture Objectives
+        • Learn about Ranked IR
+                 • TFIDF
+                 • VSM
+                 • SMART notation
+
+        • Implement:
+                 • TFIDF
+
+
+
+
+                                                       2
+     Walid Magdy, TTDS 2025/2026
+
+2
+
+
+
+
+                                                                1
+                                                                              10/7/25
+
+
+
+
+    Boolean Retrieval
+       • Thus far, our queries have all been Boolean.
+            • Documents either: “match” or “no match”.
+       • Good for expert users with precise understanding of
+          their needs and the collection.
+            • Patent search uses sophisticated sets of Boolean queries
+                and check hundreds of search results
+                (car OR vehicle) AND (motor OR engine) AND NOT (cooler)
+       • Not good for the majority of users.
+            • Most incapable of writing Boolean queries.
+            • Most don’t want to go through 1000s of results.
+                • This is particularly true for web search
+                • Question: What is the most unused web-search feature?
+                                                                          3
+    Walid Magdy, TTDS 2025/2026
+
+3
+
+
+
+
+    Ranked Retrieval
+       • Typical queries: free text queries
+       • Results are “ranked” with respect to a query
+       • Large result sets are not an issue
+            • We just show the top k ( ≈ 10) results
+            • We don’t overwhelm the user
+       • Criteria:
+            • Top ranked documents are the most likely to satisfy user’s
+                query
+            • Score is based on how well documents match a query
+                Score(d,q)
+                                                                          4
+    Walid Magdy, TTDS 2025/2026
+
+4
+
+
+
+
+                                                                                   2
+                                                                                            10/7/25
+
+
+
+
+    Old Example
+       • Find documents matching query {ink wink}
+            1. Load inverted lists for each query word
+            2. Merge two postings lists à Linear merge
+       • Apply function for matches
+            • Boolean: exist / not exist = 0 or 1
+            • Ranked: f(tf, df, length, ….) = 0 à 1                Matches
+                                                                   1: f(0,1) = 0.4
+
+            ink                                                    3: f(1,0) = 0.3
+                                  3:1   4:1   5:1
+                                                                   4: f(1,0) = 0.6
+         wink                     1:1   5:1
+                                                                   5: f(1,1) = 0.7
+
+                                                                                        5
+    Walid Magdy, TTDS 2025/2026
+
+5
+
+
+
+
+    Function example: Jaccard coeffecient
+       • a commonly used measure of overlap of two sets A
+          and B
+       • 𝑗𝑎𝑐𝑐𝑎𝑟𝑑 𝐴, 𝐵 = !∩#
+                        !∪#
+                                              D1: He likes to wink, he likes to drink
+                                              D2: He likes to drink, and drink, and drink
+
+       • 𝑗𝑎𝑐𝑐𝑎𝑟𝑑 𝐴, 𝐴 = 1
+       • 𝑗𝑎𝑐𝑐𝑎𝑟𝑑 𝐴, 𝐵 = 0,              if 𝐴 ∩ 𝐵 = 0
+       • Example:
+            • D1 ∪ D2 = {he, likes, to, wink, and, drink}
+            • D1 ∩ D2 = {he, likes, to, drink}
+            • 𝑗𝑎𝑐𝑐𝑎𝑟𝑑 𝐷1, 𝐷2 = !" = 0.6667
+                                                                                        6
+    Walid Magdy, TTDS 2025/2026
+
+6
+
+
+
+
+                                                                                                 3
+                                                                        10/7/25
+
+
+
+
+    Jaccard coefficient: Issues
+       • Does not consider term frequency (how many times a
+          term occurs in a document)
+       • It treats all terms equally!
+            • How about rare terms in a collection?
+              more informative than frequent terms.
+            • He likes to drink, shall “to” == “drink”?
+       • Needs more sophisticated way of length normalization
+            • |D1| = 3, |D2| = 1000!
+            • D1 à Q, D2 à D
+
+
+                                                                    7
+    Walid Magdy, TTDS 2025/2026
+
+7
+
+
+
+
+    Should terms be treaded the same?
+       • Collection of 5 documents (balls = terms)
+       • Query
+       • Which is the least relevant document?
+       • Which is the most relevant document?
+
+          D1                 D2         D3                D4   D5
+
+
+
+
+                                                                    8
+    Walid Magdy, TTDS 2025/2026
+
+8
+
+
+
+
+                                                                             4
+                                                                                 10/7/25
+
+
+
+
+     TFIDF
+       • TFIDF:
+           Term Frequency, Inverse Document Frequency
+       • tf(t,d):
+           number of times term t appeared in document d
+            • As 𝑡𝑓 𝑡, 𝑑 ↑↑ à importance of t in d ↑↑
+            • Document about IR, contains “retrieval” more than others
+       • df(t):
+           number of documents term t appeared in
+            • As d𝑓 𝑑 ↑↑ à importance if t in a collection ↓↓
+                 • “the” appears in many document à not important
+                 • “FT” is not important word in financial times articles
+                                                                            9
+     Walid Magdy, TTDS 2025/2026
+
+9
+
+
+
+
+     DF, CF, & IDF
+       • DF ≠ CF (collection frequency)
+             • cf(t) = total number of occurrences of term t in a collection
+             • df(t) ≤ N (N: number of documents in a collection)
+             • cf(t) can be ≥ N
+       • DF is more commonly used in IR than CF
+             • CF is still used
+       • idf(t): inverse of df(t)
+             • As i𝑑𝑓 𝑡 ↑↑ à rare term à importance ↑↑
+             • idf(t) à measure of the informativeness of t
+
+
+                                                                            10
+     Walid Magdy, TTDS 2025/2026
+
+10
+
+
+
+
+                                                                                      5
+                                                                                                           10/7/25
+
+
+
+
+     DF vs CF
+
+       he   drink   ink   likes   pink   think   wink
+        2    1      0      2      0       0      1      ß D1: He likes to wink, he likes to drink
+        1    3      0      1      0       0      0      ß D2: He likes to drink, and drink, and drink
+        1    1      1      1      0       1      0      ß D3: The thing he likes to drink is ink
+        1    1      1      1      1       0      0      ß D4: The ink he likes to drink is pink
+        1    1      1      1      1       0      1      ß D5: He likes to wink, and drink pink ink
+
+        5    5      3      5      2       1      2 DF
+        6    7      3      6      2       1      2 CF
+
+
+                                                                                                      11
+     Walid Magdy, TTDS 2025/2026
+
+11
+
+
+
+
+     IDF: formula
+                                                         𝑁
+                                          i𝑑𝑓 𝑡 = 𝑙𝑜𝑔78(     )
+                                                        𝑑𝑓 𝑡
+
+       • Log scale used to dampen the effect of IDF
+                                                                 term        df(t)           idf(t)
+
+       • Suppose N = 1 million à calpurnia                                              1      6
+                                                                 animal               100      4
+                                                                 sky                 1,000     3
+                                                                 fly             10,000        2
+                                                                 under         100,000         1
+                                                                 the         1,000,000         0
+
+                                                                                                      12
+     Walid Magdy, TTDS 2025/2026
+
+12
+
+
+
+
+                                                                                                                6
+                                                                                                     10/7/25
+
+
+
+
+     TFIDF term weighting
+       • One the best known term weights schemes in IR
+               • Increases with the number of occurrences within a
+                 document
+               • Increases with the rarity of the term in the collection
+       • Combines TF and IDF to find the weight of terms
+                                                 𝑁
+                 𝑤9.: = 1 + 𝑙𝑜𝑔78𝑡𝑓 𝑡, 𝑑 ×𝑙𝑜𝑔78(     )
+                                                𝑑𝑓 𝑡
+       • For a query q and document d, retrieval score f(q,d):
+                                𝑆𝑐𝑜𝑟𝑒(𝑞, 𝑑) = 6 𝑤9.:
+                                                           9∈<∩:
+                                                                                                13
+     Walid Magdy, TTDS 2025/2026
+
+13
+
+
+
+
+     Document/Term vectors with tfidf
+
+                  !"#A"BC'"(C)*HA,'#J'   ./*M/1C)'H1'J   O3HCOH4,H1#   5'4*H#   6#3H**A   T'89H#3
+
+      !"#A"B             :;<:                =;>?            @           @        @        @;=:
+      AJ/#/1             >;<>                B;>             @           >        @         @
+      )'H1'J             ?;:C                <;:a            @          >;:>     @;<:       @
+     )'*,/J"M'             @                 >;:a            @           @        @         @
+     )*HA,'#J'           <;?:                 @              @           @        @         @
+      4HJ8B              >;:>                 @              >;C        @;><     :;<:      @;??
+      bAJ1HJ             >;=c                 @             @;>>        a;>:     @;<:      >;C:
+
+
+
+
+       à Vector Space Model
+
+                                                                                                14
+     Walid Magdy, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                                                          7
+                                                                           10/7/25
+
+
+
+
+     Vector Space Model
+       • Documents and Queries are presented as vectors
+       • Match (Q,D) = Distance between vectors
+       • Example: Q= Gossip Jealous
+       • Euclidean Distance?
+           Distance between the endpoints
+           of the two vectors
+       • Large for vectors of diff. lengths
+       • Take a document d and append it to itself. Call this
+           document d′.
+            • “Semantically” d and d′ have the same content
+            • Euclidean distance can be quite large
+                                                                     15
+     Walid Magdy, TTDS 2025/2026
+
+15
+
+
+
+
+     Angle Instead of Distance
+       • The angle between the two documents is 0,
+           corresponding to maximal similarity.
+       • Key idea: Rank documents according to angle with
+           query.
+            • Rank documents in increasing order of the angle with query
+            • Rank documents in decreasing order of cosine (query,
+                document)
+       • Cosine of angle = projection of one
+           vector on the other
+
+
+
+                                                                     16
+     Walid Magdy, TTDS 2025/2026
+
+16
+
+
+
+
+                                                                                8
+                                                                       10/7/25
+
+
+
+
+     Length Normalization
+       • A vector can be normalized by dividing each of its
+           components by its length – for this we use the L2 norm:
+
+                                   𝑥⃗ % =   / 𝑥&%
+                                              &
+
+       • Dividing a vector by its L2 norm makes it a unit (length)
+           vector (on surface of unit hypersphere)
+       • Effect on the two documents d and d′ (d appended to
+           itself) from earlier slide: they have identical vectors
+           after length-normalization.
+             • Long and short documents now have comparable weights
+                                                                  17
+     Walid Magdy, TTDS 2025/2026
+
+17
+
+
+
+
+     Example
+               1
+       • D1 = 3 è 𝐷1 % = 1 + 9 + 4 = 3.74
+               2
+                        0.267
+       • D1normalized = 0.802
+                        0.535
+               3
+       • D2 = 9 è 𝐷1 % = 9 + 81 + 36 = 11.25
+               6
+                        0.267
+       • D2normalized = 0.802
+                        0.535
+                                                                  18
+     Walid Magdy, TTDS 2025/2026
+
+18
+
+
+
+
+                                                                            9
+                                                                               10/7/25
+
+
+
+
+     Cosine “Similarity” (Query, Document)
+       • 𝑞⃗& is the tf-idf weight of term 𝑖 in
+           the query
+       • 𝑑⃗& is the tf-idf weight of term 𝑖 in
+           the document
+       • For normalized vectors:
+                                          |*|
+                𝑞, 𝑑⃗ = 𝑞⃗ @ 𝑑⃗ = ∑&'( 𝑞& 𝑑&
+            cos ⃗
+       • For non-normalized vectors:
+                                    𝑞⃗ @ 𝑑⃗   𝑞⃗   𝑑⃗        ∑|*|
+                                                              &'( 𝑞& 𝑑&
+                𝑞, 𝑑⃗ =
+            cos ⃗                           =    @    =
+                                   𝑞⃗ 𝑑⃗      𝑞⃗   𝑑⃗
+                                                          ∑|*|      |*|
+                                                               𝑞 % ∑&'( 𝑑&%
+                                                           &'( &
+                                                                          19
+     Walid Magdy, TTDS 2025/2026
+
+19
+
+
+
+
+     Algorithm
+
+
+
+
+                                                                          20
+     Walid Magdy, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                                   10
+                                                                      10/7/25
+
+
+
+
+     TFIDF Variants
+
+
+
+
+       • Many search engines allow for different weightings for
+           queries vs. documents
+       • SMART Notation: use notation ddd.qqq, using the
+           acronyms from the table
+       • A very standard weighting scheme is: lnc.ltc
+                                                                 21
+     Walid Magdy, TTDS 2025/2026
+
+21
+
+
+
+
+     For Lab and CW
+
+
+
+
+       “OR” operator, then:
+                                                         𝑁
+           𝑆𝑐𝑜𝑟𝑒(𝑞, 𝑑) = / 1 + 𝑙𝑜𝑔(/ 𝑡𝑓 𝑡, 𝑑 ×𝑙𝑜𝑔(/ (        )
+                                                        𝑑𝑓 𝑡
+                                   +∈-∩.
+
+                                                                 22
+     Walid Magdy, TTDS 2025/2026
+
+22
+
+
+
+
+                                                                          11
+                                                                   10/7/25
+
+
+
+
+     Summary of Steps:
+       • Represent the query as a weighted tf-idf vector
+       • Represent each document as a weighted tf-idf vector
+       • Compute the cosine similarity score for the query
+           vector and each document vector
+       • Rank documents with respect to the query by score
+       • Return the top K (e.g., K = 10) to the user
+
+
+
+
+                                                             23
+     Walid Magdy, TTDS 2025/2026
+
+23
+
+
+
+
+     Retrieval Output
+       • For a query q1, the output would be a list of documents
+           ranked according to the score(q1,d)
+
+       • Possible output format:
+                1,      710,       0.9234
+                1,      213,       0.7678
+                1,      103,       0.6761
+                1,      13,        0.6556
+                1,      501,       0.4301
+     Query id                               score
+                             document id
+
+                                                             24
+     Walid Magdy, TTDS 2025/2026
+
+24
+
+
+
+
+                                                                       12
+                                                             10/7/25
+
+
+
+
+     Resources
+        • Text book 1: Intro to IR, Chapter 6.2 à 6.4
+        • Text book 2: IR in Practice, Chapter 7
+
+
+
+        • Lab 3
+
+
+
+
+                                                        25
+     Walid Magdy, TTDS 2025/2026
+
+25
+
+
+
+
+                                                                 13
+

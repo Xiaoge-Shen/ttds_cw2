@@ -1,0 +1,168 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 13}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}Comparing Text Corpora (2): Topic Models, LDA, and Inference}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily plate notation 表达重复随机过程 $\rightarrow$ unigram model 建立最朴素的词生成基线 $\rightarrow$ mixture of unigrams 让每篇文档先选一个主题 $\rightarrow$ pLSI 允许同一文档混合多个主题但依赖 document ID $\rightarrow$ LDA 用 Dirichlet prior 生成 document-topic mixture $\rightarrow$ model inference 从 corpus 反推 \(\theta\)、\(\Phi\) 和 latent z $\rightarrow$ Gibbs sampling 用反复重采样近似后验 $\rightarrow$ topic modelling 与 annotation/classification 形成两条 corpus analysis 路线
+\end{chainbox}
+\slideimage{2}{0.72}{/Users/huez/Documents/ttds/lec/ttds25_13comparing-corpora-2.pdf}
+\begin{callout}{这节课一句话}
+这节课一句话：topic modelling 是把一堆文档想象成“主题调色盘”生成出来的过程，LDA 用 Dirichlet prior 让每篇文档能混合多个主题，再用近似推断从已观察到的词倒推出隐藏主题。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. 1. Plate notation：把重复过程折叠成一张图}
+\slideimage{2}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_13comparing-corpora-2.pdf}
+\begin{callout}{人话直觉}
+不要把 plate notation 看成神秘数学图；它像菜谱里的“重复 N 次”：同一个投篮动作、同一个掷骰过程、同一个生成 word 的小机器，被框起来批量执行。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} plate 表示某些随机变量和依赖关系会重复出现。课件先用 basketball shooting accuracy 影响 make basket 的例子，再把 first/second/third/nth basket 折叠成一个带 N 的 plate。之后所有 topic model 图里，N 通常表示一篇 document 内的 word tokens，M 表示 corpus 中的 documents。考试看图时，先问：哪些变量重复？哪些变量共享？箭头表示谁影响谁？
+
+\noindent\textbf{考试问法：} 常见问法是解释 plate notation 中 N/M 的意义，或根据图说明变量 w、z、\(\theta\) 是否按 word 或 document 重复。答题不要只说“框框”，要说它压缩表达 repeated random variables 和 conditional dependencies。
+
+\Needspace{0.38\textheight}
+\section{2. 2. Unigram model：只有一个全局词袋的世界}
+\slideimage{5}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_13comparing-corpora-2.pdf}
+\begin{callout}{人话直觉}
+想象全班所有文章都从同一个巨大的抽词罐里抓词：无论文章讲狗、车还是政治，都用同一套词概率。这当然粗糙，但它是理解后续模型的地板。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} unigram model 假设每个 word 独立地从同一个 vocabulary probability distribution 生成；文档只是 words 的 sequence/vector。句子概率就是逐词相乘。课件例子中“My dog barked at another dog.”的概率按 my、dog、barked、at、another、dog 的单词概率连乘得到。它的价值是清楚展示 generative model 的基本思想；局限是完全不区分 documents 或 topics。
+
+\[
+P(w_1,\ldots,w_N)=\prod_{i=1}^{N}P(w_i)
+\]
+\noindent\textbf{考试问法：} 若问 unigram probability，写出 product of word probabilities；若问局限，强调 one global word distribution、independence assumption、不能表达文档主题差异。
+
+\Needspace{0.38\textheight}
+\section{3. 3. 为什么不能只追求“文本概率越高越好”}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_13comparing-corpora-2.pdf}
+\begin{callout}{人话直觉}
+一个模型如果给所有胡言乱语也很高概率，就像老师给所有答案都满分：看似宽容，实际没判别力。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 课件在 unigram 后追问：为什么还要更复杂模型？关键不是让所有 possible text 概率都高，而是让真实语料中的 documents 高、noise 或不符合语料结构的文本低。topic model 的复杂度来自它想解释：不同文档为什么有不同词分布，同一文档内部为什么词会围绕某些 latent themes 聚集。
+
+\noindent\textbf{考试问法：} 若考“more complex model 的 point”，不要答成“提高所有 probability”。应答：better fit real documents while assigning lower probability to noise，并能捕捉 document/topic structure。
+
+\Needspace{0.38\textheight}
+\section{4. 4. Mixture of unigrams：每篇文档只戴一顶主题帽}
+\slideimage{8}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_13comparing-corpora-2.pdf}
+\begin{callout}{人话直觉}
+比 unigram 进步的一步是：先决定这篇文章是 pets 还是 vehicles，然后整篇文章都从那个主题的词罐里抽词。但帽子只能戴一顶。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} mixture of unigrams 为每个 document 采样一个 latent topic z，然后该文档所有 words 都从 P(w|z) 生成。计算文档概率时，要对所有可能 topics 做加权求和：每个 topic 的 prior P(z) 乘以该 topic 下所有词概率的乘积。它能表达不同 documents 来自不同 topics，却不能表达一篇文章同时谈 pets 和 vehicles。
+
+\[
+P(\mathbf{w})=\sum_{z}P(z)\prod_{i=1}^{N}P(w_i\mid z)
+\]
+\noindent\textbf{考试问法：} 常见比较题：相对 unigram，它有 document-level topic；相对 LDA/pLSI，它每篇 document 只有一个 topic，不能混合。计算题要记得 sum over z。
+
+\Needspace{0.38\textheight}
+\section{5. 5. pLSI：一篇文档终于可以混合多个主题}
+\slideimage{10}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_13comparing-corpora-2.pdf}
+\begin{callout}{人话直觉}
+pLSI 像给每篇文章一张专属歌单：60\% topic 1、40\% topic 2；每生成一个词时，先按这张歌单选 topic，再按 topic 选词。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} pLSI 的关键变量是 document ID d。模型可理解为先选择 document，再根据 P(z|d) 为每个 word 选择 topic，最后从 P(w|z) 生成 word。它比 mixture of unigrams 灵活，因为同一 document 内不同 word token 可以来自不同 topics。局限也来自 d：参数随训练 documents 增长，对 unseen documents 缺少自然 generative process。
+
+\[
+P(d,w)=P(d)\sum_{z}P(z\mid d)P(w\mid z)
+\]
+\noindent\textbf{考试问法：} 若问 pLSI 与 LDA 区别，抓住 docID dependency：pLSI 学的是每个已见文档的 topic mixture；LDA 用 Dirichlet prior 生成 topic mixtures，更自然处理新文档。
+
+\Needspace{0.38\textheight}
+\section{6. 6. LDA：给每篇文档先抽一盒彩色主题颜料}
+\slideimage{12}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_13comparing-corpora-2.pdf}
+\begin{callout}{人话直觉}
+LDA 的文档不是单色，也不是手工登记好的歌单，而是先从 Dirichlet 分布抽出一份“主题配方”\(\theta\)：可能 70\% sports、20\% politics、10\% tech；每个词再按这份配方选主题和选词。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Latent Dirichlet Allocation 是生成式 topic model。对每篇 document，从 Dirichlet prior \(\alpha\) 采样 document-topic distribution \(\theta\)；对每个 word token，先从 \(\theta\) 采样 latent topic z，再从该 topic 的 topic-word distribution \(\Phi\) 采样 observed word w。\(\beta\) 控制 topic-word distribution/prior。\(\theta\) 是 document over topics，\(\Phi\) 是 topic over words，z 是每个 token 的隐藏主题 assignment，w 是看到的词。
+
+\[
+\theta_d \sim Dirichlet(\alpha),\quad z_{d,i}\sim Multinomial(\theta_d),\quad w_{d,i}\sim Multinomial(\Phi_{z_{d,i}})
+\]
+\noindent\textbf{考试问法：} LDA 生成过程是高频题。答题顺序必须是 document-level \(\theta\)，再 word-level z，再 observed w；同时说明 \(\alpha\)/\(\beta\) 是 priors/smoothing，不要把 \(\theta\) 和 \(\Phi\) 混为一谈。
+
+\Needspace{0.38\textheight}
+\section{7. 7. Model inference：从词的脚印反推隐藏主题}
+\slideimage{13}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_13comparing-corpora-2.pdf}
+\begin{callout}{人话直觉}
+真实世界里我们只看到文章里的词，看不到每个词背后是哪一个 topic。inference 就像侦探：根据词共现的脚印，倒推每个主题爱用什么词、每篇文档混了哪些主题。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} inference 的目标是给定 corpus 学习 latent topic assignments 与参数，尤其是 document-topic matrix \(\theta\) 和 topic-word matrix \(\Phi\)。课件指出 exact inference becomes intractable，因为所有 token 的 topic assignment 组合空间巨大。因此实际使用 approximate inference，例如 Gibbs sampling 或 variational inference。
+
+\noindent\textbf{考试问法：} 若问为什么 exact inference 难，回答 latent assignments combinatorial explosion；若问输出，回答 \(\theta\)=document-topic probabilities，\(\Phi\)=topic-word probabilities。
+
+\Needspace{0.38\textheight}
+\section{8. 8. Gibbs sampling：一次只重猜一个词的 topic}
+\slideimage{14}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_13comparing-corpora-2.pdf}
+\begin{callout}{人话直觉}
+Gibbs sampling 像给每个词贴主题便利贴：一开始乱贴，然后每次撕下一张，根据周围统计重新贴；反复很多轮后，便利贴分布逐渐稳定。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Gibbs sampling for LDA 在已知 corpus、\(\alpha\)、\(\beta\) 的条件下学习 \(\Phi\) 和 \(\theta\)。基本步骤是：随机初始化每个 word token 的 topic；维护 topic-word counts 与 document-topic counts；对某个 token 重采样前先 decrement 它当前 assignment 的 counts；再根据其他 tokens 的 assignments 计算该 token 属于各 topic 的条件概率；采样新 topic 并 increment counts；重复直到 convergence 或固定迭代数。\(\alpha\)/\(\beta\) 起 smoothing/prior 作用，避免零概率并影响分布形状。
+
+\[
+P(z_{d,i}=k\mid z_{-d,i},w)\propto (C_{d,k}^{-i}+\alpha_k)\frac{C_{k,w_i}^{-i}+\beta_{w_i}}{\sum_v C_{k,v}^{-i}+\sum_v\beta_v}
+\]
+\noindent\textbf{考试问法：} 流程题要写出 random initialization、remove current assignment、sample new topic from conditional distribution、update counts、repeat until convergence。还要强调它是 approximate/probabilistic，不保证每次同一结果。
+
+\Needspace{0.38\textheight}
+\section{9. 9. Topic modelling 之后：解释、例子与分类路线}
+\slideimage{23}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_13comparing-corpora-2.pdf}
+\begin{callout}{人话直觉}
+topic model 给你“地图上的未知区域”；classification 则是你已经有地名和标签，训练导航系统把新文档自动归类。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 课件后段展示 topic modelling examples，并引出 annotation + classification。传统 supervised learning workflow 是 annotate representative samples、train a classifier、apply to rest of data；transfer learning 是找一个大而相似的数据集训练，可选 fine-tune 到小数据集，再应用。classification 后还可以分析每个 class 的 relevant features、common words/topics，以及 predicted classes 与其他 variables 的关系。
+
+\noindent\textbf{考试问法：} 比较题常问 topic modelling vs classification：前者多为 unsupervised、发现 latent topics；后者 supervised、用预定义 labels 预测 classes。有 label 和明确分类目标时用 classification；探索语料主题时用 topic modelling。
+
+\section{考试速记版}
+\begin{itemize}
+\item Plate notation = repeated variables/dependencies；N 常是 words，M 常是 documents。
+\item Unigram：所有词来自一个全局分布，句子概率为逐词概率连乘。
+\item Mixture of unigrams：每篇文档一个 topic；document probability 要 sum over topics。
+\item pLSI：每篇文档有 topic mixture，但依赖 document ID，不自然生成 unseen docs。
+\item LDA：\(\theta\) 是 document-topic，\(\Phi\) 是 topic-word，z 是 token-level latent topic。
+\item LDA generative story：\(\theta\)\textasciitilde{}Dir(\(\alpha\))，每词 z\textasciitilde{}\(\theta\)，w\textasciitilde{}\(\Phi\)\_z。
+\item Inference 学 \(\theta\)/\(\Phi\)/z；exact inference intractable，所以用 Gibbs/variational。
+\item Gibbs sampling：随机初始化、移除当前计数、按条件概率重采样、更新、到收敛。
+\item Topic modelling 探索 hidden themes；classification 用 labels 自动打类。
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+如果考 LDA 与前序模型的比较，可以这样答：unigram model 假设所有词独立来自同一个全局 word distribution，因此不能表达文档差异；mixture of unigrams 为每篇文档选择一个 latent topic，再从该 topic 的 word distribution 生成所有词，但一篇文档只能有一个主题；pLSI 允许每篇文档有自己的 topic mixture，word 先从 P(z|d) 选 topic 再从 P(w|z) 生成，但它依赖已见 document ID，参数随文档增加且对新文档不够自然。LDA 在 pLSI 基础上加入 Dirichlet prior：每篇 document 先从 \(\alpha\) 采样 \(\theta\)\_d，每个 word token 再采样 z\_\{d,i\} 和 w\_\{d,i\}。实际只观察到 words，所以需要 approximate inference，例如 Gibbs sampling，通过反复重采样 topic assignments 来估计 document-topic matrix \(\theta\) 和 topic-word matrix \(\Phi\)。
+\end{callout}
+\end{document}

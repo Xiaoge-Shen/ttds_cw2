@@ -1,0 +1,171 @@
+{
+  "lecture": "TTDS 04",
+  "source_pdf": "ttds25_04preprocessing.pdf",
+  "title": "Preprocessing：从原始文本到可索引 terms",
+  "one_sentence": "这节课讲的是搜索引擎入口处的“清洗与对齐”：把 document 和 query 的 messy surface forms 变成一致、可匹配、适合索引的 terms。",
+  "concept_chain": [
+    "Indexing 前需要 text transformation",
+    "word 不够精确，IR 更关心 term",
+    "Tokenisation：切出 candidate tokens",
+    "Stopping：处理高频低 aboutness 词",
+    "Normalisation：统一大小写、重音、等价形式",
+    "Stemming：合并 morphological variants",
+    "Common practice：non-letter split + stop removal + case folding + Porter",
+    "Limitations：irregular verbs、spelling variants、synonyms → query expansion/asymmetric expansion"
+  ],
+  "slides": [
+    {
+      "page": 1,
+      "reason": "本讲目标：tokenisation、stopping、normalisation、stemming。",
+      "caption": "Preprocessing 是索引前的核心文本转换。"
+    },
+    {
+      "page": 2,
+      "reason": "把 preprocessing 放进 indexing process 的位置。",
+      "caption": "原始 documents 必须先变成适合 index 的 terms。"
+    },
+    {
+      "page": 3,
+      "reason": "解释 term 与 word 的区别，并给 tokenisation 定义。",
+      "caption": "IR 问的不是“什么是自然词”，而是“什么应被索引”。"
+    },
+    {
+      "page": 4,
+      "reason": "展示 tokenisation 在 hyphen、number、URL、hashtag、多词实体上的难点。",
+      "caption": "分词没有万能规则，应用场景会改变最佳切法。"
+    },
+    {
+      "page": 5,
+      "reason": "展示跨语言 tokenisation：French、German、Chinese/Japanese。",
+      "caption": "不同语言需要 segmentation、decompounding 等不同处理。"
+    },
+    {
+      "page": 6,
+      "reason": "定义 stop words，并讨论是否总该删除。",
+      "caption": "Stop words 高频但不总是无用。"
+    },
+    {
+      "page": 7,
+      "reason": "讲 normalisation、case folding、equivalence classes。",
+      "caption": "统一 surface forms，关键是 document/query 保持一致。"
+    },
+    {
+      "page": 9,
+      "reason": "定义 stemming，并说明不同语言中的效果差异。",
+      "caption": "Stemming 把 played/playing/player 等形态变化拉近。"
+    },
+    {
+      "page": 10,
+      "reason": "介绍 stemmer 类型和 Porter stemmer 规则。",
+      "caption": "Porter stemmer 是英语最常见 algorithmic stemmer。"
+    },
+    {
+      "page": 11,
+      "reason": "说明 stemmed terms 不是给用户看的自然词，并总结 common practice。",
+      "caption": "repli、replac 不是拼错，而是系统内部 term。"
+    },
+    {
+      "page": 12,
+      "reason": "列出 preprocessing limitations 与 asymmetric expansion。",
+      "caption": "有些语义差异不能靠简单规范化解决。"
+    },
+    {
+      "page": 13,
+      "reason": "总结 pipeline，并用 Bible/Wiki 数字展示 preprocessing 后规模变化。",
+      "caption": "预处理会显著改变 words/file size 与索引规模。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Preprocessing 在 IR pipeline 里的位置",
+      "slide_page": 2,
+      "intuition": "搜索引擎不能直接把乱糟糟的网页塞进索引；它要先把文本切好、洗好、统一格式。",
+      "explanation": "Preprocessing 位于 indexing process 的 text transformation 阶段：documents 被 acquisition 后，需要经过 format conversion、meaning-bearing part selection、word unit decisions、stopping、stemming 等步骤，再创建 index。query processing 也必须使用一致的预处理，否则 query term 与 indexed term 形式不一致，会导致本该匹配的内容匹配失败。",
+      "exam_angle": "若问 preprocessing 目标，答 identify the optimal form of the term to be indexed to achieve best retrieval performance，并强调 document/query consistency。",
+      "formula_latex": null
+    },
+    {
+      "title": "Term 不是普通 word",
+      "slide_page": 3,
+      "intuition": "人觉得 word 是自然语言单词；搜索引擎觉得 term 是“我愿意放进索引、以后能拿来匹配的单位”。",
+      "explanation": "讲义指出 IR 中更常说 terms 而不是 words。term 可以是完整单词 preprocessing，也可以是词的一部分 pre，也可以是 number/code 如 INFR11145。preprocessing 的目标不是保留人类最舒服的写法，而是找到能提升 retrieval performance 的 indexable unit。",
+      "exam_angle": "若问 token/term/word 区别：word 是自然语言概念，token 是文本中字符序列实例，term 是进一步处理后用于 index 的单位。",
+      "formula_latex": null
+    },
+    {
+      "title": "Tokenisation：把句子切成候选 tokens",
+      "slide_page": 3,
+      "intuition": "Tokenisation 像切菜：先把整段文本切成块，后面才决定哪些块丢掉、合并、变形。",
+      "explanation": "Tokenisation 输入句子，输出 tokens；token 是 character sequence 的实例。典型技术是在 non-letter characters 处分割。例如 Friends, Romans; and Countrymen! 可得到 Friends、Romans、and、Countrymen。每个 token 只是 candidate index entry，后续还要 stopping、normalisation、stemming 才成为最终 term。",
+      "exam_angle": "若考 tokenisation，定义、例子、典型 split at non-letter characters、token vs term 四点都要出现。",
+      "formula_latex": null
+    },
+    {
+      "title": "Tokenisation 难点：标点不是小事",
+      "slide_page": 4,
+      "intuition": "Hewlett-Packard、3/20/91、#BlackLivesMatter 看起来只是字符串，但切错了会直接丢语义。",
+      "explanation": "Tokenisation 的难点包括 apostrophe 如 Finland's，hyphenated words 如 Hewlett-Packard/state-of-the-art/lower-case，numbers 如 dates、course codes、phone numbers，URLs，social media hashtags/mentions/camel-case，以及 San Francisco 这类 multi-word entity。不同任务会选择保留、拆分、规范化或删除。",
+      "exam_angle": "常见题会问为什么 tokenisation 不简单：列 hyphen、numbers、URLs、hashtags、multi-word entities，并强调 decision depends on application。",
+      "formula_latex": null
+    },
+    {
+      "title": "跨语言 tokenisation：空格不是 universal truth",
+      "slide_page": 5,
+      "intuition": "英语给了你空格这根拐杖，中文日文不一定给；德语还会把一串概念焊成一个长词。",
+      "explanation": "French 中 L'ensemble 是否拆成 L 与 ensemble 会影响匹配；German compounds 如 Lebensversicherungsgesellschaftsangestellter 需要 compound splitter，讲义提到德语 retrieval systems 可明显受益；Chinese/Japanese 没有自然空格，需要 segmentation。Tokenisation 因语言结构不同而变化。",
+      "exam_angle": "若问不同语言的 tokenisation，答 Chinese/Japanese need segmentation，German may need decompounding，French apostrophe/contractions need careful handling。",
+      "formula_latex": null
+    },
+    {
+      "title": "Stopping：高频词该不该删",
+      "slide_page": 6,
+      "intuition": "the、a、to 像空气，到处都有；它们通常不告诉你主题，但有时少了它们句子就变味。",
+      "explanation": "Stop words 是 collection 中最常见、对 aboutness 影响较小的词，约占文本 30-40%。它们包括 the、a、is、to 等，也会随 domain 变化，如 tweets 中 RT、patents 中 said/claim。删除 stop words 可减小 index 和噪声，但 phrase queries 如 Let it be、To be or not to be，以及 relational queries 如 flights to/from 会依赖 stop words。Web search 趋势是保留它们，因为压缩、query optimization 和 probabilistic weighting 可降低成本。",
+      "exam_angle": "若问 stop words 是否总该删除，答不是；给 phrase/relational query 反例，并说明 web search 常保留且给低权重。",
+      "formula_latex": null
+    },
+    {
+      "title": "Normalisation：让不同表面形式对齐",
+      "slide_page": 7,
+      "intuition": "用户搜 car，文档写 CAR!!；人一眼知道是同一个东西，机器需要规则才能知道。",
+      "explanation": "Normalisation 的目标是 make words with different surface forms look the same。Case folding 把 CAR、Car、caR 变成 car；diacritics/accents removal 可把 Château 变成 chateau；equivalence classes 可把 U.S.A. 与 USA、Ph.D. 与 PhD、多种 hyphen/space 形式归到一起。最重要标准是 documents 与 queries 一致，并尽量跟随用户常见行为。",
+      "exam_angle": "若考 normalisation，强调 surface forms、case folding、accent removal、equivalence classes、一致性；同时提 Windows/windows 这类风险。",
+      "formula_latex": "\\operatorname{norm}(\\text{CAR}) = \\operatorname{norm}(\\text{Car}) = \\operatorname{norm}(\\text{car}) = \\text{car}"
+    },
+    {
+      "title": "Stemming：合并词形变化",
+      "slide_page": 9,
+      "intuition": "play、played、playing 像同一家族穿了不同衣服；stemming 让它们在索引里更容易相认。",
+      "explanation": "Stemmers attempt to reduce morphological variations of words to a common stem，通常通过移除 suffixes。它处理 inflectional variations，如 plural/tenses，也处理 derivational variations，如 verb/noun 转换。Stemming 可在 indexing time 或 query processing 做。英语通常带来约 5-10% retrieval effectiveness improvement；对高度屈折语言更关键，如讲义提到 Finnish、Arabic 的提升更大。",
+      "exam_angle": "若考 stemming，定义、目的、处理的 variation 类型、index/query 两个位置、英语与高屈折语言效果差异都可写。",
+      "formula_latex": "\\operatorname{stem}(\\text{played}) \\approx \\operatorname{stem}(\\text{playing}) \\approx \\operatorname{stem}(\\text{play})"
+    },
+    {
+      "title": "Stemmer 类型、Porter 与内部 terms",
+      "slide_page": 10,
+      "intuition": "一种办法是查家谱词典，另一种办法是按规则剪后缀；Porter 就是英语里最常见的剪刀。 repli、replac 像坏英语，但对搜索引擎来说它们是内部代号，不是给用户朗读的单词。",
+      "explanation": "Stemming 有 dictionary-based 与 algorithmic 两类。Dictionary-based 使用相关词列表；algorithmic stemmer 用程序规则决定相关形式，例如 suffix-s stemmer。它会有 false negatives，如 supplies → supplie 未正确处理，也会有 false positives，如 James → Jame。Porter stemmer 是英语最常见算法，使用 conventions 和 5 phases of reductions，按规则顺序处理后缀，如 sses→ss、y→i、ies→i、ement→null。 Stemmed words may be misspelled-looking: repli、replac、suppli、inform retriev、anim。这些不再是自然词，而是系统内部 terms，用来代表 replace、replaces、replaced、replacing、replacement 等表面形式。它们通常不会展示给用户，只用于匹配和索引。",
+      "exam_angle": "若问 Porter 或 algorithmic stemming，写 5 phases/sequential reductions/longest suffix convention，并指出 false positive/false negative 风险。；同时若问 stem 为什么像拼错，答 stem 是 hidden internal term form，用于匹配而非展示给用户。",
+      "formula_latex": null
+    },
+    {
+      "title": "Common practice、limitations 与 asymmetric expansion",
+      "slide_page": 12,
+      "intuition": "默认流水线能解决大量表面形式问题，但 went/go、TV/television、car/vehicle 这类差异需要更聪明的扩展。",
+      "explanation": "常见做法是：Tokenisation 按 non-letter characters 分割，用 basic regular expression 处理 \\w 并忽略其他字符；remove stop words；apply case folding；apply Porter stemmer。特殊应用需要例外，例如 tweets 中可能保留 # 和 @，medical text 中 protein/disease names 需要专门规则。 Preprocessing 的限制包括 irregular verbs，如 saw/see、went/go；different spellings，如 colour/color、tokenisation/tokenization；abbreviations，如 Television/TV；synonyms，如 car/vehicle、UK/Britain。解决方向是 query expansion。Asymmetric expansion 不把所有形式硬合并，而是维护非对称关系，例如 query window 可搜 window/windows，query windows 可搜 windows/Windows，query Windows 只搜 Windows。它更强但效率更低，词表更大，query 更长，term statistics 也可能更不准确。",
+      "exam_angle": "若问 common preprocessing practice，按 non-letter split、stop removal、case folding、Porter stemmer 回答；若问 asymmetric expansion，强调它保留 unnormalized token relations，比 equivalence classing 灵活但 less efficient，且可能影响 term statistics。",
+      "formula_latex": "\\text{window} \\rightarrow \\{\\text{window},\\text{windows}\\},\\quad \\text{Windows} \\rightarrow \\{\\text{Windows}\\}"
+    }
+  ],
+  "quick_revision": [
+    "Preprocessing 目标：把 document/query 变成一致、可匹配、可索引 terms。",
+    "Term 可以是词、词片段、数字、代码或处理后的内部单位。",
+    "Tokenisation：切 tokens；典型做法是在 non-letter characters 分割。",
+    "Tokenisation 难点：hyphen、numbers、URLs、hashtags、multi-word entities、跨语言。",
+    "Stopping：stop words 高频、约 30-40%，但 phrase/relational queries 中可能关键。",
+    "Normalisation：case folding、accent removal、equivalence classes；document/query 必须一致。",
+    "Stemming：合并 morphology；Porter 是英语常用 algorithmic stemmer。",
+    "Limitations：irregular verbs、spellings、abbreviations、synonyms；可用 query/asymmetric expansion。"
+  ],
+  "exam_answer": "Text preprocessing converts raw documents and queries into consistent indexable terms to improve retrieval performance. A typical pipeline tokenises text into candidate tokens, removes or downweights stop words, normalises surface forms through case folding, accent removal and equivalence classes, and applies stemming to merge morphological variants. The same processing must be applied to documents and queries, otherwise matching fails. However, preprocessing has limits: irregular verbs, spelling variants, abbreviations and synonyms often require query expansion or asymmetric expansion rather than simple equivalence classing."
+}

@@ -1,0 +1,134 @@
+{
+  "lecture": "TTDS 05",
+  "source_pdf": "ttds25_05indexing1.pdf",
+  "title": "Indexing 1：从扫全文到倒排索引",
+  "one_sentence": "这节课把搜索引擎的“找词”问题，从笨拙的全文扫描，变成 term 到 postings list 的高速查表问题。",
+  "concept_chain": [
+    "preprocessing 产出 term",
+    "linear scan 太慢",
+    "document/term matrix",
+    "inverted index",
+    "postings 与 df/tf",
+    "Boolean query processing",
+    "phrase/proximity search"
+  ],
+  "slides": [
+    {
+      "page": 2,
+      "reason": "从 acquisition 到 index creation 的总流程图，说明索引在 IR pipeline 的位置。",
+      "caption": "Indexing Process：文档进入系统后被转换成可查的 lookup table。"
+    },
+    {
+      "page": 4,
+      "reason": "用 grep/PDF find 与 search engine 对比，建立为什么必须建 index。",
+      "caption": "Book index 类比：不是每次翻全书，而是查目录。"
+    },
+    {
+      "page": 5,
+      "reason": "term vector / inverted list 的核心转置关系。",
+      "caption": "Inverted index 是 collection matrix 的转置式稀疏存储。"
+    },
+    {
+      "page": 7,
+      "reason": "明确 posting、postings list、dictionary 与 df 的关系。",
+      "caption": "真正存的不是整张大矩阵，而是每个词的出现文档清单。"
+    },
+    {
+      "page": 9,
+      "reason": "index construction 从 term sequence 到 postings 的压缩合并过程。",
+      "caption": "排序、合并重复项、生成 dictionary/postings。"
+    },
+    {
+      "page": 10,
+      "reason": "展示 Boolean 与 frequency inverted index 的区别。",
+      "caption": "从只存 docID 到存 (docID,count)，为 ranked retrieval 铺路。"
+    },
+    {
+      "page": 11,
+      "reason": "phrase search 引出位置约束，说明 Boolean AND 不够。",
+      "caption": "pink AND ink 不等于短语 pink ink。"
+    },
+    {
+      "page": 13,
+      "reason": "positional/proximity index 的数据结构示意。",
+      "caption": "positions 让短语和窗口查询变得可判定。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Index 是搜索引擎的“地图册”",
+      "slide_page": 2,
+      "intuition": "没有索引的搜索像在整座城市挨家敲门；有索引之后，你先查地图，直接去相关街区。",
+      "explanation": "文档经过 crawling、feeds 或本地 acquisition 进入 data store，再做 format conversion、tokenisation、stopping、stemming 等 preprocessing，最后把 processed terms 加入 index。index 本质上是 lookup table：给定一个 term，快速找到包含它的 documents 或位置，而不是重新扫描 collection。",
+      "exam_angle": "若问 indexing process，要说清楚：documents acquisition/preprocessing 产出 terms，index creation 建立 term 到 document evidence 的映射。"
+    },
+    {
+      "title": "为什么 grep/find 不够用",
+      "slide_page": 4,
+      "intuition": "grep 像每次考试都把整本书从第一页读到最后；搜索引擎必须像翻书后索引一样，马上跳到相关页。",
+      "explanation": "Sequential search 对每次 query 都线性扫描文本，collection 很大、query 很多时不可行。IR index 的作用是 sub-linear 地定位 term 所在文档，并可额外保存 frequency、positions 等信息支持更复杂检索。",
+      "exam_angle": "常考比较：PDF find/grep 是 linear scan；IR index 是为大规模、高频查询设计的数据结构。"
+    },
+    {
+      "title": "Document vector 与 collection matrix",
+      "slide_page": 6,
+      "intuition": "把每篇文档想成超长购物清单：每个词是一格，格子里写这个词买了几次，也就是出现几次。",
+      "explanation": "document vector 以 terms 为维度，cell value 可以是 binary 0/1 或 term frequency。所有 document vectors 叠起来形成 collection matrix。问题是 vocabulary 很大，而每篇文档只含少量 terms，所以矩阵绝大多数 entry 是 0。",
+      "exam_angle": "若问 collection matrix 为什么 sparse，要联系 vocabulary 大、单篇文档词项少，以及 Zipf/Heaps 导致大量 rare terms。"
+    },
+    {
+      "title": "Inverted index：把矩阵翻过来",
+      "slide_page": 5,
+      "intuition": "不是问“这篇文档有哪些词”，而是反过来问“这个词在哪些文档里”。搜索正好需要后者。",
+      "explanation": "inverted index 用 term 作为入口，每个 term 对应一个 inverted list/postings list，列出包含该 term 的 documents。它等价于 collection matrix 的稀疏表示：只存非零的 term-document pairs，不存海量 0。",
+      "exam_angle": "定义 inverted index 时要包含 term → postings list，posting 通常至少有 docID，可扩展 tf 和 positions。"
+    },
+    {
+      "title": "Dictionary、posting、postings list、df",
+      "slide_page": 7,
+      "intuition": "dictionary 像电话簿目录，postings list 像某个名字下面的所有地址，df 是地址数量。",
+      "explanation": "dictionary 保存 vocabulary terms 及 metadata，例如 document frequency df 和指向 postings list 的 pointer。posting 是 postings list 的一条记录，通常记录 docID；df(t) 是包含 term t 的 document 数量。按 docID 排序后可以用 linear merge 高效做 AND/OR。",
+      "exam_angle": "考试容易让你区分 df 和 posting：df 是数量，posting 是记录，postings list 是记录列表。",
+      "formula_latex": "df(t)=|\\{d: t\\in d\\}|"
+    },
+    {
+      "title": "Index construction：先排序，再合并",
+      "slide_page": 9,
+      "intuition": "像把散落的快递单先按收件人排序，再把同一人的包裹合成一条清单。",
+      "explanation": "构建 inverted index 的典型步骤是：从每篇文档生成 (term,docID) 序列；按 term 再按 docID 排序；合并同一 term/document 的重复出现；最后生成 dictionary、df 和 postings。若保留 count，就得到 frequency inverted index。",
+      "exam_angle": "若问 construction pipeline，按 tokenize/normalise → term-doc pairs → sort → merge → dictionary/postings 作答。"
+    },
+    {
+      "title": "Boolean query processing：集合运算",
+      "slide_page": 10,
+      "intuition": "AND 是两张名单取交集，OR 是合并名单，NOT 是从全集里划掉名单。",
+      "explanation": "Boolean retrieval 对 query terms 的 postings lists 做集合运算。AND 常用 intersection，OR 用 union，NOT 用 complement。由于 postings 通常按 docID 排序，两个 list 的 intersection 可用 linear merge 完成，时间与 list 长度之和成正比。",
+      "exam_angle": "若问 query {ink AND wink}，要说加载两个 postings lists，然后做 intersection/linear merge。",
+      "formula_latex": "T_{AND}=O(|P_{ink}|+|P_{wink}|)"
+    },
+    {
+      "title": "Phrase search：AND 还不够",
+      "slide_page": 11,
+      "intuition": "“pink”和“ink”都出现，只说明两个人在同一个房间；phrase search 要求他们手拉手按顺序站着。",
+      "explanation": "phrase query 不仅要求 terms 同时出现在文档中，还要求顺序和相邻关系满足短语。bi-gram index 可把相邻词对如 pink_ink 当作 index term，但会增大 index，并不自然支持任意长度 phrase 或 proximity query。",
+      "exam_angle": "常考 phrase search vs Boolean AND：AND 只要求共现；phrase 还要求 positions 满足顺序相邻。"
+    },
+    {
+      "title": "Positional/proximity index：保存词的位置",
+      "slide_page": 13,
+      "intuition": "如果只知道词在哪篇文章里，你只能知道“同场”；如果知道位置，你才能判断“距离多近”。",
+      "explanation": "positional index 在 posting 中保存 term positions，例如 term: df; DocNo: pos1,pos2,pos3。phrase search 可检查相邻位置，proximity search 可检查两个 term 的距离是否不超过窗口 n。代价是 index size 增大，但换来短语和邻近查询能力。",
+      "exam_angle": "若问 proximity search，答案要包含两步：先 AND 找候选文档，再检查 positions 距离。",
+      "formula_latex": "|pos(t_1,d)-pos(t_2,d)|\\le n"
+    }
+  ],
+  "quick_revision": [
+    "Index 的核心作用：避免每次 query 线性扫描整个 collection。",
+    "Inverted index 是 term → postings list；posting 至少含 docID，可扩展 tf/positions。",
+    "Collection matrix 很 sparse，所以 inverted index 只存非零 term-document evidence。",
+    "Boolean query processing 本质是 postings lists 的集合运算。",
+    "Phrase/proximity search 需要 positional evidence；Boolean AND 本身不够。",
+    "Index construction 关键词：term-doc pairs、sort、merge、dictionary、postings、df。"
+  ],
+  "exam_answer": "Inverted index 是 IR 系统中最核心的索引结构，它把每个 term 映射到包含该 term 的 postings list。与完整 term-document matrix 相比，它只保存非零出现记录，因此是稀疏且高效的表示。构建时通常先从预处理后的文档生成 (term,docID) 序列，排序并合并重复项，得到 dictionary、document frequency 和 postings。查询时，Boolean AND/OR/NOT 可转化为 postings lists 的交集、并集和补集；若要支持 phrase 或 proximity search，则需要在 posting 中额外保存 term positions。"
+}

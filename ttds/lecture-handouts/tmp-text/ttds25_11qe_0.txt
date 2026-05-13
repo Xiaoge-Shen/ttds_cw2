@@ -1,0 +1,843 @@
+                                                            10/22/25
+
+
+
+
+                   Text Technologies for Data Science
+                                    INFR11145
+
+
+                          Query Expansion
+
+                                     Instructor:
+                                    Walid Magdy
+    22-Oct-2025
+
+
+
+1
+
+
+
+
+     Lecture Objectives
+        • Learn about Query Expansion
+                  • Query expansion methods
+                  • Relevance feedback in IR
+                  • Rocchio’s algorithm
+                  • PRF
+
+        • Implement:
+                  • PRF
+
+
+
+
+                                                        2
+     Walid Magdy, TTDS 2025/2026
+
+2
+
+
+
+
+                                                                  1
+                                                                               10/22/25
+
+
+
+
+    Query Expansion
+       • Query: representation of user’s information need
+            • Many times it can be suboptimal
+       • Different words can have the same meaning
+            • replacement, replace, replacing, replaced à Stemming
+            • go, gone, went à Lemmatisation (NLP)
+            • car, vehicle, automobile à ??
+            • US, USA, the states, united states of America à ??
+       • Stemming/Lemmatisation à could be applied to
+          normalise document and queries
+           • Research shows that no significant difference between both
+       • Query Expansion (QE) à add more words of the same
+          meaning to your query for better retrieval
+                                                                           3
+    Walid Magdy, TTDS 2025/2026
+
+3
+
+
+
+
+    Query Expansion: Methods
+       • Thesaurus
+            • Group words into sets of synonyms (synsets)
+            • Typically grouping is on the word level (neglects context)
+            • Manually built: e.g. WordNet
+              • NLTK wordnet: http://www.nltk.org/howto/wordnet.html
+            • Automatically built:
+              • Words co-occurence
+              • Parallel corpus of translations
+       • Retrieved documents-based expansion
+            • Relevance feedback
+            • Pseudo (Blind) relevance feedback
+       • Query logs
+                                                                           4
+    Walid Magdy, TTDS 2025/2026
+
+4
+
+
+
+
+                                                                                     2
+                                                                                                                       10/22/25
+
+
+
+
+    Automatic Thesaurus: co-occurence
+       • Words co-occurring in a document/paragraph are likely to
+           be (in some sense) similar or related in meaning
+       • Built using collection matrix (term-document matrix)
+       • For a collection matrix A, where At,d is the normalised
+           weight of term t in document d, similarity matrix could be
+           calculated as follows:
+                                                      C = A.AT
+       where, Cu,v is the similarity score between terms u and v. The
+       higher the score, the more similar the terms
+       • Advantage: unsupervised
+           Disadvantage: related words more than real synonyms
+                                                                                                                   5
+    Walid Magdy, TTDS 2025/2026
+
+5
+
+
+
+
+    Automatic Thesaurus: co-occurence
+       • Example
+
+
+
+
+       https://nlp.stanford.edu/IR-book/html/htmledition/automatic-thesaurus-generation-1.html#fig:autothesaurus
+                                                                                                                   6
+    Walid Magdy, TTDS 2025/2026
+
+6
+
+
+
+
+                                                                                                                             3
+                                                                                             10/22/25
+
+
+
+
+    Automatic Thesaurus: parallel corpus
+       • Parallel corpus are the main training resource for
+          machine translation systems
+       • Nature: sets of two parallel sentences in two different
+          languages (source and target language)
+       • Idea:
+            • More than one word in language X can be translated into the
+                same word in language Y
+                à these words in language X could be considered synsets
+       • Requirement: the presence of parallel corpus (training
+          data) à supervised method
+
+                                                                                         7
+    Walid Magdy, TTDS 2025/2026
+
+7
+
+
+
+
+    Automatic Thesaurus: parallel corpus
+                                   Process for eliminating foreign matter from a waste
+                                   heat stream
+            English    French
+                                   Procédé pour éliminer de la matière étrangère d'un
+                                   courant de chaleur perdue
+
+                                       Remove Stopwords               Align Terms
+            Align Sentences              Stem Words
+
+                                                                  ENàFR        FRàEN
+        elimin:          élimin:                                   terms        terms
+        élimin 0.71      remov 0.71                                 dic.         dic.
+        elimin 0.13      elimin 0.14
+                                              ENàEN
+                         elimin:               terms
+                         remov 0.6              dic.              Backoff Alignment
+                         elimin 0.16
+
+                                                                                         8
+    Walid Magdy, TTDS 2025/2026
+
+8
+
+
+
+
+                                                                                                   4
+                                                                                             10/22/25
+
+
+
+
+     Automatic Thesaurus: parallel corpus
+        • Example
+                 motor             weight      travel       color           link
+              motor    0.63 weight     0.86 travel  0.67 color    0.56 link      0.4
+              engin    0.36 wt         0.14 move    0.19 colour   0.25 connect 0.18
+                                            displac 0.14 dye      0.19 bond      0.17
+                                                                       crosslink 0.13
+                                                                       bind      0.12
+
+                  cloth            tube         area        game            play
+              fabric  0.36 tube        0.88 area     0.4 set      0.6   set      0.3
+              cloth   0.3 pipe         0.12 zone     0.23 game    0.4   play     0.24
+              garment 0.2                   region   0.2                read     0.17
+              tissu   0.14                  surfac   0.17               game 0.16
+                                                                        reproduc 0.1
+
+                                                                                        9
+     Walid Magdy, TTDS 2025/2026
+
+9
+
+
+
+
+     Thesaurus-based QE
+        • Works for very specific applications (e.g. medical domain)
+        • Many times fails to improve retrieval
+             • Sometimes reduces both precision and recall
+             • How?
+        • When it works, it is hard to get a consistent
+           performance over all queries:
+            • Improves some, and reduces others. Significant?
+        • Why it fails?
+             • Lack of context
+        • Current research: word embeddings / BERT / LLMs
+             • Improvements are being noticed
+                                                                                        10
+     Walid Magdy, TTDS 2025/2026
+
+10
+
+
+
+
+                                                                                                   5
+                                                                           10/22/25
+
+
+
+
+     Relevance Feedback
+        • Idea: let user give feedback to the IR system about
+           samples of what is relevant and what is not.
+        • User feedback on relevance of docs in initial results
+             • User issues a (short, simple) query
+             • The user marks some results as relevant or non-relevant.
+             • The system computes a better representation of the
+               information need based on feedback.
+             • Relevance feedback can go through one or more iterations
+        • From user perspective: it may be difficult to formulate a
+           good query when you don’t know the collection well,
+           BUT easier to judge particular documents
+
+                                                                      11
+     Walid Magdy, TTDS 2025/2026
+
+11
+
+
+
+
+     Example 1: Image Search
+
+
+
+
+                                                                      12
+     Walid Magdy, TTDS 2025/2026
+
+12
+
+
+
+
+                                                                                 6
+                                                                                                 10/22/25
+
+
+
+
+     Example 1: Image Search
+
+
+
+
+                                                                                            13
+     Walid Magdy, TTDS 2025/2026
+
+13
+
+
+
+
+     Example 2: Text Search
+     • Initial query: New space satellite applications
+     • Initial Results
+         1. NASA Hasn’t Scrapped Imaging Spectrometer
+         2. NASA Scratches Environment Gear From Satellite Plan
+         3. Science Panel Backs NASA Satellite Plan, But Urges Launches of Smaller Probes
+         4. A NASA Satellite Project Accomplishes Incredible Feat: Staying Within Budget
+         5. Scientist Who Exposed Global Warming Proposes Satellites for Climate Research
+         6. Report Provides Support for the Critics Of Using Big Satellites to Study Climate
+         7. Arianespace Receives Satellite Launch Pact From Telesat Canada
+         8. Telecommunications Tale of Two Companies
+
+     • User then marks relevant documents with “+”
+     • System learns new terms
+                                                                                            14
+     Walid Magdy, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                                                       7
+                                                                               10/22/25
+
+
+
+
+     New terms common in selected docs
+           2.074 new                     15.10 space
+           30.81 satellite               5.660 application
+           5.991 nasa                    5.196 eos
+           4.196 launch                  3.972 aster
+           3.516 instrument              3.446 rianespace
+           3.004 bundespost              2.806 ss
+           2.790 rocket                  2.053 scientist
+           2.003 broadcast               1.172 earth
+           0.836 oil                     0.646 measure
+                                                                         15
+     Walid Magdy, TTDS 2025/2026
+
+15
+
+
+
+
+     Adding new terms to the query
+     1. NASA Scratches Environment Gear From Satellite Plan
+     2. NASA Hasn’t Scrapped Imaging Spectrometer
+     3. When the Pentagon Launches a Secret Satellite, Space Sleuths Do Some
+        Spy Work of Their Own
+     4. NASA Uses ‘Warm’ Superconductors For Fast Circuit
+     5. Telecommunications Tale of Two Companies
+     6. Soviets May Adapt Parts of SS-20 Missile For Commercial Use
+     7. Gaping Gap: Pentagon Lags in Race To Match the Soviets In Rocket
+        Launchers
+     8. Rescue of Satellite By Space Agency To Cost $90 Million
+
+                                        Hopefully better results!
+                                                                         16
+     Walid Magdy, TTDS 2025/2026
+
+16
+
+
+
+
+                                                                                     8
+                                                                                               10/22/25
+
+
+
+
+     Theoretical Optimal Query
+        • Found closer to rel docs and away from irrel ones.
+        • Challenge: we don’t know the truly relevant docs
+
+                                                          x            x
+                                             x                     x
+                                             o                x                x
+                                                         x        x x x
+                                         o           x                     x
+                                   Q o                        x
+                                                 o                x x x
+                                    o o
+            Optimal                                               x
+             Query                                   x
+                                                                    x non-relevant documents
+                                                                    o relevant documents
+                                                                                          17
+     Walid Magdy, TTDS 2025/2026
+
+17
+
+
+
+
+     Rocchio’s Algorithm
+        • Key Concept: Vector Centroid
+        • Recall that, in VSM, we represent documents as
+           points in a high-dimensional space
+        • The centroid is the centre mass of a set of points
+                                                          1
+                                     𝜇⃗ 𝐶 =                  ' 𝑑⃗
+                                                         |𝐶|
+                                                              ⃗
+                                                              "#$
+            where C is a set of documents.
+
+        • Introduced 1963
+                                                                                          18
+     Walid Magdy, TTDS 2025/2026
+
+18
+
+
+
+
+                                                                                                     9
+                                                                                            10/22/25
+
+
+
+
+     Rocchio Algorithm: theory
+        • Rocchio seeks the query 𝑞⃗ 𝑜𝑝𝑡 that maximizes
+
+            𝑞⃗ 𝑜𝑝𝑡 = argmax[𝑠𝑖𝑚 ⃗
+                                𝑞, 𝐶𝑟𝑒𝑙 − 𝑠𝑖𝑚 ⃗
+                                              𝑞, 𝐶𝑖𝑟𝑟𝑒𝑙 ]
+                             %
+        • For Cosine similarity
+                                     1             1
+                      𝑞⃗ 𝑜𝑝𝑡 =            * 𝑑𝑗 −                       * 𝑑𝑗
+                                   |𝐶𝑟𝑒𝑙|        𝐶𝑖𝑟𝑟𝑒𝑙
+                                          !!∈#"#$                     !!∉#"#$
+
+
+                                   𝑞⃗ 𝑜𝑝𝑡 = 𝜇⃗ 𝐶𝑟𝑒𝑙 − 𝜇⃗ 𝐶𝑖𝑟𝑟𝑒𝑙
+
+                                                                                       19
+     Walid Magdy, TTDS 2025/2026
+
+19
+
+
+
+
+     Rocchio Algorithm: in practice
+        • Only small set of docs are known to be rel or irrel
+                                       1               1
+               𝑞⃗ 𝑚 = 𝛼𝑞⃗ 0 + 𝛽              * 𝑑𝑗 − 𝛾                           * 𝑑𝑗
+                                     |𝐷𝑟𝑒𝑙 |          𝐷𝑖𝑟𝑟𝑒𝑙
+                                             !!∈%"#$                      !!∈%%""#$
+
+        𝑞⃗ 0 = original query vector
+        Drel = set of known relevant doc vectors
+        Dirrel = set of known non-relevant doc vectors
+        𝑞⃗ 𝑚 = modified query vector
+        𝛼 = original query weights (hand-chosen or set empirically)
+        𝛽 = positive feedback weight
+        𝛾 = negative feedback weight
+
+
+        • New query moves toward relevant documents and
+           away from non-relevant documents
+                                                                                       20
+     Walid Magdy, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                                                 10
+                                                                                             10/22/25
+
+
+
+
+     Notes about setting weights: 𝛼, 𝛽, 𝛾
+        • Values of 𝛽, 𝛾 compared to 𝛼 are set high when large
+           judged documents are available.
+        • In practice, +ve feedback is more valuable than -ve
+           feedback (usually, set 𝛽>𝛾)
+             • Many systems only allow positive feedback (𝛾=0).
+             • Or, use only highest-ranked negative document.
+        • When 𝛾>0, some weights in query vector can go -ve.
+                              01123456
+             • “Jaguar”                  jaguar + car + model - animal - jungle
+
+        • In practice, top nt terms in 𝑑𝑗 ∈ 𝐷𝑟𝑒𝑙 are only selected
+             • n = 5 à 50
+             • Top nt are identified using e.g. TFIDF
+                                                                                        21
+     Walid Magdy, TTDS 2025/2026
+
+21
+
+
+
+
+     Effect of Relevance Feedback on Query
+
+          Initial                                         x                x
+          Query               x
+                                              o                                    x
+                                         Q0               x            x
+                                   x              x
+                                                      x                        x
+                                           o                  x
+                                   x     o Qm
+                          x                       o                            x
+        Modified                       o o                         x
+         Query                            x           x
+                              x
+                                                                  x non-relevant documents
+                                                                  o relevant documents
+                                                                                        22
+     Walid Magdy, TTDS 2025/2026
+
+22
+
+
+
+
+                                                                                                  11
+                                                                     10/22/25
+
+
+
+
+     Effect of Relevance Feedback on Retrieval
+        • Relevance feedback can improve recall and precision
+        • In practice, relevance feedback is most useful for
+           increasing recall in situations where recall is
+           important.
+        • Empirically, one round of relevance feedback is often
+           very useful. Two rounds is sometimes marginally
+           useful.
+
+
+
+
+                                                                23
+     Walid Magdy, TTDS 2025/2026
+
+23
+
+
+
+
+     Relevance Feedback: Issues
+        • Long queries are inefficient for typical IR engine.
+             • High cost for retrieval system. (why?)
+             • Long response times for user.
+        • It’s often harder to understand why a particular
+           document was retrieved after applying relevance
+           feedback
+        • Users are often reluctant to provide explicit feedback
+           à not practical!
+
+
+
+
+                                                                24
+     Walid Magdy, TTDS 2025/2026
+
+24
+
+
+
+
+                                                                          12
+                                                                               10/22/25
+
+
+
+
+     Relevance Feedback: Practicality
+        • User revises and resubmits query
+             • Users may prefer revision/resubmission to having to judge
+                 relevance of documents.
+             • Useful for query suggestion to other users
+
+
+        • Is there a way to apply relevance feedback without
+           user’s input?
+
+
+
+
+                                                                          25
+     Walid Magdy, TTDS 2025/2026
+
+25
+
+
+
+
+     Pseudo (Blind) Relevance Feedback
+        • Solves the problem of users hate to provide feedback
+        • Feedback is applied blindly (PRF)
+             • Automates the “manual” part of true relevance feedback.
+        • Algorithm:
+             • Retrieve a ranked list of hits for the user’s query
+             • Assume that the top k documents are relevant
+             • Do relevance feedback (e.g. Rocchio)
+             • Typically applies only positive relevance feedback (𝛾=0)
+        • Mostly works
+             • Still can go horribly wrong for some queries (when top k
+               docs are not relevant)
+             • Several iterations can lead to query drift
+                                                                          26
+     Walid Magdy, TTDS 2025/2026
+
+26
+
+
+
+
+                                                                                    13
+                                                                              10/22/25
+
+
+
+
+     PRF (BRF)
+        • Was proven to be useful for many IR applications
+             • News search (learn names and entities)
+             • Social media search (learn hashtags)
+             • Web search (implicit feedback is used more = clicks)
+        • Some domains are more challenging
+             • Patent search
+                 • Top documents are usually not relevant
+                 • Patent text in general is unclear/confusing
+        • PRF is the most basic QE method for IR
+             • Unsupervised
+             • Language independent
+             • Does not require any kind of language resources
+
+                                                                         27
+     Walid Magdy, TTDS 2025/2026
+
+27
+
+
+
+
+     PRF (BRF): Evaluation
+        • In practice, different number of feedback docs (nd)
+           and terms (nt) are usually tested for PRF
+            • nd: 1 à 50
+            • nt: 5 à 50
+        • Results of PRF are directly compared to baseline
+           (with no PRF)
+            • It is not considered cheating.
+            • It is essential to show that improvement is significant, and
+                 preferred to show the % of queries improved vs degraded.
+
+
+
+
+                                                                         28
+     Walid Magdy, TTDS 2025/2026
+
+28
+
+
+
+
+                                                                                   14
+                                                                                 10/22/25
+
+
+
+
+     Practical
+
+
+
+
+                                                                            29
+     Walid Magdy, TTDS 2025/2026
+
+29
+
+
+
+
+     Term Representation
+        • So far, a term is a definite term
+             • Car ≠ Vehicle ≠ Hamester
+             • Local Representation
+
+
+        • Vector representation
+             • A term, phrase, or a paragraph can be presented as a vector
+             • Objective: terms/sentences with closer meaning get higher
+                 dot product that terms/sentences with different meanings
+             • Ideally: multimodel à sentences and images of similar
+                 content shall get closer representation
+                                                                            30
+     Walid Magdy, TTDS 2025/2026
+
+30
+
+
+
+
+                                                                                      15
+                                                                                                10/22/25
+
+
+
+
+     Term Representation (History)
+        • 2014–2015 — Word Embeddings Era
+             • Breakthrough: Word2Vec and GloVe à dense word representations
+             • Impact: Limited — used for query expansion and semantic similarity.
+             • Limitation: Static embeddings; no context awareness
+
+        • 2018–2019 — Transformer Revolution
+             • Breakthrough: BERT and the Transformer architecture.
+             • Impact: Major leap — contextualized embeddings enable deep query–document
+                 understanding.
+             • Key Systems: monoBERT, duoBERT → strong results
+
+        • 2020–2021 — Dense Retrieval and Dual Encoders
+             •   Breakthrough: Dense Passage Retrieval (DPR), ColBERT, ANCE.
+             •   Impact: Enables end-to-end neural retrieval using dense embeddings.
+             •   Technology: ANN (Approximate Nearest Neighbor) search with FAISS, ScaNN.
+             •   Trend: Emergence of vector-based retrieval pipelines.
+
+
+                                                                                          31
+     Walid Magdy, TTDS 2025/2026
+
+31
+
+
+
+
+     Term Representation (History)
+        • 2022–2023 — LLMs and Retrieval-Augmented Generation
+           (RAG)
+             • Breakthrough: Integration of Large Language Models (GPT, T5, FLAN) in IR.
+             • Impact: LLMs enhance query rewriting, re-ranking, and document expansion.
+             • Trend: Retrieval becomes part of RAG pipelines — retrieval + generation for QA
+                 and reasoning.
+
+
+        • 2024–2025 — Multimodal and Graph-Augmented IR
+             •   Breakthroughs:
+             •   Multimodal retrieval (text + image + audio).
+             •   Graph-based RAG (GraphRAG) for structured contextual reasoning.
+             •   Domain-specialized IR models (biomedical, legal, financial).
+             •   Impact: Focus on interpretable, trustworthy, and multimodal retrieval.
+             •   Trend: IR as a foundation for knowledge-augmented AI.
+
+
+
+
+                                                                                          32
+     Walid Magdy, TTDS 2025/2026
+
+32
+
+
+
+
+                                                                                                     16
+                                                                              10/22/25
+
+
+
+
+     What about what we studied so far?
+        • Inverted Index?
+        • BM25?
+        • PRF?
+        • Term-based search is indispensable
+             • Very efficient
+             • Highly scalable
+             • Limitations: ranking might be suboptimal!
+
+        • Solution:
+             • Used as essential first step
+             • Advanced methods are used later for reranking top results.
+
+                                                                         33
+     Walid Magdy, TTDS 2025/2026
+
+33
+
+
+
+
+     Summary
+        • QE: automatically add more terms to user’s query to
+           better match relevant docs
+        • QE via thesaurus
+             • Manual/automatic thesaurus: useful for specific applications
+             • Fail when context is important
+        • Relevance feedback
+             • Get samples of rel/irrel docs for extracting QE useful terms
+             • Rocchio’s is one of the most common algorithms
+        • PRF
+             • Skips user’s input for the feedback process
+             • Found to be useful in many applications
+        • Current methods use advanced techniques for better matching
+                                                                         34
+     Walid Magdy, TTDS 2025/2026
+
+34
+
+
+
+
+                                                                                   17
+                                                                           10/22/25
+
+
+
+
+     Resources
+        • Text book 1: Intro to IR, Chapter 9
+        • Text book 2: IR in Practice, Chapter 6.2, 6.3
+        • Reading:
+           Magdy W. and G. J. F. Jones.
+           A Study on Query Expansion Methods for Patent Retrieval.
+           PAIR 2011 - CIKM 2011 (link)
+
+
+
+        • Lab 5
+
+
+
+                                                                      35
+     Walid Magdy, TTDS 2025/2026
+
+35
+
+
+
+
+                                                                                18
+

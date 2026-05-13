@@ -1,0 +1,192 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 12}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}Comparing Text Corpora: 从词频、词典到 Topic Models 的系统比较}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily 场景：两个或多个 large plain-text corpora $\rightarrow$ 初步探索：读样本、语言识别、长度与词频统计 $\rightarrow$ 为什么不能只 ask AI：缺少系统性与可复现证据 $\rightarrow$ content analysis：themes/topics 与 document labels $\rightarrow$ automated content analysis：词频、lexicons、topic modelling $\rightarrow$ word-level differences：MI 与 chi-squared $\rightarrow$ dictionary/lexicon：已知类别映射到词表 $\rightarrow$ dominance scores：目标 corpus 相对 background 的类别突出度 $\rightarrow$ topic modelling：document-topic 与 topic-word matrices
+\end{chainbox}
+\slideimage{1}{0.72}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{这节课一句话}
+这节课一句话：比较语料库不是让 AI 随口总结，而是用可复现的 content analysis、word-level statistics、lexicons 和 topic models 来回答“这些文本讲什么、彼此差在哪”。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. 1. 比较语料库要回答什么}
+\slideimage{2}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{人话直觉}
+拿到两个装满文本的文件夹，不是先写结论，而是先问：这里面都在讲什么？A 和 B 到底哪里不同？
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 本讲场景是两个或多个 corpora，每个包含大量 plain text files。目标是 systematically understand and quantify：文档内容是什么、有哪些 themes/topics、不同 corpora/classes 之间如何不同。初步可以读样例、做 language identification、统计词数、平均文档长度、高频词，甚至画 word clouds，但这些只是入口，不是最终证据。
+
+\noindent\textbf{考试问法：} 若问 comparing corpora 的基本场景，答 multiple large text corpora + understand content + quantify differences；若问初步分析，列 sampling、language ID、frequency、length。
+
+\Needspace{0.38\textheight}
+\section{2. 2. 为什么不能只 ask AI}
+\slideimage{3}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{人话直觉}
+AI 摘要像一个很会聊天的实习生：能给灵感，但不能替代可复现、可检查、可统计的分析流程。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 第 3 页用 Why not just ask AI 引出核心态度：LLM 总结可能有用，但它通常不是严格 corpus comparison 的统计证据。考试答案应强调 reproducibility、systematic coverage、quantification 和 methodological transparency。Corpus comparison 需要能说明预处理、计数、归一化、统计检验或模型输出，而不是只给一个无法验证的自然语言总结。
+
+\noindent\textbf{考试问法：} 若问 why not just ask AI，答不可复现、缺少系统采样和量化依据、难以作为 statistical evidence。
+
+\Needspace{0.38\textheight}
+\section{3. 3. Content Analysis：人工方法是自动化的概念原型}
+\slideimage{4}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{人话直觉}
+Content analysis 像给文本贴标签：先定义标签体系，再让人按一致规则标注，最后统计哪些文本有什么主题。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 传统 content analysis 的目标是确定文档中有哪些 content types/themes/topics，以及哪些文档包含哪些 topics。流程包括：读子集定义 themes/topics，制定 consistent coding methodology，标注所有文档，检查 human coder agreement，通过第三方解决分歧，再分析 annotations。它准确但慢，自动化方法试图保留“主题/类别”思想，同时扩展到大规模语料。
+
+\noindent\textbf{考试问法：} 若问 content analysis steps，按六步讲；若问 automated content analysis 为什么有用，答 human accurate but slow, machine scalable。
+
+\Needspace{0.38\textheight}
+\section{4. 4. Automated Content Analysis 的方法地图}
+\slideimage{5}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{人话直觉}
+如果只有一个 corpus，你像在做体检；如果有多个 corpora/classes，你像在找差异诊断。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 第 5 页将 automated content analysis 分成两列：single corpus/class 可做 word frequency analysis、dictionaries/lexicons、topic modelling；multiple corpora/classes 可做 word-level differences、dominance scores、topic-level differences。这个表是答题的路线图：先判断问题是“描述一个语料库”还是“比较多个语料库”，再选择相应方法。
+
+\noindent\textbf{考试问法：} 若问 automated content analysis 可做什么，按 single vs multiple 两类组织答案，别把所有方法乱堆。
+
+\Needspace{0.38\textheight}
+\section{5. 5. Word Frequency：最简单但必须规范化}
+\slideimage{6}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{人话直觉}
+长文档说的词当然多；如果不按长度归一化，你其实是在奖励话多，而不是发现主题。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Word frequency analysis 的步骤是 preprocess、count words、normalize by document length、average across documents。normalize by document length 很关键，否则长文档会主导总词频。它适合作为初步理解，但高频词不一定是区分性词；要比较 corpora/classes，通常需要 reference corpus 和 word-level difference methods。
+
+\[
+freq(t,d)=\frac{count(t,d)}{|d|}
+\]
+\noindent\textbf{考试问法：} 若问为什么 normalize，答控制文档长度差异；若问 word-level differences 想回答什么，答哪些 words best characterize target corpus/class。
+
+\Needspace{0.38\textheight}
+\section{6. 6. Mutual Information：一个词能透露多少类别信息}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{人话直觉}
+如果看到 term t 几乎就能猜出文档来自目标 class，那这个词对区分类别很有信息量。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Mutual information I(X;Y) 衡量观察 X 后能学到多少关于 Y 的信息，在课件中也称 information gain，但不是 pointwise mutual information。Word-class 分析中，X=U 表示 document contains term t，Y=C 表示 class is target class，二者通常都是 Boolean。MI 可用于找 characteristic words 和 feature selection，但对稀有词可能敏感，需要谨慎解释。
+
+\[
+I(U;C)=\sum_{u\in\{0,1\}}\sum_{c\in\{0,1\}}P(U=u,C=c)\log\frac{P(U=u,C=c)}{P(U=u)P(C=c)}
+\]
+\noindent\textbf{考试问法：} 若问 MI 中 X/Y 是什么，答 U=term present, C=target class；若问 MI 如何解释，答 term occurrence 对 class membership 的信息量。
+
+\Needspace{0.38\textheight}
+\section{7. 7. Chi-squared：把词与类别的关系写成 independence test}
+\slideimage{10}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{人话直觉}
+Chi-squared 问的是：这个词出现在某 class 里这么频繁，像不像纯巧合？
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Chi-squared 是 hypothesis testing approach。Null hypothesis 是 term appearance independent from document class，即 P(U=1,C=1)=P(U=1)P(C=1)。如果 \(\chi\)² 值高，说明 observed counts 与 independence 期望差异大，该 term 与 class 有较强关联。它和 MI 都可用于 word-level differences 和 feature selection。
+
+\[
+H_0: P(U=1,C=1)=P(U=1)P(C=1);\quad \chi^2=\sum_i\frac{(O_i-E_i)^2}{E_i}
+\]
+\noindent\textbf{考试问法：} 若问 chi-squared null hypothesis，必须写 independence；若问高 \(\chi\)² 表示什么，答 term occurrence 与 class membership association strong。
+
+\Needspace{0.38\textheight}
+\section{8. 8. Dictionaries/Lexicons：当你已经知道要找什么}
+\slideimage{12}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{人话直觉}
+Lexicon 像一套现成的关键词清单：你先定义“positive”“negative”“anger”“health”等类别，再数文档里命中多少对应词。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Dictionary/lexicon approach 是 category -> word list 的预建映射，例如 sentiment lexicon 中 positive 包含 good、great、happy，negative 包含 terrible、bad、worst。每个文档的 category score 可由该类别词在文档中的命中比例得到。Domain 很重要：unpredictable movie plot 可能正面，unpredictable coffee pot 可能负面。同一 lexicon 跨领域使用时必须检查语义是否迁移。
+
+\[
+score(category,d)=\frac{\#\ dictionary\ words\ from\ category\ in\ d}{\#\ words\ in\ d}
+\]
+\noindent\textbf{考试问法：} 若问 lexicon approach，答预定义类别词表 + 计算类别分数 + domain caveat；若问例子，可提 LIWC、VADER、SentiWordNet、EmoLex。
+
+\Needspace{0.38\textheight}
+\section{9. 9. Dominance Score：相对背景看类别是否突出}
+\slideimage{14}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{人话直觉}
+一个 corpus 的 anger 分数高不高，不能只看绝对值；要问它比背景语料高多少。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Dominance score 比较 target corpus 与 background corpus 中某个 category score 的比值。它适合回答“某个心理、情绪或主题类别在目标语料中是否相对突出”。如果 dominance > 1，通常表示该类别在 target 中比 background 更强；但解释时仍要考虑 lexicon 质量、预处理和 domain shift。
+
+\[
+dominance(category)=\frac{category\ score\ in\ target\ corpus}{category\ score\ in\ background\ corpus}
+\]
+\noindent\textbf{考试问法：} 若问 dominance score 用来回答什么，答 category is over-represented in target relative to background；必须说明它是相对指标。
+
+\Needspace{0.38\textheight}
+\section{10. 10. Topic Modelling：把海量词压缩成可解释主题}
+\slideimage{18}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{人话直觉}
+Topic model 像把一大堆散乱词汇压成几种颜料：每篇文档是不同颜料的混合，每个 topic 是一组高概率词。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Topic modelling 的目标类似传统 content analysis：找出 corpus 的主要 themes/topics，以及每篇文档包含哪些 topics。第 18 页图示输出包括 document-topic matrix 和 topic-word matrix：前者表示每个 document 在 k 个 topics 上的权重，后者表示每个 topic 对 vocabulary 中词的分布。它也可看作 dimensionality reduction，把 p 个词维度压缩到 k 个 topics。
+
+\[
+D_{n\times p}\rightarrow \Theta_{n\times k},\Phi_{k\times p}
+\]
+\noindent\textbf{考试问法：} 若问 topic model 输入输出，答 corpus 输入，输出 document-topic matrix 与 topic-word matrix；若问 dimensionality reduction，答 p word dimensions -> k topics。
+
+\Needspace{0.38\textheight}
+\section{11. 11. Topic Modelling 方法与边界}
+\slideimage{20}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_12comparing-corpora.pdf}
+\begin{callout}{人话直觉}
+LDA 是经典默认选项，但不是唯一工具；topic model 给的是主题结构候选，不是自动真理。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 最流行的 topic modelling 方法是 Latent Dirichlet Allocation (LDA)，由 Blei、Ng 和 Jordan 于 2003 年提出。其他方法包括 pLSI、PCA-based methods、Non-negative Matrix Factorization 和 deep learning based topic modeling。第 19 页还指出 topic models 不只用于 text，也可用于 bioinformatics、code、music、network data。考试中应把它描述为 exploratory/structuring method，并提醒需要解释和验证 topics。
+
+\noindent\textbf{考试问法：} 若问最流行方法，答 LDA；若问其他方法，列 pLSI、PCA、NMF、deep learning；若问是否只用于文本，答 no。
+
+\section{考试速记版}
+\begin{itemize}
+\item Comparing corpora = understand content + quantify differences。
+\item 不要只 ask AI：需要 reproducible, systematic, quantitative evidence。
+\item Traditional content analysis = define themes, code documents, check agreement, analyze annotations。
+\item Single corpus：word frequency、lexicons、topic modelling。
+\item Multiple corpora/classes：word-level differences、dominance scores、topic-level differences。
+\item MI：term presence tells information about class membership。
+\item Chi-squared：test independence between term appearance and class。
+\item Lexicons = category-to-word-list；domain meaning matters。
+\item Dominance score = target category score / background category score。
+\item Topic model outputs document-topic and topic-word matrices。
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+Comparing text corpora should be done systematically rather than by relying only on an AI summary. A typical workflow begins with initial exploration such as sampling documents, language identification, word counts and length-normalized frequency analysis. Traditional content analysis defines themes, applies a consistent coding scheme, checks coder agreement and analyzes annotations; automated content analysis scales this idea using word frequency, dictionaries/lexicons and topic modelling. For multiple corpora or classes, word-level differences can be measured with mutual information or chi-squared statistics, where term presence is compared with class membership. Lexicon methods compute category scores from predefined word lists and can be compared with dominance scores against a background corpus. Topic models such as LDA provide document-topic and topic-word matrices, reducing high-dimensional word data to interpretable themes that still require human validation.
+\end{callout}
+\end{document}

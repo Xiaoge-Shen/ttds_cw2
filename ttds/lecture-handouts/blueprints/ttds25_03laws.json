@@ -1,0 +1,155 @@
+{
+  "lecture": "TTDS 03",
+  "source_pdf": "ttds25_03laws.pdf",
+  "title": "Laws of Text：词频长尾、词表增长与文本聚集性",
+  "one_sentence": "这节课告诉你文本不是随机沙子，而是有稳定统计脾气：少数词极高频、大量词极低频、词表一直长、词一出现就容易在附近再出现。",
+  "concept_chain": [
+    "Word 是 IR 的基本表示单位",
+    "词频分布极不均匀：少数高频词 + 大量低频词",
+    "Zipf's law：rank 与 frequency/probability 近似反比",
+    "Benford's law：自然数字首位也非均匀",
+    "Heaps' law：collection 变大时 vocabulary 持续增长但变慢",
+    "Clumping/contagion：词是稀有但会局部聚集的事件",
+    "应用：估计 index size、query processing cost、preprocessing 效果"
+  ],
+  "slides": [
+    {
+      "page": 1,
+      "reason": "本讲目标：Zipf、Benford、Heaps、clumping/contagion，并说明是 practical lecture。",
+      "caption": "Text laws 是大规模文本系统的统计底盘。"
+    },
+    {
+      "page": 2,
+      "reason": "说明 word 是表示文本的 basic unit，且规律跨语言跨领域。",
+      "caption": "词的行为稳定到可以用 laws 描述。"
+    },
+    {
+      "page": 3,
+      "reason": "展示词频 hard exponential decay 与 Zipf 公式。",
+      "caption": "少数词很常见，多数词很罕见。"
+    },
+    {
+      "page": 4,
+      "reason": "Wikipedia abstracts 表格验证 rank × frequency 近似稳定。",
+      "caption": "Zipf 不只是公式，真实集合中能观察到。"
+    },
+    {
+      "page": 5,
+      "reason": "引入 first digit distribution 和 Benford's law。",
+      "caption": "自然数据中数字首位也偏爱小数字。"
+    },
+    {
+      "page": 6,
+      "reason": "给出 Heaps' law 公式、参数范围与不饱和现象。",
+      "caption": "读得越多，新词越少，但新词不会马上消失。"
+    },
+    {
+      "page": 7,
+      "reason": "解释 clumping/contagion 和 occurrence distance。",
+      "caption": "词像传染病：出现一次后，附近更容易再出现。"
+    },
+    {
+      "page": 8,
+      "reason": "用 20 billion terms 应用 Heaps' law，并总结 shell commands。",
+      "caption": "Text laws 能直接估算 vocabulary 和指导实践统计。"
+    },
+    {
+      "page": 9,
+      "reason": "资源页指向教材与 Zipf/Benford 视频。",
+      "caption": "本讲可通过实验和外部资源加深直觉。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "为什么 IR 要关心 text laws",
+      "slide_page": 2,
+      "intuition": "如果你要建搜索引擎，不能只问“文本里有什么词”，还要问“这些词通常怎样分布”。",
+      "explanation": "IR 通常以 word/term 作为表示文本的基本单位。讲义强调词的某些 characteristics 在不同语言和不同领域中都很一致，因此可以用 laws 描述。了解这些规律能帮助估计 vocabulary size、index size、postings list 长度、query processing 代价，也能解释 stop words、rare terms 和 preprocessing 的系统影响。",
+      "exam_angle": "若问为什么学 text laws，答统计规律帮助理解和设计 indexing、compression、query processing、preprocessing 与大规模文本系统。",
+      "formula_latex": null
+    },
+    {
+      "title": "词频长尾：文本世界不是平均分配",
+      "slide_page": 3,
+      "intuition": "英语里 the、of、to 像城市主干道，车流巨大；schizophrenia、bazinga 像偏僻小巷，偶尔才有人经过。",
+      "explanation": "词频分布高度不均匀：少数词非常 frequent，大量词 less frequent，讲义指出约 50% terms appear once。频率随 rank 呈 hard exponential decay。这解释了为什么高频 stop words 对主题区分能力弱但处理代价高，而低频词往往更有判别力。",
+      "exam_angle": "可考“词频分布特点”或“为什么 stop words 高频但不区分主题”：回答少数高频词 + 大量 singleton/rare terms + 长尾。",
+      "formula_latex": null
+    },
+    {
+      "title": "Zipf's law：rank × probability 近似常数",
+      "slide_page": 3,
+      "intuition": "把词按频率排队，第一名大概比第二名多，第二名比第三名多；名次越靠后，频率按反比例掉下去。",
+      "explanation": "Zipf's law 描述：在给定文本集合中，unique terms 按 frequency 排序后，term 的 rank r 与其出现概率 P_t 的乘积近似为常数。若用 frequency 而不是 probability，也常写成 r × freq_t 近似常数。它是理解 inverted index 稀疏性和 postings list 长短差异的核心规律。",
+      "exam_angle": "若考 Zipf，必须写公式、解释 r 和 P_t/freq_t，并说明意义：少数高频词、长尾低频词、index postings 极不均匀。",
+      "formula_latex": "r \\times P_t \\approx \\text{constant}\\quad\\text{or}\\quad r \\times \\operatorname{freq}_t \\approx \\text{constant}"
+    },
+    {
+      "title": "Zipf 对索引和查询处理的影响",
+      "slide_page": 4,
+      "intuition": "查 the 像翻全城电话簿，查 bazinga 可能只看几条记录；同样是一个词，系统成本完全不同。",
+      "explanation": "Wikipedia abstracts 示例显示 rank × frequency 在同一量级波动，说明真实 collection 里高频词 postings list 很长，低频词 postings list 很短。对于 inverted index，这意味着 dictionary 中大量 term 很稀疏，而少数 term 占据大量 occurrences。查询处理时通常优先利用更短、更有判别力的 postings list。",
+      "exam_angle": "系统题可问 Zipf 如何影响 index/query：高频词存储与处理成本高，低频词更 discriminative，排序和优化需利用 term statistics。",
+      "formula_latex": null
+    },
+    {
+      "title": "Benford's law：首位数字也有偏见",
+      "slide_page": 5,
+      "intuition": "如果数字真平均，1 到 9 当首位应差不多；但很多自然数据里，1 开头远比 9 开头常见。",
+      "explanation": "Benford's law 说明许多自然数据的 first digit distribution 不是 uniform，而是小数字更常出现。讲义列出 term frequencies、physical constants、energy bills、population numbers 等例子。它与 Zipf 有相似精神：自然数据常呈非均匀、长尾、跨数量级分布。",
+      "exam_angle": "若考 Benford，写 P(d)=log(1+1/d)，解释 d 是首位数字，并说明它可出现在 term frequencies 等自然统计中。",
+      "formula_latex": "P(d) = \\log\\left(1 + \\frac{1}{d}\\right)"
+    },
+    {
+      "title": "Heaps' law：词表会长，但越长越慢",
+      "slide_page": 6,
+      "intuition": "刚开始读一本书，几乎每行都有新词；读到后面，大多数词见过了，但人名、地名、专业词、拼写噪声还会不断冒出来。",
+      "explanation": "Heaps' law 描述随着读入 words 数 n 增加，observed vocabulary size v(n) 持续增长但速度下降。公式为 v(n)=k n^b，其中 b<1，通常 0.4<b<0.7。k 和 b 取决于 collection、language、domain 与 preprocessing。它可用于估计 dictionary size 和 index memory。",
+      "exam_angle": "若考 Heaps，写公式，解释 n、v、k、b，强调 b<1 表示 sublinear growth；用途是估计 vocabulary/index size。",
+      "formula_latex": "v(n) = k n^b,\\quad 0.4 < b < 0.7,\\quad b < 1"
+    },
+    {
+      "title": "为什么 vocabulary 不会很快饱和",
+      "slide_page": 6,
+      "intuition": "语言像活水：新闻人物、新产品、拼写错误、URL、代码、外语词会一直往词表里倒。",
+      "explanation": "讲义指出即使 n 达到 80+ million，vocabulary 仍在增长。原因是大集合不断引入新实体、罕见专业词、拼写变体、数字代码和噪声。Heaps' law 对多数 collection 准确，但 k、b 不同；当 n 很小时不太准确。preprocessing 越激进，例如 stemming、case folding、stop removal，观察到的 vocabulary growth 可能越小。",
+      "exam_angle": "可考“为什么 Heaps 不 saturate”：答大型真实文本源不断产生新词、实体、噪声与变体；小集合上 law 不稳定。",
+      "formula_latex": null
+    },
+    {
+      "title": "Clumping/contagion：词是稀有但传染的事件",
+      "slide_page": 7,
+      "intuition": "lightning 是独立闪一下就没了；疾病会传染。词更像疾病：一篇文章开始聊 mitochondria，附近很可能又出现 mitochondria。",
+      "explanation": "从 Zipf 可知多数词出现很少，但 once you see a word once, expect to see again。Clumping/contagion 指词项出现具有局部聚集性：词是 rare events, but contagious。原因是文本有 topic locality；同一主题在段落、文档或 passage 内连续展开。",
+      "exam_angle": "若考 contagion，关键词是 local burstiness/topic locality；说明它启发 proximity search、passage retrieval、positional index 和 compression。",
+      "formula_latex": null
+    },
+    {
+      "title": "Occurrence distance：怎样观察 clumping",
+      "slide_page": 7,
+      "intuition": "如果一个只出现两次的词，两次位置总是离得很近，就说明它不是均匀撒在整本书里的。",
+      "explanation": "讲义用 Wiki abstract collection 做实验：找只出现两次的 terms，测两次 occurrences 的距离 d，并画 d 的 density function。结果显示多数只出现两次的词出现距离较近。这为“文本按主题局部组织”提供了统计证据。",
+      "exam_angle": "若问如何验证 clumping，回答：选择 frequency=2 的 terms，计算两次 occurrence position 的距离，观察距离分布是否集中在小 d。",
+      "formula_latex": "d = n_{\\text{occurrence }2} - n_{\\text{occurrence }1}"
+    },
+    {
+      "title": "Text laws 的 practical 用法",
+      "slide_page": 8,
+      "intuition": "这些 law 不是数学装饰，而是工程估算器：还没建索引，就能预判词表和处理成本。",
+      "explanation": "讲义用 Heaps' law 估算 20 billion terms、k=0.25、b=0.7 时 unique terms 约 4M。实践中可用 cat、zcat/gzcat、more、tr、sort、uniq、redirection 和 pipe 统计词频、观察 Zipf、统计 singleton terms 与 vocabulary growth。不同语言/领域也应重新实验，因为参数会变化。",
+      "exam_angle": "应用题可能给 n、k、b 让你估 v(n)，或问如何用 shell 观察词频分布；回答时连接 law 与 index size/query cost。",
+      "formula_latex": "v(20\\text{B}) = 0.25 \\times (20\\text{B})^{0.7} \\approx 4\\text{M}"
+    }
+  ],
+  "quick_revision": [
+    "Text laws 描述词频、词表增长和词项位置的稳定统计规律。",
+    "约 50% terms 可能只出现一次，词频呈长尾。",
+    "Zipf：r × P_t ≈ constant，rank 越低频率越高。",
+    "Benford：P(d)=log(1+1/d)，自然数字首位非均匀。",
+    "Heaps：v(n)=k n^b，b<1，vocabulary sublinear growth。",
+    "Vocabulary 不会快速饱和，因为新实体、拼写、噪声、专业词不断出现。",
+    "Clumping：词是 rare but contagious，出现后附近更可能再出现。",
+    "应用：估 index size、postings length、query cost、preprocessing effect。"
+  ],
+  "exam_answer": "Text laws describe stable statistical patterns in large text collections. Zipf's law says that when terms are ranked by frequency, rank times term probability or frequency is approximately constant, producing a few very frequent words and a long tail of rare terms. Heaps' law says vocabulary grows as v(n)=k n^b with b<1, so new terms keep appearing but at a decreasing rate, which helps estimate dictionary and index size. Clumping or contagion says words are rare but locally bursty: once a term appears, it is more likely to appear again nearby because text has topic locality."
+}

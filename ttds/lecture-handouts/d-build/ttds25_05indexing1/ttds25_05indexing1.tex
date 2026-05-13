@@ -1,0 +1,159 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 05}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}Indexing 1：从扫全文到倒排索引}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily preprocessing 产出 term $\rightarrow$ linear scan 太慢 $\rightarrow$ document/term matrix $\rightarrow$ inverted index $\rightarrow$ postings 与 df/tf $\rightarrow$ Boolean query processing $\rightarrow$ phrase/proximity search
+\end{chainbox}
+\slideimage{2}{0.72}{/Users/huez/Documents/ttds/lec/ttds25_05indexing1.pdf}
+\begin{callout}{这节课一句话}
+这节课把搜索引擎的“找词”问题，从笨拙的全文扫描，变成 term 到 postings list 的高速查表问题。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. Index 是搜索引擎的“地图册”}
+\slideimage{2}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_05indexing1.pdf}
+\begin{callout}{人话直觉}
+没有索引的搜索像在整座城市挨家敲门；有索引之后，你先查地图，直接去相关街区。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 文档经过 crawling、feeds 或本地 acquisition 进入 data store，再做 format conversion、tokenisation、stopping、stemming 等 preprocessing，最后把 processed terms 加入 index。index 本质上是 lookup table：给定一个 term，快速找到包含它的 documents 或位置，而不是重新扫描 collection。
+
+\noindent\textbf{考试问法：} 若问 indexing process，要说清楚：documents acquisition/preprocessing 产出 terms，index creation 建立 term 到 document evidence 的映射。
+
+\Needspace{0.38\textheight}
+\section{2. 为什么 grep/find 不够用}
+\slideimage{4}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_05indexing1.pdf}
+\begin{callout}{人话直觉}
+grep 像每次考试都把整本书从第一页读到最后；搜索引擎必须像翻书后索引一样，马上跳到相关页。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Sequential search 对每次 query 都线性扫描文本，collection 很大、query 很多时不可行。IR index 的作用是 sub-linear 地定位 term 所在文档，并可额外保存 frequency、positions 等信息支持更复杂检索。
+
+\noindent\textbf{考试问法：} 常考比较：PDF find/grep 是 linear scan；IR index 是为大规模、高频查询设计的数据结构。
+
+\Needspace{0.38\textheight}
+\section{3. Document vector 与 collection matrix}
+\slideimage{6}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_05indexing1.pdf}
+\begin{callout}{人话直觉}
+把每篇文档想成超长购物清单：每个词是一格，格子里写这个词买了几次，也就是出现几次。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} document vector 以 terms 为维度，cell value 可以是 binary 0/1 或 term frequency。所有 document vectors 叠起来形成 collection matrix。问题是 vocabulary 很大，而每篇文档只含少量 terms，所以矩阵绝大多数 entry 是 0。
+
+\noindent\textbf{考试问法：} 若问 collection matrix 为什么 sparse，要联系 vocabulary 大、单篇文档词项少，以及 Zipf/Heaps 导致大量 rare terms。
+
+\Needspace{0.38\textheight}
+\section{4. Inverted index：把矩阵翻过来}
+\slideimage{5}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_05indexing1.pdf}
+\begin{callout}{人话直觉}
+不是问“这篇文档有哪些词”，而是反过来问“这个词在哪些文档里”。搜索正好需要后者。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} inverted index 用 term 作为入口，每个 term 对应一个 inverted list/postings list，列出包含该 term 的 documents。它等价于 collection matrix 的稀疏表示：只存非零的 term-document pairs，不存海量 0。
+
+\noindent\textbf{考试问法：} 定义 inverted index 时要包含 term \(\rightarrow\) postings list，posting 通常至少有 docID，可扩展 tf 和 positions。
+
+\Needspace{0.38\textheight}
+\section{5. Dictionary、posting、postings list、df}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_05indexing1.pdf}
+\begin{callout}{人话直觉}
+dictionary 像电话簿目录，postings list 像某个名字下面的所有地址，df 是地址数量。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} dictionary 保存 vocabulary terms 及 metadata，例如 document frequency df 和指向 postings list 的 pointer。posting 是 postings list 的一条记录，通常记录 docID；df(t) 是包含 term t 的 document 数量。按 docID 排序后可以用 linear merge 高效做 AND/OR。
+
+\[
+df(t)=|\{d: t\in d\}|
+\]
+\noindent\textbf{考试问法：} 考试容易让你区分 df 和 posting：df 是数量，posting 是记录，postings list 是记录列表。
+
+\Needspace{0.38\textheight}
+\section{6. Index construction：先排序，再合并}
+\slideimage{9}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_05indexing1.pdf}
+\begin{callout}{人话直觉}
+像把散落的快递单先按收件人排序，再把同一人的包裹合成一条清单。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 构建 inverted index 的典型步骤是：从每篇文档生成 (term,docID) 序列；按 term 再按 docID 排序；合并同一 term/document 的重复出现；最后生成 dictionary、df 和 postings。若保留 count，就得到 frequency inverted index。
+
+\noindent\textbf{考试问法：} 若问 construction pipeline，按 tokenize/normalise \(\rightarrow\) term-doc pairs \(\rightarrow\) sort \(\rightarrow\) merge \(\rightarrow\) dictionary/postings 作答。
+
+\Needspace{0.38\textheight}
+\section{7. Boolean query processing：集合运算}
+\slideimage{10}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_05indexing1.pdf}
+\begin{callout}{人话直觉}
+AND 是两张名单取交集，OR 是合并名单，NOT 是从全集里划掉名单。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Boolean retrieval 对 query terms 的 postings lists 做集合运算。AND 常用 intersection，OR 用 union，NOT 用 complement。由于 postings 通常按 docID 排序，两个 list 的 intersection 可用 linear merge 完成，时间与 list 长度之和成正比。
+
+\[
+T_{AND}=O(|P_{ink}|+|P_{wink}|)
+\]
+\noindent\textbf{考试问法：} 若问 query \{ink AND wink\}，要说加载两个 postings lists，然后做 intersection/linear merge。
+
+\Needspace{0.38\textheight}
+\section{8. Phrase search：AND 还不够}
+\slideimage{11}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_05indexing1.pdf}
+\begin{callout}{人话直觉}
+“pink”和“ink”都出现，只说明两个人在同一个房间；phrase search 要求他们手拉手按顺序站着。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} phrase query 不仅要求 terms 同时出现在文档中，还要求顺序和相邻关系满足短语。bi-gram index 可把相邻词对如 pink\_ink 当作 index term，但会增大 index，并不自然支持任意长度 phrase 或 proximity query。
+
+\noindent\textbf{考试问法：} 常考 phrase search vs Boolean AND：AND 只要求共现；phrase 还要求 positions 满足顺序相邻。
+
+\Needspace{0.38\textheight}
+\section{9. Positional/proximity index：保存词的位置}
+\slideimage{13}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_05indexing1.pdf}
+\begin{callout}{人话直觉}
+如果只知道词在哪篇文章里，你只能知道“同场”；如果知道位置，你才能判断“距离多近”。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} positional index 在 posting 中保存 term positions，例如 term: df; DocNo: pos1,pos2,pos3。phrase search 可检查相邻位置，proximity search 可检查两个 term 的距离是否不超过窗口 n。代价是 index size 增大，但换来短语和邻近查询能力。
+
+\[
+|pos(t_1,d)-pos(t_2,d)|\le n
+\]
+\noindent\textbf{考试问法：} 若问 proximity search，答案要包含两步：先 AND 找候选文档，再检查 positions 距离。
+
+\section{考试速记版}
+\begin{itemize}
+\item Index 的核心作用：避免每次 query 线性扫描整个 collection。
+\item Inverted index 是 term \(\rightarrow\) postings list；posting 至少含 docID，可扩展 tf/positions。
+\item Collection matrix 很 sparse，所以 inverted index 只存非零 term-document evidence。
+\item Boolean query processing 本质是 postings lists 的集合运算。
+\item Phrase/proximity search 需要 positional evidence；Boolean AND 本身不够。
+\item Index construction 关键词：term-doc pairs、sort、merge、dictionary、postings、df。
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+Inverted index 是 IR 系统中最核心的索引结构，它把每个 term 映射到包含该 term 的 postings list。与完整 term-document matrix 相比，它只保存非零出现记录，因此是稀疏且高效的表示。构建时通常先从预处理后的文档生成 (term,docID) 序列，排序并合并重复项，得到 dictionary、document frequency 和 postings。查询时，Boolean AND/OR/NOT 可转化为 postings lists 的交集、并集和补集；若要支持 phrase 或 proximity search，则需要在 posting 中额外保存 term positions。
+\end{callout}
+\end{document}

@@ -1,0 +1,771 @@
+                                                           11/5/25
+
+
+
+
+                  Text Technologies for Data Science
+                                   INFR11145
+
+
+                            Web Search (2)
+
+                                    Instructor:
+                                   Walid Magdy
+    05-Nov-2025
+
+
+
+1
+
+
+
+
+     Lecture Objectives
+        • Learn about:
+              • Basics of Web search
+              • Brief History of web search
+              • SEOs
+              • Web Crawling (intro)
+
+
+
+
+                                                       2
+     Walid Magdy, TTDS 2025/2026
+
+2
+
+
+
+
+                                                                1
+                                                                     11/5/25
+
+
+
+
+    Brief History
+       • Early keyword-based engines (1995-1997)
+            • Altavista, Excite, Infoseek, Lycos, AOL
+            • Traditional IR techniques
+            • Scalability is an issue
+
+       • Paid search ranking: Goto (morphed into
+          Overture.com ® Yahoo!)
+           • Your search ranking depended on how much you paid
+           • Auction for keywords
+           • Called “sponsored search”
+                • CPC (Cost Per Click)
+                • CPM (Cost Per Thousand Impressions)
+
+                                                                 3
+    Walid Magdy, TTDS 2025/2026
+
+3
+
+
+
+
+    CPC / CPM / RPM
+       • With new services on the web à RPM
+       • RPM: Revenue per 1000 video views
+
+
+       • Read more:
+           Understand ad revenue analytics
+           https://support.google.com/youtube/answer/9314357
+
+
+
+
+                                                                 4
+    Walid Magdy, TTDS 2025/2026
+
+4
+
+
+
+
+                                                                          2
+                                                                            11/5/25
+
+
+
+
+    Brief (non-technical) History
+       • 1998+: Link-based ranking pioneered by Google
+            • Blew away all early engines
+            • Great user experience in search of a business model
+            • Meanwhile Goto/Overture’s annual revenues: ~ $1 billion
+       • Result: Google added paid search “ads” to the side,
+          independent of search results
+            • Yahoo followed, acquiring Overture (for paid placement)
+                and Inktomi (for search)
+       • 2005+: Google gains search share, dominating in
+          Europe and very strong in North America
+           • 2009: Yahoo! and Microsoft combined paid search offering
+       • 2024+: AI + RAG systems (no clear winner yet!)
+                                                                        5
+    Walid Magdy, TTDS 2025/2026
+
+5
+
+
+
+
+    Brief (non-technical) History
+
+
+
+
+                                                                        6
+    Walid Magdy, TTDS 2025/2026
+
+6
+
+
+
+
+                                                                                 3
+                                                                    11/5/25
+
+
+
+
+    Market Share Today (Oct 2025)
+
+
+
+
+                                                              7
+    Walid Magdy, TTDS 2025/2026
+
+7
+
+
+
+
+                Algorithmic Search Results
+                                             Sponsored Search Ads
+
+
+
+
+                                                              8
+    Walid Magdy, TTDS 2025/2026
+
+8
+
+
+
+
+                                                                         4
+                                                                              11/5/25
+
+
+
+
+     How is it going?
+
+
+
+
+                                          Sponsored results are prioritized
+
+
+
+
+                                                                       9
+     Walid Magdy, TTDS 2025/2026
+
+9
+
+
+
+
+     How is it going?
+
+
+
+
+                           Shopping posts (only sponsored)
+                                                                       10
+     Walid Magdy, TTDS 2025/2026
+
+10
+
+
+
+
+                                                                                   5
+                                                                                                                                                                 11/5/25
+
+
+
+
+     How is it going?
+
+
+
+
+                                                                                                                                                            11
+     Walid Magdy, TTDS 2025/2026
+
+11
+
+
+
+
+     Web Search Basics                                                                                        !!
+
+                                                                                                                   !
+                                                                                                                            [<F1AFJ#O!rV1CA!
+
+                                                                                                                   ]T!S<<CVH10#!iw<J#AA!
+                                                                                                                   AVA0F%1D!S<<CVH10#A!LxyeP!zyxEg^gs!
+                                                                                                                   [H;#!AHT!]#JDVGV#O!R1ADHCCHDVF1!
+                                                                                                                   BBB.0WH<<CVH10#.0F;!
+                                                                                                                   [H1!_JH10VA0FEaHCCH1OE[H1!`FA#4!
+                                                                                                                   ]S!
+
+
+
+
+                                                User
+                                                                                                                   !
+                                                                                                                   .*"+"!?H0%%;!]C#H1#JA!
+                                                                                                               ! .*"+"!?H0%%;AE!]F;<C#D#![#C#0DVF1!
+                                                                                                                 !!!
+                                                                                                               !!! _J##![UV<<V1Wu!
+                                                                                                                   BBB.bH0%%;A.0F;!
+                                                                                                                   !
+                                                                                                                   .*"+"!?H0%%;!]C#H1#JA!
+                                                                                                                   .*"+"E_J##!SVJ!AUV<<V1Wu!
+                                                                                                                   SCC!;FO#CA.!h#C<G%C!HObV0#.!
+                                                                                                                   BBB.I#ADEbH0%%;.0F;!
+                                                                                                                   !
+                                                                                                                   !
+                                                                                                                   !
+                                                                                                                                     !
+                                                       !"#!!                                "#A%CDA!$!E!$%!FG!HIF%D!&'($%'%%%!GFJ!)*"+".!L%,$-!A#0F1OAP!!
+
+                                                       .*"+"4!R10!EE!S1TDUV1W!#CA#!VA!H!0F;<JF;VA#!
+                                                       SD!DU#!U#HJD!FG!TF%J!UF;#4!S<<CVH10#A!IT!.*"+".!,,,!=[S.!DF!)*"+".0F;.!"#AVO#1DVHC!S<<CVH10#A.!
+                                                       ?H0%%;!]C#H1#JA.!AVAUBHAU#JA.!]FFCV1W!S<<CVH10#A.![D#H;!ab#1.!]FGG##![TAD#;!,,,!!
+                                                       BBB.)*"+".0F;c!E!deC!E!]H0U#O!E![V;VCHJ!<HW#A!!
+
+
+
+                                   Web spider          .*"+"!
+                                                       f#C0F;#!DF!.*"+"4!DU#!UF;#!FG!DU#!b#JT!I#AD!H<<CVH10#A!H1O!CVD0U#1A!V1!DU#!BFJCO.!!
+                                                       BBB.)*"+".0F.%Cc!E!gC!E!]H0U#O!E![V;VCHJ!<HW#A!!
+
+                                                       .*"+"!E!A#%DA0U#J!h#JAD#CC#J!bF1!iV1IH%W#JMD#14!hH%AW#JMD#1!,,,!E!k!lJH1ACHD#!DUVA!
+                                                       <HW#!m!
+                                                       AHA!nFJDHC!o%;!lU#;H!iAA#1!p!T#1V#AA#1!F1CV1#!%1D#J!BBB.o%EDVA0U.O#.!.*"+"!B#CDB#VD!
+                                                       ...#V1!r#I#1!CH1W.!,,,!fMUC#1![V#!OV#!.*"+"!?#JDJ#D%1W!RUJ#A!rH1O#A.!!
+                                                       BBB.)*"+".O#c!E!seC!E!]H0U#O!E![V;VCHJ!<HW#A!!
+
+                                                       h#JoCV0U!BVCCCF;;#1!I#V!.*"+"!tAD#JJ#V0U!E!k!lJH1ACHD#!DUVA!<HW#!m!
+                                                       h#JoCV0U!BVCCCF;;#1!I#V!.*"+"!tAD#JJ#V0U!f#11![V#!1V0UD!H%DF;HDVA0U!
+                                                       B#VD#JW#C#VD#D!B#JO#14!CCV0C#1![V#!IVDD#!UV#Ju!hS=[hSrl[Ti"vli!,,,!!
+                                                       BBB.)*"+".HDc!E!gC!E!]H0U#O!E![V;VCHJ!<HW#A!!
+
+                                                       !
+
+                                                       !
+
+                                                       !
+
+                                                       !
+                                                                                                            Search
+
+                                   Indexer
+
+
+            The Web
+
+
+                                         Indexes                                           Ad indexes
+                                                                                                                                                            12
+     Walid Magdy, TTDS 2025/2026
+
+12
+
+
+
+
+                                                                                                                                                                      6
+                                                                               11/5/25
+
+
+
+
+     User Need on Web Search
+        • Informational – want to learn about something (~40% / 65%)
+                                                Information Retrieval
+
+        • Navigational – want to go to that page (~25% / 15%)
+                                                United Airlines
+
+        • Transactional – want to do something (web-mediated) (~35% /
+           20%)
+            • Access a service     Seattle weather
+
+            • Downloads            Mars surface images
+
+            • Shop                 Canon S410
+
+
+        • Gray areas
+             • Exploratory search “see what’s there”
+
+                                                                          13
+     Walid Magdy, TTDS 2025/2026
+
+13
+
+
+
+
+     Search Engine Optimization (SEO)
+        • The Trouble with Paid Search Ads:
+           It costs money. What’s the alternative?
+        • Search Engine Optimization (SEO):
+             • “Tuning” your web page to rank highly in the algorithmic
+                 search results for selected keywords
+             • Alternative to paying for placement
+        • Performed by companies, webmasters and
+           consultants (“Search engine optimizers”) for their
+           clients
+        • Some perfectly legitimate, some very shady
+
+                                                                          14
+     Walid Magdy, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                                    7
+                                                                                11/5/25
+
+
+
+
+     SEO: Simplest Form
+        • First generation engines relied heavily on tf/idf
+             • The top-ranked pages for the query maui resort were
+                 the ones containing the most maui’s and resort’s
+        • SEOs responded with dense repetitions of chosen
+           terms
+             • e.g., maui resort maui resort maui resort
+             • Misleading meta-tags, excessive repetition
+             • Often, the repetitions would be in the same color as the
+                 background of the web page
+                 • Repeated terms got indexed by crawlers
+                 • But not visible to humans on browsers
+                   Pure word density cannot be trusted
+                             as an IR signal
+                                                                          15
+     Walid Magdy, TTDS 2025/2026
+
+15
+
+
+
+
+     SEO word manipulating examples
+        • XYZ Hotel in ABC city
+             • Accommodation, hotel, room, flat, travel, sights, attractions,
+                 vacation, holiday, in ABC ABC ABC
+
+        • XYZ for family advices
+             • Family, couples, parents, spouse, wife, husband, fights,
+                 relationship, cheating, communication, kids, children
+
+        • XYZ Umbrellas
+             • Raining, rainy, wet, weather, day
+
+
+
+                                                                          16
+     Walid Magdy, TTDS 2025/2026
+
+16
+
+
+
+
+                                                                                     8
+                                                                                    11/5/25
+
+
+
+
+     SEO: Cloaking
+        • Serve fake content to
+          search engine spider
+        • Famous technique:
+          Black Hat
+        • Kind of a spam!
+
+
+
+
+                                                                               17
+     Walid Magdy, TTDS 2025/2026
+
+17
+
+
+
+
+     Duplicate Detection
+        • The web is full of duplicated content
+        • Strict duplicate detection = exact match
+             • Not as common
+             • can be detected with fingerprints
+        • But many, many cases of near duplicates
+             • e.g., last modified date the only difference between two
+                 copies of a page
+        • Near-Duplication: Approximate match
+             • Use similarity threshold to detect near-duplicates
+                 • e.g., Similarity > 80% => Documents are “near duplicates”
+                 • Not transitive though sometimes used transitively
+                      • A ≈ B & B ≈ C à doesn’t have to mean A ≈ C
+                                                                               18
+     Walid Magdy, TTDS 2025/2026
+
+18
+
+
+
+
+                                                                                         9
+                                                                             11/5/25
+
+
+
+
+     Duplicate Detection: MiniHash
+        • Features of similarity:
+             • Segments of a document (natural or artificial breakpoints)
+             • Shingles (word n-grams)
+             • a rose is a rose is a rose →
+                   a_rose_is_a
+                     rose_is_a_rose
+                          is_a_rose_is
+                             a_rose_is_a
+        • Similarity measure between two docs (= sets of
+           shingles)
+            • Set intersection
+            • Specifically (Size_of_Intersection / Size_of_Union)
+
+                                                                        19
+     Walid Magdy, TTDS 2025/2026
+
+19
+
+
+
+
+     Shingles + Set Intersection
+        • Computing exact set intersection of shingles between
+           all pairs of documents is expensive/intractable
+        • Approximate using a cleverly chosen subset of
+           shingles from each (a sketch)
+
+        • Estimate sizesize
+                         of intersection
+                             of union
+                                         based on a short sketch
+
+             Doc
+              A                Shingle set A   Sketch A
+
+                                                                 Jaccard
+             Doc
+              B                Shingle set B   Sketch B
+
+
+                                                                        20
+     Walid Magdy, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                                 10
+                                                                       11/5/25
+
+
+
+
+     Web Crawling
+
+
+
+                 URLs crawled
+                 and parsed
+                                                   Unseen Web
+
+                                   URLs frontier
+                     Seed
+                     pages                             Dark Web
+
+
+
+
+                                                                  21
+     Walid Magdy, TTDS 2025/2026
+
+21
+
+
+
+
+     Basic Crawler Operation
+        • Begin with known “seed” URLs
+        • Fetch and parse them
+             • Extract URLs they point to
+             • Place the extracted URLs on a queue
+        • Fetch one URL from the queue
+        • Repeat
+
+
+
+
+                                                                  22
+     Walid Magdy, TTDS 2025/2026
+
+22
+
+
+
+
+                                                                           11
+                                                                       11/5/25
+
+
+
+
+     What Any Crawler Must Do
+        • Be Polite: Respect implicit and explicit politeness
+           considerations
+            • Only crawl allowed pages
+                 • respect robots.txt
+             • Avoid hitting any site too often
+        • Be Robust: Be immune to spider traps and other
+           malicious behaviour from web servers
+            • Be careful to spams (link farms)
+
+
+
+
+                                                                  23
+     Walid Magdy, TTDS 2025/2026
+
+23
+
+
+
+
+     What Any Crawler Should Do
+        • Be capable of distributed operation
+             • designed to run on multiple distributed machines
+        • Be scalable: designed to increase the crawl rate by
+           adding more machines
+        • Performance/efficiency: permit full use of available
+           processing and network resources
+        • Fetch pages of “higher quality” first
+        • Freshness/Continuous operation: Continue fetching
+           fresh copies of a previously fetched page
+        • Extensible: Adapt to new data formats, protocols
+                                                                  24
+     Walid Magdy, TTDS 2025/2026
+
+24
+
+
+
+
+                                                                           12
+                                                                                11/5/25
+
+
+
+
+     Basic Crawler Architecture
+
+                           DNS
+                                               Doc        robots    URL
+                                               FP’s       filters   set
+
+
+
+             WWW
+                                   Parse
+                          Fetch                                     Dup
+                                             Content       URL
+                                                                    URL
+                                              seen?       filter
+                                                                    elim
+
+
+
+
+                                           URL Frontier
+
+
+                                                                           25
+     Walid Magdy, TTDS 2025/2026
+
+25
+
+
+
+
+     Processing Steps in Crawling
+        1. Pick a URL from the frontier
+        2. Fetch the document at the URL
+        3. Parse the document
+            1. Extract links from it to other docs (URLs)
+        4. Check if document has content already seen
+            1. If not, add to indexes
+        5. For each extracted URL
+            1. Ensure it passes certain URL filter tests
+            2. Check if it is already in the frontier (duplicate URL
+               elimination)
+
+
+                                                                           26
+     Walid Magdy, TTDS 2025/2026
+
+26
+
+
+
+
+                                                                                    13
+                                                                                           11/5/25
+
+
+
+
+     URL Frontier
+        • Can include multiple pages from the same host
+        • Must avoid trying to fetch them all at the same time
+        • Must try to keep all crawling threads busy
+
+
+
+
+                                                                                      27
+     Walid Magdy, TTDS 2025/2026
+
+27
+
+
+
+
+     Explicit and Implicit Politeness
+        • Explicit politeness: specifications from webmasters
+           on what portions of site can be crawled
+            • robots.txt
+        • Implicit politeness: even with no specification, avoid
+           hitting any site too often
+                                                   User-agent: *
+                                                   Disallow: /yoursite/temp/
+
+                                                   User-agent: searchengine
+                                                   Disallow:
+
+        • No robot should visit any URL starting with "/yoursite/temp/", except the
+           robot called “searchengine"
+
+                                                                                      28
+     Walid Magdy, TTDS 2025/2026
+
+28
+
+
+
+
+                                                                                               14
+                                                                                  11/5/25
+
+
+
+
+     URL Frontier: 2 Main Considerations
+        • Politeness: do not hit a web server too frequently
+        • Priority/Freshness: crawl some pages more often
+          than others
+            • Pages whose content changes often (e.g. News sites)
+        • These goals may conflict each other.
+            • e.g., simple priority queue fails – many links out of a page
+                 go to its own site, creating a burst of accesses to that site.
+        • Even if we restrict only one thread to fetch from a
+           host, can hit it repeatedly
+        • Common heuristic: insert time gap between
+           successive requests to a host that is >> time taken in
+           most recent fetch from that host
+                                                                             29
+     Walid Magdy, TTDS 2025/2026
+
+29
+
+
+
+
+     Summary
+        • History of Web search
+        • Basics of web search
+        • Usage of web search
+        • SEO
+        • Web crawling
+
+
+
+
+                                                                             30
+     Walid Magdy, TTDS 2025/2026
+
+30
+
+
+
+
+                                                                                      15
+                                                                       11/5/25
+
+
+
+
+     Resources
+        • Text book 1: Intro to IR, Chapter 19
+        • Text Book 2: IR in Practice: Chapter 3
+        • YouTube Videos (nice to watch)
+             • How Search Works. Google
+                 https://www.youtube.com/watch?v=BNHR6IQJGZs
+             • The Evolution of Search. Google
+                 https://www.youtube.com/watch?v=mTBShTwCnD4
+             • What Is The Deep Web?. Mashable
+                 https://www.youtube.com/watch?v=_UOK7aRmUtw
+             • Most popular websites (search engines) over time
+                 https://www.youtube.com/watch?v=MirrGCbsIp4
+             • This is How Much YouTube Pays Me
+                 https://www.youtube.com/watch?v=I3MeCEwVxB0
+                                                                  31
+     Walid Magdy, TTDS 2025/2026
+
+31
+
+
+
+
+                                                                           16
+

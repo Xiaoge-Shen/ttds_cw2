@@ -1,0 +1,153 @@
+{
+  "lecture": "TTDS 07",
+  "source_pdf": "ttds25_07rankedretrieval.pdf",
+  "title": "Ranked Retrieval 1：从 match/no match 到排序分数",
+  "one_sentence": "这节课把检索从 Boolean 的“进不进名单”，升级为 ranked retrieval 的“谁最应该排在前面”。",
+  "concept_chain": [
+    "Boolean retrieval limitation",
+    "top-k ranked output",
+    "Jaccard baseline",
+    "TF/DF/IDF",
+    "TF-IDF weighting",
+    "Vector Space Model",
+    "length normalization",
+    "cosine similarity",
+    "SMART notation"
+  ],
+  "slides": [
+    {
+      "page": 2,
+      "reason": "Boolean retrieval 的限制和 ranked retrieval 的动机。",
+      "caption": "用户通常不想写复杂 Boolean query，也不想看无排序结果。"
+    },
+    {
+      "page": 4,
+      "reason": "Jaccard coefficient 的缺陷：不看 tf，也不区分稀有词。",
+      "caption": "集合 overlap 是起点，但不是好 ranking 的终点。"
+    },
+    {
+      "page": 5,
+      "reason": "TF、DF、IDF 定义和 TF-IDF 直觉。",
+      "caption": "词在本文档多、在集合中少，才更有区分力。"
+    },
+    {
+      "page": 7,
+      "reason": "TF-IDF term weighting 的标准公式。",
+      "caption": "log TF + IDF：既奖励出现，也抑制泛词。"
+    },
+    {
+      "page": 8,
+      "reason": "Vector Space Model 的基本比喻。",
+      "caption": "query 和 document 都变成 term space 中的向量。"
+    },
+    {
+      "page": 9,
+      "reason": "length normalization 的动机和 L2 norm。",
+      "caption": "不要让长文档仅因更长就占便宜。"
+    },
+    {
+      "page": 10,
+      "reason": "cosine similarity 公式与几何直觉。",
+      "caption": "比较方向，而不是单纯比较长度。"
+    },
+    {
+      "page": 11,
+      "reason": "SMART notation 总结 weighting scheme。",
+      "caption": "把 tf/idf/normalization 的组合写成 compact 记号。"
+    },
+    {
+      "page": 12,
+      "reason": "ranked retrieval 的完整步骤总结。",
+      "caption": "query/document weighted vectors → cosine → top-k。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Boolean retrieval 的天花板",
+      "slide_page": 2,
+      "intuition": "Boolean 像门口保安：只说“能进/不能进”；但搜索引擎需要前台排序：谁最值得先见。",
+      "explanation": "Boolean retrieval 给每个 document match/no match，适合专家用户和精确约束，但普通用户通常输入 free text query，并期待系统返回 top-k ranked results。ranked retrieval 给每个 document 一个 score，再按分数排序。",
+      "exam_angle": "若问 ranked vs Boolean，核心区别是 binary decision vs score-based ranking/top-k。"
+    },
+    {
+      "title": "Ranking output：score(d,q)",
+      "slide_page": 3,
+      "intuition": "不是把所有候选文档倒在桌上，而是给每份卷子打分，从高到低发给用户。",
+      "explanation": "ranked retrieval 通常输出 query_id、document_id 和 score。score(d,q) 表示 document d 与 query q 的匹配程度或相关性估计。系统可以只返回 top-k，因为用户一般只看前几条。",
+      "exam_angle": "答 ranked retrieval pipeline 时要出现 score、sort、top-k 三个词。",
+      "formula_latex": "d_1 \\succ d_2 \\quad \\text{if}\\quad score(q,d_1)>score(q,d_2)"
+    },
+    {
+      "title": "Jaccard：一个太朴素的 overlap 分数",
+      "slide_page": 4,
+      "intuition": "Jaccard 只数两袋词有多少交集，不管“the”和“serendipity”谁更珍贵，也不管某个词出现多少次。",
+      "explanation": "Jaccard coefficient 衡量两个集合 overlap，取 intersection 除以 union。它能作为简单 similarity，但不考虑 term frequency，所有 terms 权重相同，也缺少良好的 length normalization。",
+      "exam_angle": "若问 Jaccard limitations，答不考虑 tf、不区分 rare/common terms、length normalization 弱。",
+      "formula_latex": "J(A,B)=\\frac{|A\\cap B|}{|A\\cup B|}"
+    },
+    {
+      "title": "TF：一个词在本文档里有多响",
+      "slide_page": 5,
+      "intuition": "如果一篇文章反复提到 indexing，它大概率真的在讲 indexing；但第 10 次出现没有第 1 次那么惊艳。",
+      "explanation": "term frequency tf(t,d) 是 term t 在 document d 中出现次数。TF-IDF 常用 log-scaled tf，让第一次出现贡献很大，后续出现仍加分但边际收益递减。",
+      "exam_angle": "若问为什么用 log TF，答 dampen repeated occurrences，避免重复词无限加分。",
+      "formula_latex": "tf\\text{-}weight(t,d)=1+\\log_{10}tf(t,d)"
+    },
+    {
+      "title": "DF/IDF：越常见越不稀罕",
+      "slide_page": 6,
+      "intuition": "“the” 像空气，哪里都有，不能帮你定位；稀有词像门牌号，越少见越能指路。",
+      "explanation": "df(t) 是包含 term t 的 document 数量，cf(t) 是 term 在 collection 中出现总次数。inverse document frequency 用 N/df(t) 的 log 衡量词的区分能力：出现在越多文档中的词 IDF 越低。",
+      "exam_angle": "考试常让区分 df 与 cf：df 数 documents，cf 数 occurrences。",
+      "formula_latex": "idf(t)=\\log_{10}\\frac{N}{df(t)}"
+    },
+    {
+      "title": "TF-IDF：本文档高频 × 全集合稀有",
+      "slide_page": 7,
+      "intuition": "好关键词要同时满足两件事：在这篇文档里声音大，在别的文档里不吵。",
+      "explanation": "TF-IDF term weight 同时奖励 document 内高频和 collection 中稀有。它是经典强 baseline，简单、可解释、易实现。query-document score 可对共有 query terms 的权重求和，也可作为 VSM 中的向量权重。",
+      "exam_angle": "若考 TF-IDF，必须定义 tf、df/idf，再解释“文档内多、集合中少”这一直觉。",
+      "formula_latex": "w_{t,d}=(1+\\log_{10}tf(t,d))\\log_{10}\\frac{N}{df(t)}"
+    },
+    {
+      "title": "Vector Space Model：把文本放进几何空间",
+      "slide_page": 8,
+      "intuition": "query 和 document 都变成箭头；相关性不是看箭头绝对多长，而是看它们指向是不是相近。",
+      "explanation": "VSM 将 documents 和 queries 表示为同一 term space 中的 weighted vectors。每个维度是 term，值可由 TF-IDF 等 weighting 给出。匹配时比较 query vector 与 document vector 的相似度。",
+      "exam_angle": "答 VSM 时要说 shared term space、weighted vectors、similarity/ranking。"
+    },
+    {
+      "title": "Length normalization：别奖励“啰嗦”",
+      "slide_page": 9,
+      "intuition": "一篇文档复制粘贴一遍，语义没变，但长度翻倍；如果直接按点积或欧氏距离，就会被长度骗。",
+      "explanation": "长文档包含更多 terms，容易得到更高 raw score。L2 normalization 将向量除以其长度，使比较更关注方向而非规模。复制文档后向量长度变大，但 normalized direction 基本不变。",
+      "exam_angle": "若问为什么不用 Euclidean distance，答 document length 会扭曲相似度；cosine/normalization 更稳。",
+      "formula_latex": "\\|\\vec{x}\\|_2=\\sqrt{\\sum_i x_i^2},\\quad \\vec{x}'=\\frac{\\vec{x}}{\\|\\vec{x}\\|_2}"
+    },
+    {
+      "title": "Cosine similarity：看夹角，不看体重",
+      "slide_page": 10,
+      "intuition": "两个箭头方向越一致，说明 query 想要的词权重模式和 document 越接近。",
+      "explanation": "cosine similarity 是 query vector 与 document vector 的点积除以各自长度。若 vectors 已归一化，cosine 就等于 dot product。它是 VSM 中最常见的 ranking score。",
+      "exam_angle": "公式题要写 numerator 是 dot product，denominator 是两个 L2 norms；归一化后直接点积。",
+      "formula_latex": "\\cos(\\vec q,\\vec d)=\\frac{\\vec q\\cdot\\vec d}{\\|\\vec q\\|\\|\\vec d\\|}"
+    },
+    {
+      "title": "SMART notation：给 weighting scheme 起缩写名",
+      "slide_page": 11,
+      "intuition": "SMART 像配方标签：document 怎么处理、query 怎么处理，用六个字母浓缩写清楚。",
+      "explanation": "SMART notation 用 ddd.qqq 描述 document 和 query 的 term weighting scheme，包括 tf scaling、idf usage、normalization 等。例如 lnc.ltc 表示 documents 和 queries 使用不同组合。它帮助系统化比较 weighting variants。",
+      "exam_angle": "若问 SMART，不必背所有组合细节，但要知道它描述 query/document 的 weighting scheme。"
+    }
+  ],
+  "quick_revision": [
+    "Ranked retrieval 给 document 打 score 并返回 top-k；Boolean 只有 match/no match。",
+    "Jaccard 是 |交集|/|并集|，缺点是不看 tf、idf 和长度。",
+    "TF 表示词在文档中出现次数；log TF 体现边际收益递减。",
+    "IDF 表示词的集合稀有性：df 越大，idf 越小。",
+    "TF-IDF = 文档内高频 × 集合中稀有，是强 baseline。",
+    "VSM 把 query/document 表示为 term vectors，用 cosine similarity 排序。",
+    "Length normalization 防止长文档仅因更长而占便宜。"
+  ],
+  "exam_answer": "Ranked retrieval 解决 Boolean retrieval 只有 match/no match、不能排序的问题。系统为每个 document 对 query 计算 score，并返回 top-k。最简单的 Jaccard 只看集合 overlap，但不考虑 term frequency、term rarity 和 length normalization。TF-IDF 用 tf 衡量 term 在文档中的重要性，用 idf 衡量它在 collection 中的区分能力，常写为 (1+log tf)log(N/df)。在 Vector Space Model 中，query 和 document 都表示为 TF-IDF weighted vectors，再用 cosine similarity 比较方向相似度；L2 normalization 可减少文档长度差异造成的偏置。"
+}

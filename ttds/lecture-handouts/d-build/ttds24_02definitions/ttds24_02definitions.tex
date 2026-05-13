@@ -1,0 +1,177 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 02}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}Definitions：IR 的基本对象、相关性与系统黑箱}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily IR basic form：Given Q, find relevant D $\rightarrow$ 两大问题：effectiveness 与 efficiency $\rightarrow$ 三大对象：documents、queries、relevant documents $\rightarrow$ Query 是 information need 的不完美表达 $\rightarrow$ Relevance 是主题匹配、任务满足与用户主观性的混合体 $\rightarrow$ Bag-of-words 用词项 overlap 近似 aboutness $\rightarrow$ IR 与 DB 的根本差异：unstructured/imprecise vs structured/exact $\rightarrow$ 系统架构：offline indexing + online search
+\end{chainbox}
+\slideimage{1}{0.72}{/Users/huez/Documents/ttds/lec/ttds24_02definitions.pdf}
+\begin{callout}{这节课一句话}
+这节课把 IR 拆成最小零件：给定 query Q，在 document collection 中找到 relevant documents D，同时在 effectiveness 和 efficiency 之间做系统级权衡。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. IR basic form：Q 找 D}
+\slideimage{3}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_02definitions.pdf}
+\begin{callout}{人话直觉}
+把 query 想成用户递给系统的一张寻物启事，documents 是仓库里的物品，IR 要找出最可能有用的那些。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} IR 的基本形式是：Given Query Q, find relevant documents D。这里的 Q 不一定是完整问题，D 也不一定是网页，可以是任何被检索单位。关键是 relevant：系统不是返回所有包含同一字符串的对象，而是返回能满足 query 背后 information need 的对象。
+
+\[
+Q \rightarrow \{D_1, D_2, \ldots, D_k\}_{\text{ranked by relevance}}
+\]
+\noindent\textbf{考试问法：} 若问 IR 的 basic form，写出 Q、D、relevant documents，并说明输出通常是 ranked set 而非唯一精确答案。
+
+\Needspace{0.38\textheight}
+\section{2. Effectiveness 与 efficiency：找对也要找快}
+\slideimage{3}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_02definitions.pdf}
+\begin{callout}{人话直觉}
+只找对但一分钟才返回，用户已经走了；只找快但全是垃圾，系统也失败。IR 永远在这两个方向拉扯。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Effectiveness 指系统能否找到真正 relevant、能满足 information need 的文档；efficiency 指系统能否在海量数据和高查询吞吐下快速完成检索。讲义强调 IR 面对 vast quantities of data、thousands queries per second、constantly changing data，因此必须既有好的 retrieval model，也有高效 index 与 query processing。
+
+\noindent\textbf{考试问法：} 比较或系统设计题常要求解释二者 trade-off：复杂模型可能提升效果但增加延迟，高效索引可能牺牲部分语义细节。
+
+\Needspace{0.38\textheight}
+\section{3. Document：被检索的最小业务单位}
+\slideimage{4}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_02definitions.pdf}
+\begin{callout}{人话直觉}
+Document 不一定是一篇 PDF；它只是系统决定“每次返回什么”的单位。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Document 是 element to be retrieved，通常有 unique ID，N documents 构成 collection。它可以是 web page、email、book、page、sentence、tweet、photo、video、music piece、code、QA answer、product description、advertisement，甚至 DNA。重要的是系统如何定义 document boundary，因为它决定 indexing、ranking 和 evaluation 的粒度。
+
+\[
+C = \{D_1, D_2, \ldots, D_N\}
+\]
+\noindent\textbf{考试问法：} 若问 document 是否一定是传统文本，答案是否定；强调 unique ID、collection、retrieval unit，并举多种例子。
+
+\Needspace{0.38\textheight}
+\section{4. Query：information need 的压缩表达}
+\slideimage{5}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_02definitions.pdf}
+\begin{callout}{人话直觉}
+用户脑子里是一整段需求，打进搜索框的却常常只有两三个词；query 是需求的影子，不是需求本身。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Query 通常是表达 information need 的 free text。同一 information need 可以被多个 query 表达，例如 hurricane news、North Carolina storm、Florence；同一 query 也可能对应多个需求，例如 Apple 和 Jaguar。query 还可以是 image sample、QA question、hummed tune、user history、structured scholar search 或 advanced search operators。
+
+\noindent\textbf{考试问法：} 常考 query formulation 难点：synonymy、polysemy、short query、上下文缺失；回答时强调 query 与 information need 是多对多关系。
+
+\Needspace{0.38\textheight}
+\section{5. Relevance：IR 最难被钉死的词}
+\slideimage{6}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_02definitions.pdf}
+\begin{callout}{人话直觉}
+相关性不是试卷上的标准答案，更像“这篇文档能不能帮这个用户完成眼前任务”。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 在抽象层面，IR 关心 item D 是否 match item Q，或 D 是否 relevant to Q。Relevance 可能意味着用户会喜欢/点击，能帮助完成任务，具有新颖性，或与 query 主题相同。它困难在于语言没有清晰语义边界：synonymy 让 Edinburgh festival 与 The Fringe 词面不同但相关，polysemy 让 Apple/Jaguar 一个词有多个主题，用户主观性和 web spam 又进一步干扰判断。
+
+\noindent\textbf{考试问法：} 若问 relevance 为什么 tricky，列 synonymy、polysemy、subjectivity、novelty/task satisfaction、SEO/spam；不要只说“词不一样”。
+
+\Needspace{0.38\textheight}
+\section{6. Relevant items are similar：词汇相似近似主题相似}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_02definitions.pdf}
+\begin{callout}{人话直觉}
+如果两篇文章都反复出现 hurricane、storm、North Carolina，它们大概率在聊同一件事。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} IR 的关键假设是 use similar vocabulary \(\rightarrow\) similar meaning，similar documents relevant to same queries。这个假设允许系统用 string match、word overlap 或 P(D|Q) 这类 retrieval model 来近似相关性。它不是完美语义理解，但在大规模检索里简单、可扩展、效果足够强。
+
+\[
+\operatorname{score}(D,Q) = f(\operatorname{overlap}(D,Q), \text{term statistics})
+\]
+\noindent\textbf{考试问法：} 若考 retrieval model 的直觉，说明词汇 overlap 是 aboutness 的代理；同时指出 synonymy/polysemy 会破坏这个代理。
+
+\Needspace{0.38\textheight}
+\section{7. IR vs DB：不精确文本检索 vs 精确结构查询}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_02definitions.pdf}
+\begin{callout}{人话直觉}
+数据库像查学生表里 matriculation number 等于 X 的行；IR 像问“有没有讲搜索评价的材料”，答案要排序、要判断、还可能不唯一。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Databases 处理 structured data，语义基于 formal model，query 是 SQL/relational algebra 等形式化、无歧义表达，结果通常 exact。IR 多处理 mostly unstructured free text，query 是 natural language 或 Boolean-like 表达，结果 imprecise，需要 relevance measurement，且 interaction 很重要。
+
+\noindent\textbf{考试问法：} 比较题按四列回答最稳：retrieved data、query type、result type、interaction；DB=structured/formal/exact/one-shot，IR=unstructured/free text/imprecise/interactive。
+
+\Needspace{0.38\textheight}
+\section{8. Bag-of-words：把语序放下，先抓主题}
+\slideimage{9}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_02definitions.pdf}
+\begin{callout}{人话直觉}
+把一句话打散成一袋词，语法没了，但主题味道还在；像闻调料包就能猜菜系。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Bag-of-words 把 documents 和 queries 当成带重复的词袋，match 变成 D 与 Q 的 overlap 或基于词项特征的统计匹配。它的优点是简单、可扩展、让 retrieval models tractable。批评是会丢失词序、句法、negation 和多词表达，对 Chinese/Japanese 这类无空格语言需 segmentation，对 German compounds 可能需 decompounding。
+
+\[
+D = \{(t_1, c_1), (t_2, c_2), \ldots\}
+\]
+\noindent\textbf{考试问法：} 若问 BOW，定义必须包含“忽略词序”和“保留重复”；优点写 tractable/scalable，缺点写 context/negation/language-specific segmentation。
+
+\Needspace{0.38\textheight}
+\section{9. IR black box：表示、比较、索引}
+\slideimage{10}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_02definitions.pdf}
+\begin{callout}{人话直觉}
+黑箱里不是魔法，而是三件事：把 query 变形、把 document 变形、用模型比较它们。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} IR black box 包含 query representation function、document transformation function、comparison function、retrieval model 和 index。Documents 通常 offline 转换为 BOW 或其他 representation 并进入 index；query online 被转换后与 index 中的 document representation 比较，输出 hits。Index 是效率核心，因为它避免每个 query 都扫描整个 collection。
+
+\[
+\operatorname{score}(Q,D) = \operatorname{compare}(\phi_Q(Q), \phi_D(D))
+\]
+\noindent\textbf{考试问法：} 架构题要把 representation、comparison、retrieval model、index 联系起来，并区分 offline document processing 与 online query processing。
+
+\Needspace{0.38\textheight}
+\section{10. Indexing offline，search online}
+\slideimage{11}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_02definitions.pdf}
+\begin{callout}{人话直觉}
+餐厅提前备菜是 indexing，客人点菜后快速出餐是 search；准备越充分，现场越快。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Indexing process 是 offline：acquire data from crawling/feeds、store originals if needed、transform text、decide word units/stopping/stemming、create index。Search process 是 online：assist query formulation、retrieve and rank results、help browsing/reformulation、log user actions and adjust retrieval model。这个分工解释了为什么 IR 能在海量 collection 上快速响应。
+
+\noindent\textbf{考试问法：} 若问 indexing/search process，按 offline/online 两段答；index 是 quickly finding all docs containing a word 的 lookup table。
+
+\section{考试速记版}
+\begin{itemize}
+\item IR basic form：Given query Q, find relevant documents D。
+\item 两大核心问题：effectiveness 找得准，efficiency 找得快。
+\item Document 是 retrieval unit，有 unique ID；N 个 documents 构成 collection。
+\item Query 是 information need 的表达，不等于 information need 本身。
+\item Relevance 受 synonymy、polysemy、subjectivity、novelty、spam 影响。
+\item BOW = 带重复词袋，忽略词序，用 overlap 近似 aboutness。
+\item DB 是 structured/formal/exact；IR 是 unstructured/free text/imprecise。
+\item Indexing 是 offline，search 是 online。
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+In its basic form, IR takes a query Q and returns documents D that are relevant to the user's information need. The two main issues are effectiveness, meaning whether the system retrieves truly useful relevant documents, and efficiency, meaning whether it can do so quickly at large scale. Documents are uniquely identified retrieval units in a collection, while queries are often short and ambiguous expressions of information needs. Because relevance is subjective and affected by synonymy, polysemy and spam, IR commonly uses bag-of-words representations and retrieval models over an offline index to support fast online search.
+\end{callout}
+\end{document}

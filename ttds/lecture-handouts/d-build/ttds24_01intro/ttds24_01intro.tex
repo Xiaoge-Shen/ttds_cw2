@@ -1,0 +1,162 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 01}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}Introduction：TTDS 要解决什么文本问题}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily Text Technologies 的对象：documents、words、terms $\rightarrow$ Information Retrieval 不等于简单 web search $\rightarrow$ IR 的核心定义：unstructured material + information need + satisfaction $\rightarrow$ Text classification：从文本到预定义类别 $\rightarrow$ 课程主线：search engine、evaluation、preprocessing、classification、analytics、RAG $\rightarrow$ 实践要求：shell、Python、labs、coursework、group project $\rightarrow$ 考试视角：定义题、比较题、应用题都围绕 effectiveness 与 efficiency
+\end{chainbox}
+\slideimage{1}{0.72}{/Users/huez/Documents/ttds/lec/ttds24_01intro.pdf}
+\begin{callout}{这节课一句话}
+这节课把 TTDS 的地图摊开：我们不是只学 web search，而是学习如何把 documents、words、terms 变成可检索、可分类、可评价、可落地的文本技术系统。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. Text Technologies：这门课到底处理什么}
+\slideimage{2}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_01intro.pdf}
+\begin{callout}{人话直觉}
+把互联网想成一个巨大图书馆：这门课关心的是书、段落、句子、词这些能被文字表达的对象，而不是纯图像或纯音乐本身。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} TTDS 中的 Text Technologies 主要围绕 documents、words、terms 等文本单位展开。它覆盖 Information Retrieval、Search Engines、Text Classification、Text Analytics 等方向；如果图像、视频、音乐没有文本描述，它们不是本课的主要对象。这个边界很重要，因为后续所有模型都依赖把对象表示成 term、feature、document vector 或 index entry。
+
+\noindent\textbf{考试问法：} 若问 TTDS 处理什么，答 documents/words/terms 等文本对象，并举 IR、search、classification、analytics；不要泛泛说“AI/NLP 处理所有数据”。
+
+\Needspace{0.38\textheight}
+\section{2. IR 不是 web search 的同义词}
+\slideimage{4}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_01intro.pdf}
+\begin{callout}{人话直觉}
+Web search 像是 IR 最出名的明星，但 IR 这个剧组里还有图书检索、法律检索、推荐、过滤、问答、跨语言搜索。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Information Retrieval 的应用远超传统网页搜索。讲义连续展示 speech-QA、information filtering、recommendation、social search、library search、legal search、cross-language search 等例子，目的是打破“IR = Google 搜索框”的误解。Web search 是 IR 的典型场景，但 IR 的共同问题是：从大量对象中找出能满足用户需求的材料。
+
+\noindent\textbf{考试问法：} 常见考法是判断题或解释题：Web search 是 IR 的一个重要应用，但不是全部；回答时至少列出两三个非 web search 例子。
+
+\Needspace{0.38\textheight}
+\section{3. IR \(\neq\) Find：从精确匹配到信息需求}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_01intro.pdf}
+\begin{callout}{人话直觉}
+Find 像在文档里按 Cmd+F 找一个完全一样的字符串；IR 像问图书管理员“我想了解这个主题”，答案可能不是逐字匹配，但要有用。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 讲义把 Find 描述为 sequential 和 exact match，而 IR 的定义是 finding material of an unstructured nature that satisfies an information need from within large collections。这里的四个关键词分别对应任务、材料性质、目标和评价：find 是任务，unstructured 是对象性质，information need 是用户真正想解决的问题，satisfies 必须通过 evaluation 判断。
+
+\noindent\textbf{考试问法：} 若问“为什么 IR 不等于 Find”，抓住 exact match vs information need、structured certainty vs unstructured ambiguity、是否需要 evaluation 三点。
+
+\Needspace{0.38\textheight}
+\section{4. IR 定义里的四个考试关键词}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_01intro.pdf}
+\begin{callout}{人话直觉}
+这句话像 IR 的身份证：少一个词，身份就变了。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} IR 的核心定义可拆成四块：material of an unstructured nature 指 documents、web pages、emails 等缺少严格 schema 的对象；large collections 指规模压力；information need 指 query 背后的真实意图；satisfies 指结果不是绝对正确，而是通过 relevance、用户满意度、评价指标来判断好坏。
+
+\noindent\textbf{考试问法：} 考试若要求定义 IR，建议先写完整定义，再逐词解释 unstructured、information need、satisfy/evaluation，最后补一句它同时追求 effectiveness 与 efficiency。
+
+\Needspace{0.38\textheight}
+\section{5. Text Classification：文本进入预定义类别}
+\slideimage{9}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_01intro.pdf}
+\begin{callout}{人话直觉}
+如果 IR 是“按问题找文档”，classification 就是“给文档贴标签”。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Text classification 是根据文本内容把 document、article、sentence 等输入分配到 predefined categories。类别可以是 binary，如 relevant/irrelevant、spam/not spam；也可以是少量多类，如 sports/politics/technology；还可以是 hierarchical，如专利分类。它和 IR 都依赖文本表示，但目标不同：classification 输出类别，IR 输出与 query 相关的 ranked documents。
+
+\noindent\textbf{考试问法：} 若问 text classification，必须说明 input、task、output categories，并给 binary、multi-class 或 hierarchical 例子。
+
+\Needspace{0.38\textheight}
+\section{6. 课程主线：从搜索引擎到 RAG}
+\slideimage{10}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_01intro.pdf}
+\begin{callout}{人话直觉}
+这门课像搭一台搜索发动机：先处理文本，再建索引，再排序，再评价，最后还能给 LLM 当外部记忆。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 课程将学习如何构建 search engine、如何决定顶部结果、如何在大规模集合上快速检索、如何评价 search algorithm、如何处理 misspellings、morphology、synonyms，如何做 text classification 与 text analytics，并连接到 RAG。RAG 的本质是先检索相关材料，再让 LLM 生成；因此检索质量会直接限制生成质量。
+
+\noindent\textbf{考试问法：} 综合题常问 TTDS 的技术栈：preprocessing、indexing、ranking、evaluation、classification、analytics、RAG 可以串成一条系统链回答。
+
+\Needspace{0.38\textheight}
+\section{7. TTDS 与 ANLP/FNLP/ML Practical 的边界}
+\slideimage{10}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_01intro.pdf}
+\begin{callout}{人话直觉}
+别把这门课误会成“再上一门 NLP”或“再上一门机器学习”：它更像系统课，用文本技术解决搜索和大规模文档问题。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 讲义强调 TTDS 与 ANLP/FNLP 有部分 text processing 和 text laws 交集，但 TTDS 不以 word/phrase-level NLP 为核心，而是 document-level、search engines、IR methods/models、IR evaluation、text analysis 和 large-scale textual data processing。与 ML practical 相比，它会用 off-the-shelf ML 做文本分类，但重点不是一般 ML 理论。
+
+\noindent\textbf{考试问法：} 比较题中要突出 document-level、IR models/evaluation、large-scale systems，而不是只说“也处理文本”。
+
+\Needspace{0.38\textheight}
+\section{8. 术语清单是后续 lectures 的目录}
+\slideimage{11}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_01intro.pdf}
+\begin{callout}{人话直觉}
+第 11 页像游戏地图上的未解锁区域：现在只是名字，后面会逐个变成工具。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} inverted index、vector space model、TF-IDF、BM25、language model、PageRank、Learning to Rank、MAP、MRR、nDCG、mutual information、information gain、chi-square、classification/ranking/regression、RAG 都是后续核心。它们分别对应存储结构、文本表示、检索模型、网页权威性、排序学习、评价指标、特征选择和现代生成式应用。
+
+\noindent\textbf{考试问法：} 本讲不会要求推导这些模型，但可能要求说明课程覆盖哪些关键技术或把术语归类到 indexing、retrieval model、evaluation、analytics、classification。
+
+\Needspace{0.38\textheight}
+\section{9. Highly Practical：Lab 0 是自测门槛}
+\slideimage{16}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_01intro.pdf}
+\begin{callout}{人话直觉}
+Lab 0 像入场前的体能测试：读文件、lowercase、count words 看似小事，后面会被放大到百万级文本。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} TTDS 70\% 成绩来自 practical work，学生会实现相当比例的课程内容。Lab 0 要求逐词读取文本、转换小写、统计若干词出现次数；如果这都困难，后续 labs、coursework 和 group project 会非常吃力。课程假设学生具备 Python、regular expressions、shell commands、data structures 和 software engineering 基础。
+
+\noindent\textbf{考试问法：} 考试不太会考行政细节，但实践导向会出现在系统设计题：解释为什么 shell、Python、regex、data structures 对大规模文本处理关键。
+
+\Needspace{0.38\textheight}
+\section{10. Group Project：把概念做成端到端系统}
+\slideimage{17}{0.62}{/Users/huez/Documents/ttds/lec/ttds24_01intro.pdf}
+\begin{callout}{人话直觉}
+最终不是写一篇“搜索引擎是什么”的作文，而是让一个系统真的能爬、存、索引、检索、排序、展示。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Group project 占 40\%，要求 5-6 人团队实现 full end-to-end search engine，在大型文档集合上支持多种文本技术功能。BetterReads 示例展示了真实系统维度：11.5M book reviews、约 1 秒平均查询、每日自动抓取和索引、ranking 结合 relevance 与 sentiment、云端托管。
+
+\noindent\textbf{考试问法：} 系统应用题可以借用 BetterReads：说明一个实用 search engine 需要 collection acquisition、indexing、ranking、query processing、evaluation 和部署。
+
+\section{考试速记版}
+\begin{itemize}
+\item TTDS 处理 documents、words、terms，不是泛泛处理所有媒体。
+\item IR 不是 web search；web search 是 IR 的重要应用。
+\item IR 定义：在 large collections 中找满足 information need 的 unstructured material。
+\item Find 是 exact match；IR 是 relevance/evaluation 问题。
+\item Text classification = 文本输入 \(\rightarrow\) 预定义类别输出。
+\item 课程主线：preprocessing \(\rightarrow\) indexing \(\rightarrow\) ranking \(\rightarrow\) evaluation \(\rightarrow\) classification/analytics \(\rightarrow\) RAG。
+\item TTDS 更偏 document-level 和 search systems，不是传统 word-level NLP。
+\item 实践能力是课程核心：Python、regex、shell、labs、coursework、project。
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+Information Retrieval is the task of finding material of an unstructured nature that satisfies a user's information need from within large collections. It is not the same as simple Find, because Find is usually sequential exact string matching, whereas IR must handle ambiguous natural language, unstructured documents, subjective relevance and large-scale efficiency. Web search is a major IR application, but IR also includes legal search, library search, recommendation, information filtering, QA, cross-language search and RAG retrieval. In TTDS, these ideas connect to preprocessing, indexing, ranking, evaluation, text classification, text analytics and practical search engine construction.
+\end{callout}
+\end{document}

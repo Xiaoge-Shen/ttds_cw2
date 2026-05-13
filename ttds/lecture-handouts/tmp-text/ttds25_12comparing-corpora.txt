@@ -1,0 +1,744 @@
+                  Text Technologies for Data Science
+                              INFR11145
+
+
+                  Comparing Text Corpora
+
+                               Instructor:
+                              Björn Ross
+    29-Oct-2025
+
+
+
+1
+
+
+
+
+     Pre-Lecture
+       • Today
+          • Lecture: Comparing Text Corpora 1 & 2
+          • Lab 6
+       • 5 November
+          • Lecture: Web Search 1 & 2
+
+
+
+
+2
+
+
+
+
+                                                       1
+    Initial Text Analysis
+    • Scenario: you are given access to a new dataset
+          • 2 corpora, each contains thousands of plain text files
+          • You want to understand and quantify:
+              • What is the content of these documents? What are they about?
+              • How does the content of these corpora differ?
+
+    • What are some things you might try first?
+
+
+
+
+                                                                               3
+    Björn Ross, TTDS 2025/2026
+
+3
+
+
+
+
+    Initial Text Analysis
+    • Scenario: you are given access to a new dataset
+          • 2 corpora, each contains thousands of plain text files
+          • You want to understand and quantify:
+              • What is the content of these documents? What are they about?
+              • How does the content of these corpora differ?
+
+    • What are some things you might try first?
+          • Read some examples
+          • Language identification
+          • Compute basic statistics:
+              • Number of words, most frequent words, avg. words per document, …
+          • Build word clouds
+          • …
+                                                                               4
+    Björn Ross, TTDS 2025/2026
+
+4
+
+
+
+
+                                                                                   2
+    Why not just ask AI?
+
+
+
+
+                                               5
+    Björn Ross, TTDS 2025/2026
+
+5
+
+
+
+
+    Lecture Objectives
+       • Analyze text corpora systematically
+             • Content analysis background
+             • Word-level differences
+             • Dictionaries and Lexicons
+             • Topic modeling
+             • Annotation + classification
+
+
+
+
+                                               6
+    Björn Ross, TTDS 2025/2026
+
+6
+
+
+
+
+                                                   3
+    Content Analysis
+    • Goal: given some documents determine
+       • What are the types of content present? (themes/topics)
+       • Which documents contain which topics?
+    • Traditionally a manual process
+       1. Read a subset of documents, define themes/topics
+       2. Determine consistent coding* methodology
+       3. Read all documents and label them according to codes
+       4. Check agreement between human coders
+       5. Settle disagreements via a third-party
+       6. Analyze resulting annotations
+
+
+
+                                                                        7
+    Björn Ross, TTDS 2025/2026
+
+7
+
+
+
+
+    Content Analysis
+    • Can this process be automated?
+       • Yes, to an extent
+    • Should this process be automated?
+       • Humans are better than machines at this task (for now?)
+       • Computers are much, much faster
+              • Avg. human reading speed: 250 wpm
+              • Assume 1K words/document, 50K documents…
+                   • Average person needs > 4 months to read
+                   • This is a relatively small corpus for modern NLP
+              • Modern computers can process millions of words/second
+
+
+
+
+                                                                        8
+    Björn Ross, TTDS 2025/2026
+
+8
+
+
+
+
+                                                                            4
+     Automated Content Analysis
+    • Single corpus/class              • Multiple corpora/classes
+         • Word frequency analysis        • Word-level differences
+         • Dictionaries & Lexicons        • Dominance Scores
+         • Topic modelling                • Topic-level differences
+
+
+
+
+                                                                      9
+     Björn Ross, TTDS 2025/2026
+
+9
+
+
+
+
+                             Word Level Analysis
+
+
+
+
+                                                                      10
+     Björn Ross, TTDS 2025/2026
+
+10
+
+
+
+
+                                                                           5
+     Word frequency analysis
+     • Very simple starting point
+     1. Preprocess as usual (lowercasing? stemming?...)
+     2. Count words
+     3. Normalize by document length
+     4. Average across all documents
+
+
+
+
+                                                          11
+     Björn Ross, TTDS 2025/2026
+
+11
+
+
+
+
+     Word-level Differences
+     • Which words best characterize set of documents (such
+       as a corpus or class)?
+        • Need a reference corpus
+     • Some methods to do this:
+        • Mutual information
+        • Chi squared
+
+     • Can also be used for feature selection
+
+
+
+
+                                                          12
+     Björn Ross, TTDS 2025/2026
+
+12
+
+
+
+
+                                                               6
+     Mutual Information
+     • I(X;Y)
+        • How much can I learn about Y by observing X?
+        • Is the same as information gain
+        • Is not the same as pointwise mutual information
+     • We want to learn about important words in our class
+     • What should X and Y be?
+        • X = U = document contains term t (Boolean)
+        • Y = C = class is the target class (Boolean)
+
+
+
+
+                                                              13
+     Björn Ross, TTDS 2025/2026
+
+13
+
+
+
+
+     Mutual Information
+
+
+     • Given a corpus and a term, how do we estimate the
+         probability of this term appearing in a random document
+         in the corpus?
+
+
+
+
+ Source: Manning, Raghavan, and Schütze, 2008
+                                                              14
+     Björn Ross, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                   7
+     Mutual Information
+
+
+     • Given count data for 2 classes, can be computed as:
+
+
+
+
+ Source: Manning, Raghavan, and Schütze, 2008
+                                                             15
+     Björn Ross, TTDS 2025/2026
+
+15
+
+
+
+
+     Mutual Information
+
+
+
+
+     • Example:
+           • What is I(U;C) given these values?
+
+
+
+
+ Example: Manning, Raghavan, and Schütze, 2008
+                                                             16
+     Björn Ross, TTDS 2025/2026
+
+16
+
+
+
+
+                                                                  8
+     Mutual Information
+
+
+
+
+ Example: Manning, Raghavan, and Schütze, 2008
+                                                 17
+     Björn Ross, TTDS 2025/2026
+
+17
+
+
+
+
+     Mutual Information for News Data
+
+
+
+
+ Example: Manning, Raghavan, and Schütze, 2008
+                                                 18
+     Björn Ross, TTDS 2025/2026
+
+18
+
+
+
+
+                                                      9
+     Chi-squared
+     • Hypothesis testing approach
+     • H0: Term appearance is independent from a document’s
+       class
+         • i.e., 𝑃 𝑈 = 1, 𝐶 = 1 = 𝑃 𝑈 = 1 𝑃(𝐶 = 1)
+     • Compute:
+
+     • Or to directly plug in values like before:
+
+
+
+                                                               19
+     Björn Ross, TTDS 2025/2026
+
+19
+
+
+
+
+     Chi-squared
+
+
+     • Example
+           • What is the value of X2 given the example data?
+
+
+
+
+                                                               20
+     Björn Ross, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                    10
+     Chi-squared
+
+
+
+
+                                                     21
+     Björn Ross, TTDS 2025/2026
+
+21
+
+
+
+
+                         Dictionaries and Lexicons
+
+
+
+
+                                                     22
+     Björn Ross, TTDS 2025/2026
+
+22
+
+
+
+
+                                                          11
+     Dictionaries and Lexicons
+     • What if we know what we are looking for?
+     • Dictionaries (lexicons) are prebuilt mappings
+           • Category -> word list
+           • E.g., a tiny sentiment lexicon:
+               • Positive:        good, great, happy, amazing, wonderful, best, incredible
+               • Negative:        terrible, horrible, bad, awful, nasty, gross, worst, poor
+
+
+     • Domain can be important
+           • “unpredictable movie plot”
+           • “unpredictable coffee pot”
+
+
+
+                                                                                         23
+     Björn Ross, TTDS 2025/2026
+
+23
+
+
+
+
+     Dictionaries and Lexicons
+     • How to get a score per category?
+                        𝑛𝑢𝑚_𝑑𝑖𝑐𝑡𝑖𝑜𝑛𝑎𝑟𝑦_𝑤𝑜𝑟𝑑𝑠_𝑖𝑛_𝑑𝑜𝑐𝑢𝑚𝑒𝑛𝑡
+                          𝑛𝑢𝑚_𝑡𝑜𝑡𝑎𝑙_𝑤𝑜𝑟𝑑𝑠_𝑖𝑛_𝑑𝑜𝑐𝑢𝑚𝑒𝑛𝑡
+
+     • That’s it!
+     • Can also be used as machine learning features
+
+     • A more advanced approaches to quantifying categories
+         (optional reading)
+           • https://www.ncbi.nlm.nih.gov/pubmed/28364281
+
+                                                                                         24
+     Björn Ross, TTDS 2025/2026
+
+24
+
+
+
+
+                                                                                              12
+     Some Dictionaries
+• LIWC                    (Pennebaker et al., 2015)
+• General Inquirer        (Stone, 1997)
+• Roget’s Thesaurus Categories
+• VADER                   (Hutto and Gilbert, 2014)
+• Sentiwordnet            (Esuli and Sebastiani, 2006)
+• Wordnet Domains         (Magnini and Cavaglia, 2000)
+• EmoLex                  (Mohammad and Turney, 2010)
+• Empath                  (Fast et al., 2016)
+• Personal Values Lexicon (Wilson et al., 2018)
+• …
+
+                                                                        25
+     Björn Ross, TTDS 2025/2026
+
+25
+
+
+
+
+     Reactions to Rumor Tweets with EmoLex
+
+
+
+
+                                  Red     = reactions to false rumors
+                                  Green   = reactions to true rumors
+
+
+Vosoughi, Roy, and Aral, 2018
+                                                                        26
+     Björn Ross, TTDS 2025/2026
+
+26
+
+
+
+
+                                                                             13
+     Dominance Scores
+     • The dominance score for a category w.r.t. a corpus:
+                         𝑐𝑎𝑡𝑒𝑔𝑜𝑟𝑦_𝑠𝑐𝑜𝑟𝑒_𝑖𝑛_𝑡𝑎𝑟𝑔𝑒𝑡_𝑐𝑜𝑟𝑝𝑢𝑠
+                      𝑐𝑎𝑡𝑒𝑔𝑜𝑟𝑦_𝑠𝑐𝑜𝑟𝑒_𝑖𝑛_𝑏𝑎𝑐𝑘𝑔𝑟𝑜𝑢𝑛𝑑_𝑐𝑜𝑟𝑝𝑢𝑠
+
+
+
+
+           • From Mihalcea and Pulman, 2009
+                                                             27
+     Björn Ross, TTDS 2025/2026
+
+27
+
+
+
+
+     LIWC category dominance scores
+
+
+
+
+      Pérez-Rosas et al, 2015
+                                                             28
+     Björn Ross, TTDS 2025/2026
+
+28
+
+
+
+
+                                                                  14
+                             Topic Level Analysis
+
+
+
+
+                                                               29
+     Björn Ross, TTDS 2025/2026
+
+29
+
+
+
+
+     Intro to Topic Modelling
+     • Goals are similar to traditional content analysis:
+           • What are the main themes/topics in this corpus?
+           • Which documents contain which topics?
+
+
+
+
+                                                               30
+     Björn Ross, TTDS 2025/2026
+
+30
+
+
+
+
+                                                                    15
+      Topic Models
+
+
+
+
+                                           31
+
+                                      31
+     Björn Ross, TTDS 2025/2026
+
+31
+
+
+
+
+                                  Example from
+                                  David Blei
+
+
+                                           32
+
+                                      32
+     Björn Ross, TTDS 2025/2026
+
+32
+
+
+
+
+                                                 16
+                                                       Example from
+                                                       David Blei
+
+
+
+
+                                                                  33
+
+                                                             33
+     Björn Ross, TTDS 2025/2026
+
+33
+
+
+
+
+      Dimensionality Reduction
+
+
+
+            p (number of words)       k (number of topics)
+
+
+      n                 Data      n      Data with
+                                        Topic Model
+
+
+
+
+                                                                  34
+
+                                                             34
+     Björn Ross, TTDS 2025/2026
+
+34
+
+
+
+
+                                                                       17
+      Topic Modeling
+                                                 k
+
+                                             Document-
+                                             Topic Matrix
+                                                            d
+
+
+                                   Topic
+            Corpus                Modeling
+                                                      v
+                                  Method
+
+                                              Topic-Word Matrix          k
+
+
+
+                                                                         35
+
+                                                                    35
+     Björn Ross, TTDS 2025/2026
+
+35
+
+
+
+
+                                                                Example from
+                                                                         36
+                                                                David Blei
+
+
+
+                                                                    36
+     Björn Ross, TTDS 2025/2026
+
+36
+
+
+
+
+                                                                               18
+      Topic Models
+
+
+
+      • Most often used for text data, but can also be
+          applied in other settings:
+           •   Bioinformatics (Liu et al. 2016)
+           •   Computer code (McBurney et al. 2014)
+           •   Music (Hu and Saul 2009)
+           •   Network data (Cha and Cho 2014)
+
+
+                                                                             37
+
+                                                                        37
+     Björn Ross, TTDS 2025/2026
+
+37
+
+
+
+
+      Topic Modeling Methods
+
+      • Most popular: Latent Dirichlet Allocation (LDA)
+            • Introduced by David Blei, Andrew Ng, and Michael Jordan
+               (2003)
+
+      • Other methods include
+            • pLSI
+            • PCA-based methods
+            • Non-negative matrix factorization
+            • Deep learning based topic modeling
+            • ...
+                                                                             38
+
+                                                                        38
+     Björn Ross, TTDS 2025/2026
+
+38
+
+
+
+
+                                                                                  19
+      Topic Modeling Methods
+
+      • Most popular: Latent Dirichlet Allocation (LDA)
+            • Introduced by David Blei, Andrew Ng, and Michael Jordan
+               (2003)
+
+      • Other methods include
+            • pLSI
+            • PCA-based methods
+            • Non-negative matrix factorization
+            • Deep learning based topic modeling
+            • ...
+                                                                             39
+
+                                                                        39
+     Björn Ross, TTDS 2025/2026
+
+39
+
+
+
+
+      Latent Dirichlet Allocation (LDA)
+
+
+
+
+      • More details coming up in next lecture…
+
+
+
+
+                                                                             40
+
+                                                                        40
+     Björn Ross, TTDS 2025/2026
+
+40
+
+
+
+
+                                                                                  20
+

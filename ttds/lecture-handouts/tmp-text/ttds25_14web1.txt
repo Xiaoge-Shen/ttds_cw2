@@ -1,0 +1,678 @@
+                                                           11/5/25
+
+
+
+
+                  Text Technologies for Data Science
+                                     INFR11145
+
+
+                                   Web Search
+
+                                      Instructor:
+                                     Walid Magdy
+    4-Nov-2025
+
+
+
+1
+
+
+
+
+     Lecture Objectives
+        • Learn about:
+                 • Working with Massive data
+                 • Link analysis (PageRank)
+                 • Anchor text
+
+
+
+
+                                                       2
+     Walid Magdy, TTDS 2025/2026
+
+2
+
+
+
+
+                                                                1
+                                                                        11/5/25
+
+
+
+
+    The Web Document Collection
+
+
+
+
+                                                          The Web
+
+
+                                                                    3
+    Walid Magdy, TTDS 2025/2026
+
+3
+
+
+
+
+    Challenges
+       • No design/co-ordination
+       • Growing
+            • 20 PB/day in 2008 à 160 PB/day in 2013 à now??
+            • 1 PB = 1,000 TB = 1,000,000 GB
+       • Controlling quality!
+         fake news, spam, generated content
+       • Challenging for a search engine
+           • Technicalities: (storage, processing, …)
+           • Apparently relevant pages with low quality
+
+       • Opportunity!
+                                                                    4
+    Walid Magdy, TTDS 2025/2026
+
+4
+
+
+
+
+                                                                             2
+                                                                     11/5/25
+
+
+
+
+    What is the challenge in relevance?
+       • No clear semantics, contrast:
+            • “William Shakespeare”
+            • Author history’s? list of plays? a play by him?
+       • Inherent ambiguity of language:
+            • polysemy: “Apple”, “Jaguar”
+       • Relevance highly subjective
+       • On the web: counter SEOs / spam
+
+       • Potential solution: Wisdom of the crowds
+
+                                                                5
+    Walid Magdy, TTDS 2025/2026
+
+5
+
+
+
+
+    Effect of Massive data
+       • Challenges: storage, processing, networking, …
+       • Advantages: Makes stuff easier, how?
+
+
+       • Assume two good search engines the collects two
+          sub-sets of the web
+           • Search engine A collected N docs à precision@10 = 40%
+           • Search engine B collected 4N docs à precision@10??
+
+
+
+
+                                                                6
+    Walid Magdy, TTDS 2025/2026
+
+6
+
+
+
+
+                                                                          3
+                                                                                                11/5/25
+
+
+
+
+     Effect of Massive data on Precision
+        • Assume two good search engines that collect two
+           sub-sets of the web
+            • Search engine A collected N docs à precision@10 = 40%
+            • Search engine B collected 4N docs à precision@10??
+                   • Distribution of positive/negative scores stays the same
+                   • Precision/Recall at a given score stays the same
+                   • In any decent IR system: more relevant docs exist at the top
+                         à P@n ↑↑ è precision@10 = 60% (increases)
+                                                    P(score|R)    P(score|NR)
+
+
+    Retrieval
+    Score          0.9        0.8     0.7     0.6        0.5     0.4    0.3     0.2   0.1
+
+
+
+
+                                                                                            7
+     Walid Magdy, TTDS 2025/2026
+
+7
+
+
+
+
+     Big Data or Clever Algorithm?
+        • For Web search, larger index usually would beat a
+           better retrieval algorithm
+            • Google Index vs Bing Index
+        • Similar to other applications
+                • Google MT vs IBM MT
+                   • Statistical methods trained over 10x training data beat deep NLP
+                         methods with 1x training data
+                • LLMs
+                  • ChatGPT trained on whole internet (Common Crawl ~5 PB)
+                  • Larger data à more parameters à generally better performance
+                • Question answering task (2002):
+                  • IBM Watson vs Microsoft experiment
+                                                                                            8
+     Walid Magdy, TTDS 2025/2026
+
+8
+
+
+
+
+                                                                                                     4
+                                                                                               11/5/25
+
+
+
+
+     Big Data or Clever Algorithm?
+        • Question answering task:
+             • Q: Who created the character of Scrooge?
+             • A: Scrooge, introduced by Charles Dickens in “A Chrismas Carol”
+             • Requires heavy linguistic analysis, lots of research in TREC
+                                                                       117   Dickens
+        • 2002, Microsoft                                               78   Christmas Carol
+                                                                        75   Charles Dickens
+             • Identify (subj verb obj), rewrite as queries:            72   Disney
+                 • Q1: “created the character of Scrooge”               54   Carl Banks
+                 • Q2: “the character of Scrooge was created by”             …
+
+             • Search the web for exact phrase, get top 500 results
+             • Extract phrase: nQ1 or Q2n , get most frequent n
+             • Very naive approach, ignores most answers patterns
+             • Who cares!! Web is huge, you will find matches anyway
+                                                                                         9
+     Walid Magdy, TTDS 2025/2026
+
+9
+
+
+
+
+     Search “Microsoft”
+                          Doc1                                   Doc2
+                    Microsoft.com                         Tutorial.com
+                                                      Tutorial on MS word
+
+
+              “Microsoft” mentioned                 “Microsoft” mentioned
+              5 times                               35 times
+
+                                                     Source: https://www.microsoft.com
+
+
+
+
+                             WEB IS CONNECTED!
+                                                                                         10
+     Walid Magdy, TTDS 2025/2026
+
+10
+
+
+
+
+                                                                                                    5
+                                                                                    11/5/25
+
+
+
+
+     The Web as a Directed Graph
+
+
+                                            hyperlink
+                        Page A     Anchor                       Page B
+
+
+
+
+         Assumption 1: A hyperlink between pages denotes author perceived
+         relevance (quality signal)
+
+         Assumption 2: The text in the anchor of the hyperlink describes the
+         target page (textual context)
+
+                                                                               11
+     Walid Magdy, TTDS 2025/2026
+
+11
+
+
+
+
+     Links between Pages
+        • Google Description of PageRank:
+             • Relies on the “uniquely democratic” nature of the web
+             • Interprets a link from page A to page B as “a vote”
+        • A à B: means A thinks B worth something
+             • “wisdom of the crowds”: many links means B must be good
+             • Content-independent measure of quality of B
+        • Use as ranking feature, combined with content
+             • But not all pages that link to B are of equal importance!
+                 • Importance of a link from CNN >>> link from blog page
+
+        • Google PageRank, 1998
+             • How many “good” pages link to B?
+                                                                               12
+     Walid Magdy, TTDS 2025/2026
+
+12
+
+
+
+
+                                                                                         6
+                                                                                 11/5/25
+
+
+
+
+     Search “Microsoft”
+                          Doc1                                    Doc2
+                    Microsoft.com                         Tutorial.com
+                                                      Tutorial on MS word
+
+
+              “Microsoft” mentioned                 “Microsoft” mentioned
+              5 times                               35 times
+
+
+
+
+                                                                            13
+     Walid Magdy, TTDS 2025/2026
+
+13
+
+
+
+
+     PageRank: Random Surfer
+        • Analogy:
+             • User starts browsing at a
+               random page
+             • Pick a random outgoing link
+               à goes there à repeat forever
+             • Example:
+               GàEàFàEàDàBàC
+             • With probability 1-𝜆 jump to a random page
+                 • Otherwise, can get stuck forever A, or B ⟷ C
+
+        • PageRank of page x
+             • Probability of being at page x at a random moment in time
+
+                                                                            14
+     Walid Magdy, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                                      7
+                                                                                               11/5/25
+
+
+
+
+     PageRank: Algorithm
+                                   #$$%
+        • Initialize PR0(x) =       &
+               • N: total number of pages
+                                          !""%
+               • PR0(A) = .. = PR0(K) =    !!
+                                               = 9.1%
+
+        • For every page x
+                                        1−𝜆      𝑃𝑅' (𝑦)
+                          𝑃𝑅'(# 𝑥 =         +𝜆 *
+                                         𝑁       𝐿,-' (𝑦)
+                                                   )⟶+
+        • 𝑦 ⟶ 𝑥 contributes part of its PR to x
+        • Spread PR equally among out-links
+        • Iterate till converge à PR scores should sum to 100%
+                                                                                  15
+     Walid Magdy, TTDS 2025/2026
+
+15
+
+
+
+
+                                                 Initial Pageranks
+     PageRank: Example                                            B
+        • Let 𝜆 = 0.82                              A                                  C
+
+                                        !""%
+        • 𝑃𝑅𝟎 𝐶 = 𝑃𝑅𝟎 𝐵 = … =            !!
+                                             = 9.1%
+                                                    D                     E                F
+                         !$".&'
+        • 𝑃𝑅1 𝐶 =          !!
+                                + 0.82×𝑃𝑅0 𝐵
+                                                                                       K
+        • = 0.18×9.1% + 0.82×9.1%                       G                     J
+                                                               H      I
+        • = 9.1%                                  After 1st iteration
+
+                       ".!&
+        • 𝑃𝑅1 𝐵 =           + 0.82×[𝑃𝑅0 𝐶 +
+                        !!
+                    !           !        !
+           •        '
+                      𝑃𝑅0 𝐷 + 𝑃𝑅0 𝐸 + 𝑃𝑅0 𝐹
+                                (        '
+                                                     +
+                    !           !        !
+           •        '
+                      𝑃𝑅0 𝐺 + 𝑃𝑅0 𝐻 + 𝑃𝑅0 𝐼
+                                '        '
+           •        ≈ 0.31 = 31%
+                         ".!&
+        • 𝑃𝑅𝟐 𝐶 = !! + 0.82×31% ≈ 26%
+                                                                                  16
+     Walid Magdy, TTDS 2025/2026
+
+16
+
+
+
+
+                                                                                                    8
+                                                                                          11/5/25
+
+
+
+
+     PageRank: Example result
+        • Algorithm converges after few iterations
+
+
+
+
+        • Observations
+             • Pages with no inlinks: PR = (1 − 𝜆)/𝑁= 0.18/11 = 1.6%
+             • Same (or symmetric) inlinks à same PR (e.g. D and F)
+             • One inlink from high PR >> many from low PR (e.g. C vs E)
+                                                                                   17
+     Walid Magdy, TTDS 2025/2026
+
+17
+
+
+
+
+     Anchor Text
+                                                              International Business
+        • Anchor Text (text of a link):                        Machines announced
+                                                              today a deal of $100M …
+             • Description of destination page
+             • Short, descriptive like a query         We support:
+                                                       Sun
+             • Re-formulated in different ways                          www.ibm.com
+                                                       HP
+                 • Human “query expansion”             IBM
+                                                                      Big Blue today
+        • Used when indexing page content                               announced
+                                                                     record profits for
+             • Add text of all anchor text linking the page             the quarter
+
+             • Different weights for different anchor text
+                 • Weighted according to PR of linking page
+
+        • Significantly improves retrieval
+                                                                                   18
+     Walid Magdy, TTDS 2025/2026
+
+18
+
+
+
+
+                                                                                               9
+                                                                                       11/5/25
+
+
+
+
+     Vulnerabilities
+     • Hawthorne Effect: “Observation changes behavior”
+     • Goodhart’s Law: “When a measure becomes a target,
+                             it ceases to be a good measure”
+
+     • The Cobra Effect: “The solution worsens the problem due to other incentives”
+
+
+
+
+                                                                                  19
+     Walid Magdy, TTDS 2025/2026
+
+19
+
+
+
+
+     Trackback Links Spam
+        • “Blogs that link to me” feature
+             • Pings the linked page (Sping)
+             • Artificial feedback loops
+                 • Similar to “follow back” on Twitter
+
+                            Spam Page                      Genuine Page
+
+                                                         TTDS course teaches
+                                                         the basic technologies
+                                                             required for text
+                           Buy pills, buy                 processing, focusing
+                        supplements, buy                  mainly on information
+                            blablablabla                    retrieval and text
+                    https://www.genuine.com                   classification.
+
+                                                         Blogs that link to me:
+                                                           Spampage.com
+
+                                                                                  20
+     Walid Magdy, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                                           10
+                                                                                        11/5/25
+
+
+
+
+     Comment Spam
+        • Links from comments on sites with high PR
+             • One solution: insert rel=nofollow into links
+                 • Link ignored when computing PR
+
+
+                                     Spam link in the name field
+
+
+
+
+                                                  Spam link in the comment
+
+
+
+
+                                                                                  21
+     Walid Magdy, TTDS 2025/2026
+
+21
+
+
+
+
+     Link Farms
+        • Fake densely-connected graph (a clique)
+        • Hundreds of web domains / IPs
+          can be hosted on one machine
+
+
+
+
+        • Applied on social media:
+           Elmas T, Randl M, Attia Y. #TeamFollowBack: Detection & analysis of follow
+           back accounts on social media. ICWSM 2024
+                                                                                  22
+     Walid Magdy, TTDS 2025/2026
+
+22
+
+
+
+
+                                                                                            11
+                                                            11/5/25
+
+
+
+
+     Google Incident of 2003
+
+
+
+
+      • “Anchor Text Spam”
+      • Fixed in 2007, when Google changed its index
+                                                       23
+     Walid Magdy, TTDS 2025/2026
+
+23
+
+
+
+
+     Twitter Incident of 2020
+
+
+
+
+                                                       24
+     Walid Magdy, TTDS 2025/2026
+
+24
+
+
+
+
+                                                                12
+                                                                             11/5/25
+
+
+
+
+     High Pagerank Websites Gaming The Algorithm
+     • Avoid giving outlinks
+           • Sources can be cited without links
+
+     • Creating irrelevant content
+
+
+
+
+     • Stay tuned for more SEO tactics on the next lecture!
+                                                                        25
+     Walid Magdy, TTDS 2025/2026
+
+25
+
+
+
+
+     The Reality
+        • PageRank is used in Google, but is hardly the full
+           story of ranking
+            • A big hit when initially proposed, but just one feature now
+             • Many sophisticated features are used
+             • Machine-learned ranking heavily used
+                 • Learning to Rank (L2R)
+                 • Many features are used, including PR
+             • Still counted as a very useful feature
+
+
+
+                                                                        26
+     Walid Magdy, TTDS 2025/2026
+
+26
+
+
+
+
+                                                                                 13
+                                                                                             11/5/25
+
+
+
+
+     Summary
+        • Web data is massive
+             • Challenging for efficiency, but useful for effectiveness
+        • PageRank:
+             • Probability than random surfer is currently on page x
+             • The more powerful pages linking to x, the higher the PR
+        • Anchor text:
+             • Short concise description of target page content
+             • Very useful for retrieval
+        • Link Spam
+             • Trackable links, link farms
+                                                                                      27
+     Walid Magdy, TTDS 2025/2026
+
+27
+
+
+
+
+     Resources
+        • Text book 1: Intro to IR, Section 21.1
+        • Text Book 2: IR in Practice: 4.5, 10.3
+        • Page Rank Paper:
+           Page, L., Brin, S., Motwani, R., & Winograd, T. (1999).
+           The PageRank citation ranking: Bringing order to the web.
+           Stanford InfoLab.
+        • Additional reading:
+          • Dumais, S., Banko, M., Brill, E., Lin, J., & Ng, A. (2002)
+            Web question answering: Is more always better?.
+            SIGIR 2002.
+          • Elmas T, Randl M, Attia Y.
+            #TeamFollowBack: Detection & analysis of follow back accounts on social media.
+            ICWSM 2024
+                                                                                      28
+     Walid Magdy, TTDS 2025/2026
+
+28
+
+
+
+
+                                                                                                 14
+

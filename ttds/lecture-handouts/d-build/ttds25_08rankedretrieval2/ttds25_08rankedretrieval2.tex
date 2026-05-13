@@ -1,0 +1,189 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 08}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}Ranked Retrieval 2：概率模型、BM25 与语言模型}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily VSM heuristic $\rightarrow$ probabilistic uncertainty $\rightarrow$ PRP $\rightarrow$ relevance probability $\rightarrow$ BM25 $\rightarrow$ language model for IR $\rightarrow$ query likelihood $\rightarrow$ MLE zero problem $\rightarrow$ smoothing $\rightarrow$ model comparison
+\end{chainbox}
+\slideimage{2}{0.72}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{这节课一句话}
+这节课把 ranking 从 TF-IDF 的工程配方推进到概率视角：文档为什么相关、BM25 为什么稳、语言模型为什么能用“生成 query”的概率排序。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. TF-IDF 很强，但理论感偏弱}
+\slideimage{2}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{人话直觉}
+TF-IDF 像一套经验丰富的厨师配方：很好吃，但你还想知道每个调料为什么该这么放。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} VSM/TF-IDF 没有显式建模 relevance，只是组合 weighting scheme 和 similarity measure。它非常流行、强 baseline、难以击败，但 components 不完全可解释，也容易依赖 tweak-run-observe 的工程循环。
+
+\noindent\textbf{考试问法：} 若问为什么引入 probabilistic model，答 VSM heuristic、缺少 explicit relevance notion、概率模型能定义 random variables 和 assumptions。
+
+\Needspace{0.38\textheight}
+\section{2. PRP：按相关概率排序}
+\slideimage{4}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{人话直觉}
+如果你能估计每篇文档“正中用户意图”的概率，那么最合理的事就是从最高概率开始排。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Probability Ranking Principle 认为，在可用数据下，如果系统能尽可能准确估计每个 document 对请求的 relevance probability，那么按该概率递减排序能获得最佳 effectiveness。
+
+\[
+P(R=1\mid d_1,q)>P(R=1\mid d_2,q)\Rightarrow d_1\succ d_2
+\]
+\noindent\textbf{考试问法：} PRP 答题核心：rank by decreasing probability of relevance，probabilities estimated as accurately as possible from available data。
+
+\Needspace{0.38\textheight}
+\section{3. 相关概率不是读心术}
+\slideimage{5}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{人话直觉}
+系统看不到你脑子里的真实 need，只能根据 query、document、context、user profile 等影子去猜。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 真实 relevance 受用户、任务、上下文影响，不同用户可能对同一 document 判断不同。P\_true(rel|Q,D) 可理解为在未观察用户/情境/任务中，D 会被判 relevant 的比例；系统只能估计 P\_est。
+
+\noindent\textbf{考试问法：} 若问 relevance probability 如何理解，不要说用户主观就没概率；要说是对不可见用户/场景的比例性估计。
+
+\Needspace{0.38\textheight}
+\section{4. BM25：概率模型落地成强公式}
+\slideimage{6}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{人话直觉}
+BM25 像 TF-IDF 的升级款避震车：仍奖励关键词出现和稀有性，但更稳地处理重复词和长文档。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} BM25 源于 probabilistic retrieval/Binary Independence Model 的扩展，是经典且强大的 ranking function。它包含 term frequency saturation、IDF 和 document length normalization；k 控制 tf saturation，文档长度用 L\_d/L\_avg 调整。
+
+\[
+w_{t,d}=\frac{tf_{t,d}}{tf_{t,d}+k\left((1-b)+b\frac{L_d}{L_{avg}}\right)}\log_{10}\frac{N-df_t+0.5}{df_t+0.5}
+\]
+\noindent\textbf{考试问法：} 若考 BM25，答 saturated TF、IDF、length normalization，并说明 k 控制 tf 增长饱和。
+
+\Needspace{0.38\textheight}
+\section{5. BM25 为什么比朴素 TF-IDF 稳}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{人话直觉}
+一个词出现 2 次比 1 次重要，但出现 200 次不该比 100 次再重要一倍；BM25 会让这种增长慢慢饱和。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} BM25 与 TF-IDF 都奖励 document 内 query term 出现和 collection rare terms，但 BM25 更明确地处理 tf saturation 和 document length bias。长文档不会仅因词多而持续占优，重复词也不会无限加分。
+
+\noindent\textbf{考试问法：} 比较 BM25 vs TF-IDF 时，重点说 BM25 显式加入 saturation 与 length normalization。
+
+\Needspace{0.38\textheight}
+\section{6. Language Model for IR：好文档会“说出” query}
+\slideimage{8}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{人话直觉}
+如果一篇文档的语言习惯很容易吐出你的 query，那么它很可能在讲你要找的东西。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} LM approach 为每个 document 建 language model，并按 query likelihood P(q|M\_d) 排序。Bayes rule 下 P(d|q) 与 P(q|d) 相关，若 P(q) 对所有 documents 相同、P(d) 作为相同 prior 或另行处理，就可以比较 P(q|M\_d)。
+
+\[
+P(d\mid q)=\frac{P(q\mid d)P(d)}{P(q)}
+\]
+\noindent\textbf{考试问法：} 若问 LM for IR 核心思想，答 document language model 生成 query 的概率越高，document 越相关。
+
+\Needspace{0.38\textheight}
+\section{7. Unigram LM 与 query likelihood}
+\slideimage{13}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{人话直觉}
+先假装 query 里的词像从一个词袋里独立抽球，这样复杂句子概率就能拆成单词概率乘积。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} unigram LM 假设 terms 条件独立，不考虑顺序。query likelihood model 将 P(q|M\_d) 分解为 query terms 在 document model 下概率的乘积，也可按 query term frequency 写成幂次形式。
+
+\[
+P(q\mid M_d)=\prod_{t\in q}P(t\mid M_d)^{tf(t,q)}
+\]
+\noindent\textbf{考试问法：} 公式题要写 conditional independence assumption，并说明 M\_d 是 document language model。
+
+\Needspace{0.38\textheight}
+\section{8. MLE 的零概率问题}
+\slideimage{14}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{人话直觉}
+一篇文章没出现某个词，不代表它的主题模型绝不可能说这个词；样本没见到不等于世界不存在。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} MLE 通常用 tf(t,d)/|d| 估计 document LM。若 query term 没出现在 document 中，概率为 0，整个 query likelihood 乘积变 0。这对检索过于严厉，因为 document text 只是语言模型的一个 sample。
+
+\[
+P_{MLE}(t\mid M_d)=\frac{tf(t,d)}{|d|}
+\]
+\noindent\textbf{考试问法：} 若问为什么需要 smoothing，答 zero frequency/data sparsity：unseen query term 会让 P(q|M\_d)=0。
+
+\Needspace{0.38\textheight}
+\section{9. Smoothing：给没见过的词留一口气}
+\slideimage{15}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{人话直觉}
+没在这篇文档里见过的词，不该判死刑；可以向整个 collection 借一点背景概率。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} smoothing 给 unseen terms 分配非零概率，同时降低 observed terms 的过度自信估计。mixture/Jelinek-Mercer smoothing 将 document LM 与 collection LM 线性混合，lambda 控制文档证据和背景语言的权衡。
+
+\[
+P(t\mid d)=\lambda P(t\mid M_d)+(1-\lambda)P(t\mid M_c)
+\]
+\noindent\textbf{考试问法：} 若考 smoothing，说明目标是解决 zero probability，并写 document LM 与 collection LM 的混合。
+
+\Needspace{0.38\textheight}
+\section{10. \(\lambda\) 的检索行为：conjunctive vs disjunctive}
+\slideimage{16}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{人话直觉}
+\(\lambda\) 高时更执着于本文档有没有这些词，像 AND；\(\lambda\) 低时更宽容，像 OR 风格的长 query 检索。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Jelinek-Mercer 中高 lambda 更依赖 document LM，倾向检索包含所有 query words 的 documents，表现为 conjunctive-like。低 lambda 更多借 collection background，行为更 disjunctive，适合 long queries。
+
+\noindent\textbf{考试问法：} lambda 行为常考：高 \(\lambda\) 更 conjunctive-like；低 \(\lambda\) 更 disjunctive/long-query friendly。
+
+\Needspace{0.38\textheight}
+\section{11. 三种模型问的是不同问题}
+\slideimage{18}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_08rankedretrieval2.pdf}
+\begin{callout}{人话直觉}
+VSM 问“向量像不像”，概率模型问“相关概率多大”，LM 问“这篇文档能不能生成这个 query”。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} VSM 使用 weighting 与 similarity；probabilistic model 显式建模 relevance probability；LM for IR 则用 language model 的生成概率解释匹配。三者都可有效，BM25 和 query likelihood LM 往往效果相近，更复杂方法可能超过 BM25。
+
+\noindent\textbf{考试问法：} 模型比较题要按核心问题区分：alignment、relevance probability、query generation likelihood。
+
+\section{考试速记版}
+\begin{itemize}
+\item VSM/TF-IDF 很强但 heuristic，没有显式 relevance probability。
+\item PRP：按 decreasing probability of relevance 排序，估计越准越好。
+\item P\_true(rel|Q,D) 可理解为跨未观察用户/情境的相关比例。
+\item BM25 = saturated TF + IDF + document length normalization。
+\item LM for IR：document language model 生成 query 的概率越高，排名越靠前。
+\item MLE 会让 unseen query term 概率为 0，因此需要 smoothing。
+\item Jelinek-Mercer：\(\lambda\)P(t|M\_d)+(1-\(\lambda\))P(t|M\_c)，\(\lambda\) 控制 conjunctive/disjunctive 行为。
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+Probabilistic retrieval 的核心是把 IR 中的不确定性形式化，并按 relevance probability 排序。PRP 认为，如果能基于可用数据尽可能准确估计 P(R=1|d,q)，按该概率递减排序可获得最优 effectiveness。BM25 是概率检索思想中最重要的实际公式之一，它结合 saturated term frequency、IDF 和 document length normalization，因此比朴素 TF-IDF 更稳。Language Model for IR 则为每个 document 建 LM，并按 P(q|M\_d) 即 document model 生成 query 的概率排序；MLE 会导致 unseen terms 概率为 0，所以需要 smoothing，如 Jelinek-Mercer 用 \(\lambda\)P(t|M\_d)+(1-\(\lambda\))P(t|M\_c) 混合文档模型和 collection 背景模型。
+\end{callout}
+\end{document}

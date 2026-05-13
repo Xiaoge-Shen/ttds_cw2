@@ -1,0 +1,182 @@
+{
+  "lecture": "TTDS 12",
+  "source_pdf": "ttds25_12comparing-corpora.pdf",
+  "title": "Comparing Text Corpora: 从词频、词典到 Topic Models 的系统比较",
+  "one_sentence": "这节课一句话：比较语料库不是让 AI 随口总结，而是用可复现的 content analysis、word-level statistics、lexicons 和 topic models 来回答“这些文本讲什么、彼此差在哪”。",
+  "concept_chain": [
+    "场景：两个或多个 large plain-text corpora",
+    "初步探索：读样本、语言识别、长度与词频统计",
+    "为什么不能只 ask AI：缺少系统性与可复现证据",
+    "content analysis：themes/topics 与 document labels",
+    "automated content analysis：词频、lexicons、topic modelling",
+    "word-level differences：MI 与 chi-squared",
+    "dictionary/lexicon：已知类别映射到词表",
+    "dominance scores：目标 corpus 相对 background 的类别突出度",
+    "topic modelling：document-topic 与 topic-word matrices"
+  ],
+  "slides": [
+    {
+      "page": 1,
+      "reason": "标题页确认本讲主题和日期，讲的是 Comparing Text Corpora。",
+      "caption": "Comparing Text Corpora：理解内容和比较差异。"
+    },
+    {
+      "page": 2,
+      "reason": "场景页明确两个 corpora、plain text files、understand and quantify 的目标。",
+      "caption": "Initial text analysis：先问文档关于什么、两个语料库如何不同。"
+    },
+    {
+      "page": 3,
+      "reason": "Why not just ask AI 与 lecture objectives 说明系统性分析的必要性。",
+      "caption": "不能只 ask AI：本讲目标是 systematic corpus analysis。"
+    },
+    {
+      "page": 4,
+      "reason": "Content analysis 的传统步骤是理解 automated methods 的基准。",
+      "caption": "Content analysis：定义 themes、coding、标注、agreement、分析。"
+    },
+    {
+      "page": 5,
+      "reason": "自动化内容分析表格区分 single corpus 与 multiple corpora/classes。",
+      "caption": "Automated content analysis：词频、lexicons、topic modelling 与 corpus differences。"
+    },
+    {
+      "page": 6,
+      "reason": "Word frequency analysis 与 word-level differences 的基本步骤集中于此。",
+      "caption": "Word level analysis：normalize by document length，再比较 characteristic words。"
+    },
+    {
+      "page": 7,
+      "reason": "Mutual information 页定义 X=U、Y=C，是 word-class 分析核心。",
+      "caption": "MI：观察 term 是否出现能告诉我们多少 class 信息。"
+    },
+    {
+      "page": 10,
+      "reason": "Chi-squared 页给出 independence null hypothesis，是统计检验锚点。",
+      "caption": "Chi-squared：检验 term appearance 与 class 是否 independent。"
+    },
+    {
+      "page": 12,
+      "reason": "Dictionaries and lexicons 页展示 category-to-word-list 和 domain caveat。",
+      "caption": "Lexicons：已知类别词表很方便，但 domain meaning 会变。"
+    },
+    {
+      "page": 14,
+      "reason": "Dominance score 公式页说明如何比较 target 与 background corpus。",
+      "caption": "Dominance score：目标语料库某类别分数相对背景的突出程度。"
+    },
+    {
+      "page": 18,
+      "reason": "Topic modelling 图展示 corpus 到 document-topic matrix 与 topic-word matrix 的输出。",
+      "caption": "Topic modelling：把高维词空间压缩成 k 个主题。"
+    },
+    {
+      "page": 20,
+      "reason": "方法总结页列出 LDA、pLSI、PCA、NMF、deep learning topic modeling。",
+      "caption": "Topic modelling methods：LDA 最流行，其他方法并存。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "1. 比较语料库要回答什么",
+      "slide_page": 2,
+      "intuition": "拿到两个装满文本的文件夹，不是先写结论，而是先问：这里面都在讲什么？A 和 B 到底哪里不同？",
+      "explanation": "本讲场景是两个或多个 corpora，每个包含大量 plain text files。目标是 systematically understand and quantify：文档内容是什么、有哪些 themes/topics、不同 corpora/classes 之间如何不同。初步可以读样例、做 language identification、统计词数、平均文档长度、高频词，甚至画 word clouds，但这些只是入口，不是最终证据。",
+      "exam_angle": "若问 comparing corpora 的基本场景，答 multiple large text corpora + understand content + quantify differences；若问初步分析，列 sampling、language ID、frequency、length。",
+      "formula_latex": null
+    },
+    {
+      "title": "2. 为什么不能只 ask AI",
+      "slide_page": 3,
+      "intuition": "AI 摘要像一个很会聊天的实习生：能给灵感，但不能替代可复现、可检查、可统计的分析流程。",
+      "explanation": "第 3 页用 Why not just ask AI 引出核心态度：LLM 总结可能有用，但它通常不是严格 corpus comparison 的统计证据。考试答案应强调 reproducibility、systematic coverage、quantification 和 methodological transparency。Corpus comparison 需要能说明预处理、计数、归一化、统计检验或模型输出，而不是只给一个无法验证的自然语言总结。",
+      "exam_angle": "若问 why not just ask AI，答不可复现、缺少系统采样和量化依据、难以作为 statistical evidence。",
+      "formula_latex": null
+    },
+    {
+      "title": "3. Content Analysis：人工方法是自动化的概念原型",
+      "slide_page": 4,
+      "intuition": "Content analysis 像给文本贴标签：先定义标签体系，再让人按一致规则标注，最后统计哪些文本有什么主题。",
+      "explanation": "传统 content analysis 的目标是确定文档中有哪些 content types/themes/topics，以及哪些文档包含哪些 topics。流程包括：读子集定义 themes/topics，制定 consistent coding methodology，标注所有文档，检查 human coder agreement，通过第三方解决分歧，再分析 annotations。它准确但慢，自动化方法试图保留“主题/类别”思想，同时扩展到大规模语料。",
+      "exam_angle": "若问 content analysis steps，按六步讲；若问 automated content analysis 为什么有用，答 human accurate but slow, machine scalable。",
+      "formula_latex": null
+    },
+    {
+      "title": "4. Automated Content Analysis 的方法地图",
+      "slide_page": 5,
+      "intuition": "如果只有一个 corpus，你像在做体检；如果有多个 corpora/classes，你像在找差异诊断。",
+      "explanation": "第 5 页将 automated content analysis 分成两列：single corpus/class 可做 word frequency analysis、dictionaries/lexicons、topic modelling；multiple corpora/classes 可做 word-level differences、dominance scores、topic-level differences。这个表是答题的路线图：先判断问题是“描述一个语料库”还是“比较多个语料库”，再选择相应方法。",
+      "exam_angle": "若问 automated content analysis 可做什么，按 single vs multiple 两类组织答案，别把所有方法乱堆。",
+      "formula_latex": null
+    },
+    {
+      "title": "5. Word Frequency：最简单但必须规范化",
+      "slide_page": 6,
+      "intuition": "长文档说的词当然多；如果不按长度归一化，你其实是在奖励话多，而不是发现主题。",
+      "explanation": "Word frequency analysis 的步骤是 preprocess、count words、normalize by document length、average across documents。normalize by document length 很关键，否则长文档会主导总词频。它适合作为初步理解，但高频词不一定是区分性词；要比较 corpora/classes，通常需要 reference corpus 和 word-level difference methods。",
+      "exam_angle": "若问为什么 normalize，答控制文档长度差异；若问 word-level differences 想回答什么，答哪些 words best characterize target corpus/class。",
+      "formula_latex": "freq(t,d)=\\frac{count(t,d)}{|d|}"
+    },
+    {
+      "title": "6. Mutual Information：一个词能透露多少类别信息",
+      "slide_page": 7,
+      "intuition": "如果看到 term t 几乎就能猜出文档来自目标 class，那这个词对区分类别很有信息量。",
+      "explanation": "Mutual information I(X;Y) 衡量观察 X 后能学到多少关于 Y 的信息，在课件中也称 information gain，但不是 pointwise mutual information。Word-class 分析中，X=U 表示 document contains term t，Y=C 表示 class is target class，二者通常都是 Boolean。MI 可用于找 characteristic words 和 feature selection，但对稀有词可能敏感，需要谨慎解释。",
+      "exam_angle": "若问 MI 中 X/Y 是什么，答 U=term present, C=target class；若问 MI 如何解释，答 term occurrence 对 class membership 的信息量。",
+      "formula_latex": "I(U;C)=\\sum_{u\\in\\{0,1\\}}\\sum_{c\\in\\{0,1\\}}P(U=u,C=c)\\log\\frac{P(U=u,C=c)}{P(U=u)P(C=c)}"
+    },
+    {
+      "title": "7. Chi-squared：把词与类别的关系写成 independence test",
+      "slide_page": 10,
+      "intuition": "Chi-squared 问的是：这个词出现在某 class 里这么频繁，像不像纯巧合？",
+      "explanation": "Chi-squared 是 hypothesis testing approach。Null hypothesis 是 term appearance independent from document class，即 P(U=1,C=1)=P(U=1)P(C=1)。如果 χ² 值高，说明 observed counts 与 independence 期望差异大，该 term 与 class 有较强关联。它和 MI 都可用于 word-level differences 和 feature selection。",
+      "exam_angle": "若问 chi-squared null hypothesis，必须写 independence；若问高 χ² 表示什么，答 term occurrence 与 class membership association strong。",
+      "formula_latex": "H_0: P(U=1,C=1)=P(U=1)P(C=1);\\quad \\chi^2=\\sum_i\\frac{(O_i-E_i)^2}{E_i}"
+    },
+    {
+      "title": "8. Dictionaries/Lexicons：当你已经知道要找什么",
+      "slide_page": 12,
+      "intuition": "Lexicon 像一套现成的关键词清单：你先定义“positive”“negative”“anger”“health”等类别，再数文档里命中多少对应词。",
+      "explanation": "Dictionary/lexicon approach 是 category -> word list 的预建映射，例如 sentiment lexicon 中 positive 包含 good、great、happy，negative 包含 terrible、bad、worst。每个文档的 category score 可由该类别词在文档中的命中比例得到。Domain 很重要：unpredictable movie plot 可能正面，unpredictable coffee pot 可能负面。同一 lexicon 跨领域使用时必须检查语义是否迁移。",
+      "exam_angle": "若问 lexicon approach，答预定义类别词表 + 计算类别分数 + domain caveat；若问例子，可提 LIWC、VADER、SentiWordNet、EmoLex。",
+      "formula_latex": "score(category,d)=\\frac{\\#\\ dictionary\\ words\\ from\\ category\\ in\\ d}{\\#\\ words\\ in\\ d}"
+    },
+    {
+      "title": "9. Dominance Score：相对背景看类别是否突出",
+      "slide_page": 14,
+      "intuition": "一个 corpus 的 anger 分数高不高，不能只看绝对值；要问它比背景语料高多少。",
+      "explanation": "Dominance score 比较 target corpus 与 background corpus 中某个 category score 的比值。它适合回答“某个心理、情绪或主题类别在目标语料中是否相对突出”。如果 dominance > 1，通常表示该类别在 target 中比 background 更强；但解释时仍要考虑 lexicon 质量、预处理和 domain shift。",
+      "exam_angle": "若问 dominance score 用来回答什么，答 category is over-represented in target relative to background；必须说明它是相对指标。",
+      "formula_latex": "dominance(category)=\\frac{category\\ score\\ in\\ target\\ corpus}{category\\ score\\ in\\ background\\ corpus}"
+    },
+    {
+      "title": "10. Topic Modelling：把海量词压缩成可解释主题",
+      "slide_page": 18,
+      "intuition": "Topic model 像把一大堆散乱词汇压成几种颜料：每篇文档是不同颜料的混合，每个 topic 是一组高概率词。",
+      "explanation": "Topic modelling 的目标类似传统 content analysis：找出 corpus 的主要 themes/topics，以及每篇文档包含哪些 topics。第 18 页图示输出包括 document-topic matrix 和 topic-word matrix：前者表示每个 document 在 k 个 topics 上的权重，后者表示每个 topic 对 vocabulary 中词的分布。它也可看作 dimensionality reduction，把 p 个词维度压缩到 k 个 topics。",
+      "exam_angle": "若问 topic model 输入输出，答 corpus 输入，输出 document-topic matrix 与 topic-word matrix；若问 dimensionality reduction，答 p word dimensions -> k topics。",
+      "formula_latex": "D_{n\\times p}\\rightarrow \\Theta_{n\\times k},\\Phi_{k\\times p}"
+    },
+    {
+      "title": "11. Topic Modelling 方法与边界",
+      "slide_page": 20,
+      "intuition": "LDA 是经典默认选项，但不是唯一工具；topic model 给的是主题结构候选，不是自动真理。",
+      "explanation": "最流行的 topic modelling 方法是 Latent Dirichlet Allocation (LDA)，由 Blei、Ng 和 Jordan 于 2003 年提出。其他方法包括 pLSI、PCA-based methods、Non-negative Matrix Factorization 和 deep learning based topic modeling。第 19 页还指出 topic models 不只用于 text，也可用于 bioinformatics、code、music、network data。考试中应把它描述为 exploratory/structuring method，并提醒需要解释和验证 topics。",
+      "exam_angle": "若问最流行方法，答 LDA；若问其他方法，列 pLSI、PCA、NMF、deep learning；若问是否只用于文本，答 no。",
+      "formula_latex": null
+    }
+  ],
+  "quick_revision": [
+    "Comparing corpora = understand content + quantify differences。",
+    "不要只 ask AI：需要 reproducible, systematic, quantitative evidence。",
+    "Traditional content analysis = define themes, code documents, check agreement, analyze annotations。",
+    "Single corpus：word frequency、lexicons、topic modelling。",
+    "Multiple corpora/classes：word-level differences、dominance scores、topic-level differences。",
+    "MI：term presence tells information about class membership。",
+    "Chi-squared：test independence between term appearance and class。",
+    "Lexicons = category-to-word-list；domain meaning matters。",
+    "Dominance score = target category score / background category score。",
+    "Topic model outputs document-topic and topic-word matrices。"
+  ],
+  "exam_answer": "Comparing text corpora should be done systematically rather than by relying only on an AI summary. A typical workflow begins with initial exploration such as sampling documents, language identification, word counts and length-normalized frequency analysis. Traditional content analysis defines themes, applies a consistent coding scheme, checks coder agreement and analyzes annotations; automated content analysis scales this idea using word frequency, dictionaries/lexicons and topic modelling. For multiple corpora or classes, word-level differences can be measured with mutual information or chi-squared statistics, where term presence is compared with class membership. Lexicon methods compute category scores from predefined word lists and can be compared with dominance scores against a background corpus. Topic models such as LDA provide document-topic and topic-word matrices, reducing high-dimensional word data to interpretable themes that still require human validation."
+}

@@ -1,0 +1,835 @@
+                                                           10/1/25
+
+
+
+
+                  Text Technologies for Data Science
+                                    INFR11145
+
+                                   Indexing
+                                     Instructor:
+                                    Walid Magdy
+
+
+    01-Oct-2025
+
+
+
+1
+
+
+
+
+     Lecture Objectives
+        • Learn about and implement
+        • Boolean search
+        • Inverted index
+        • Positional index
+
+
+
+
+                                                       2
+     Walid Magdy, TTDS 2025/2026
+
+2
+
+
+
+
+                                                                1
+                                                                                                            10/1/25
+
+
+
+
+    Indexing Process
+                                                           document à unique ID
+                                              Document      what can you store?
+                      web-crawling                          disk space? rights?
+                      provider feeds          data store
+                                                               compression?
+                       RSS “feeds”
+         A System
+                      desktop/email
+         and
+
+
+                                                            Index Ind
+         Method for
+      …………………
+         …
+                                Documents
+                                                                     exi
+      …………………
+         …………………
+      …………………
+         …………………
+
+                                                                        n
+      …………………
+
+                                acquisition                creation
+                                                                              g Index
+         …………………
+      …………………
+         ………..
+
+
+
+
+     what data
+    do we want?                                                            a lookup table for
+                                                                         quickly finding all docs
+                                   Pre transformation
+                                               Text                        containing a word
+                                         -pr
+                                              oceinternational?
+                                format conversion.
+                                                    s“meaning”?
+                                 which part contains s  ing                       © Addison W esley, 2008
+
+
+                                word units? stopping? stemming?
+                                                                                                     3
+    Walid Magdy, TTDS 2025/2026
+
+3
+
+
+
+
+    Pre-processing output
+          This is an example sentence of how the pre-processing is
+          applied to text in information retrieval. It includes: Tokenization,
+          Stop Words Removal, and Stemming
+
+
+
+
+          exampl sentenc pre process appli text inform retriev includ
+          token stop word remov stem
+
+
+       • Add processed terms to index
+       • What is “index”?
+                                                                                                     4
+    Walid Magdy, TTDS 2025/2026
+
+4
+
+
+
+
+                                                                                                                 2
+                                                          10/1/25
+
+
+
+
+    Index
+       • How to match your term in non-linear time?
+       • Find/Grep:
+          Sequential search for term
+       • Index:
+          Find term locations immediately
+
+
+
+
+                                                      5
+    Walid Magdy, TTDS 2025/2026
+
+5
+
+
+
+
+    Book Index
+
+
+
+
+                                                      6
+    Walid Magdy, TTDS 2025/2026
+
+6
+
+
+
+
+                                                               3
+                                                                                                       10/1/25
+
+
+
+
+    Indexing
+       • Search engines vs PDF find or grep?
+            • Infeasible to scan large collection of text for every “search”
+            • Find section that has: “UK and Scotland and Money”?!
+       • Book Index
+            • For each word, list of “relevant” pages
+            • Find topic in sub-linear time
+       • IR Index:
+            • Data structure for fast finding terms
+            • Additional optimisations could be applied
+
+                                                                                                 7
+    Walid Magdy, TTDS 2025/2026
+
+7
+
+
+
+
+    Document Vectors
+       • Represent documents as vectors
+            • Vector à document, cell à term
+            • Values: term frequency or binary (0/1)
+            • All documents à collection matrix
+
+      he   drink   ink   likes   pink   think   wink
+       2    1      0      2      0       0       1     ß D1: He likes to wink, he likes to drink
+       1    3      0      1      0       0       0     ß D2: He likes to drink, and drink, and drink
+       1    1      1      1      0       1       0     ß D3: The thing he likes to drink is ink
+       1    1      1      1      1       0       0     ß D4: The ink he likes to drink is pink
+       1    1      1      1      1       0       1     ß D5: He likes to wink, and drink pink ink
+                                                number of occurrence of
+                                                a term in a document
+                                                                                                 8
+    Walid Magdy, TTDS 2025/2026
+
+8
+
+
+
+
+                                                                                                            4
+                                                                                                        10/1/25
+
+
+
+
+     Inverted Index
+        • Represent terms as vectors
+             • Vector à term, cell à document
+             • Transpose of the collection matrix
+             • Vector: inverted list
+
+       he   drink   ink   likes   pink   thing   wink
+        2    1      0      2      0       0      1      ß D1: He likes to wink, he likes to drink
+        1    3      0      1      0       0      0      ß D2: He likes to drink, and drink, and drink
+        1    1      1      1      0       1      0      ß D3: The thing he likes to drink is ink
+        1    1      1      1      1       0      0      ß D4: The ink he likes to drink is pink
+        1    1      1      1      1       0      1      ß D5: He likes to wink, and drink pink ink
+
+                                                                                                  9
+     Walid Magdy, TTDS 2025/2026
+
+9
+
+
+
+
+     Boolean Search
+        • Boolean: exist / not-exist
+        • Multiword search: logical operators (AND, OR, NOT)
+        • Example
+             • Collection: search Shakespeare's Collected Works
+             • Boolean query: Brutus AND Caesar AND NOT Calpurnia
+
+        • Build a Term-Document Incidence Matrix
+             • Which term appears in which document
+             • Rows are terms
+             • Columns are documents
+
+
+                                                                                                  10
+     Walid Magdy, TTDS 2025/2026
+
+10
+
+
+
+
+                                                                                                             5
+                                                                                                              10/1/25
+
+
+
+
+     Collection Matrix
+                                                   Documents
+
+                   !"#A"BC'"(C)*HA,'#J'   ./*M/1C)'H1'J   O3HCOH4,H1#   5'4*H#   6#3H**A   T'89H#3
+
+        !"#A"B              :                  :               ;          ;        ;         :
+        <J/#/1              :                  :               ;          :        ;         ;
+        )'H1'J              :                  :               ;          :        :         :
+       )'*,/J"M'            ;                  :               ;          ;        ;         ;
+       )*HA,'#J'            :                  ;               ;          ;        ;         ;
+        4HJ8B               :                  ;               :          :        :         :
+        =AJ1HJ              :                  ;               :          :        :         ;
+
+
+        Terms                                1 if document contains term, 0 otherwise
+
+      Query: Brutus AND Caesar AND NOT Calpurnia
+      Apply on rows: 110100 AND 110111 AND !(010000) = 100100
+                                                                                                 11
+     Walid Magdy, TTDS 2025/2026
+
+11
+
+
+
+
+                                                                                                      termx
+
+     Bigger collections?                                                                               1
+                                                                                                       0
+                                                                                                       0
+                                                                                                       0
+
+        • Consider N = 1 million documents,
+                                                                                                       1
+                                                                                                       1
+                                                                                                       0
+
+           each with about 1000 words.                                                                 0
+                                                                                                       0
+                                                                                                       0
+                                                                                            1M         0
+
+        • n = 1M x 1K = 1B words                                                                       0
+                                                                                                       0
+                                                                                                       0
+
+           è Heap’s law à v ≈ 500K                                                                     0
+                                                                                                       0
+                                                                                                       0
+
+
+        • Matrix size = 500K unique terms x 1M documents
+                                                                                                       0
+                                                                                                       0
+                                                                                                       0
+                                                                                                       0
+           = 0.5 trillion 0’s and 1’s entries!                                                         0
+                                                                                                       1
+                                                                                                       0
+
+        • If all words appear in many documents                                                        0
+                                                                                                       0
+                                                                                                       0
+
+           à max{count(1’s)} = N * doc. length = 1B                                                    0
+                                                                                                       0
+                                                                                                       0
+
+
+        • Actually, from Zip’s law à 250k terms appears once!
+                                                                                                       0
+                                                                                                       0
+                                                                                                       1
+                                                                                                       .
+
+
+        • Collection matrix is extremely sparse. (mostly 0’s)
+                                                                                                       .
+                                                                                                       .
+                                                                                                       .
+                                                                                                       .
+
+                                                                                                 12
+     Walid Magdy, TTDS 2025/2026
+
+12
+
+
+
+
+                                                                                                                   6
+                                                                                                          10/1/25
+
+
+
+
+     Inverted Index: Sparse representation
+        • For each term t, we must store a list of all documents
+           that contain t.
+             • Identify each by a docID, a document serial number
+
+                                                                                    Posting
+
+               Brutus                   1      2    4      11       31     45 173
+
+               Caesar                   1      2    4       5       6      16      57 132
+
+               Calpurnia                2     31    54 101
+                                                                                 Postings List
+             Dictionary                     Doc number
+                                              (sorted)
+
+                                                                                                     13
+     Walid Magdy, TTDS 2025/2026
+
+13
+
+
+
+
+     Inverted Index Construction
+              Documents to
+                                                           Friends, Romans, countrymen
+               be indexed
+
+
+                                       Tokenizer
+
+               Token stream                              Friends        Romans     Countrymen
+
+                                   Normaliser
+
+             Terms (modified tokens)                       friend       roman     countryman
+
+                                        Indexer           friend                          2      4
+                                                          roman                           1      2
+              Inverted index
+                                                          countryman                      3      9
+                                                                                                     14
+     Walid Magdy, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                                                               7
+                                                                                                         10/1/25
+
+
+
+
+                                                                           !"#$        %&D()
+
+     Step 1: Term Sequence                                                 (
+                                                                           %+%
+                                                                           "I-D./
+                                                                                           *
+                                                                                           *
+                                                                                           *
+                                                                           012+13          *
+                                                                           D-"3-#          *
+                                                                           (               *
+                                                                           4-3             *
+          Doc 1                                                            5+22"%          *
+                                                                           +6              *
+                                                                           .T"             *
+          I did enact Julius Caesar I was                                  D-8+.&2         *
+          killed i' the Capitol; Brutus killed                             9#1.13          *
+          me.                                                              5+22"%          *
+                                                     Sequence of           $"              *
+                                                 (term, Doc ID) pairs      3&              :
+                                                                           2".             :
+                                                                           +.              :
+          Doc 2                                                            9"              :
+                                                                           4+.T            :
+                                                                           D-"3-#          :
+          So let it be with Caesar. The                                    .T"             :
+          noble Brutus hath told you                                       I&92"/          :
+          Caesar was ambitious                                             9#1.13          :
+                                                                           T-.T/           :
+                                                                           .&2%/           :
+                                                                           ;&1             :
+                                                                           D-"3-#/         :
+                                                                           4-3             :
+                                                                           -$9+.+&13       :
+
+
+                                                                                                   15
+     Walid Magdy, TTDS 2025/2026
+
+15
+
+
+
+
+                                                 !"#$        %&D()                     !"#$      %&D()
+
+     Step 2: Sorting                             (
+                                                 %+%
+                                                 "I-D./
+                                                                 *
+                                                                 *
+                                                                 *
+                                                                                       *$+I-I&./
+                                                                                       +"
+                                                                                       +#.-./
+                                                                                                     0
+                                                                                                     0
+                                                                                                     1
+                                                 012+13          *                     +#.-./2       0
+
+        • Sort by:                               D-"3-#
+                                                 (
+                                                                 *
+                                                                 *
+                                                                                       D*3I-&4
+                                                                                       D*"/*#
+                                                                                                     1
+                                                                                                     1
+                                                 4-3             *                     D*"/*#        0
+
+             1) Term                             5+22"%
+                                                 +6
+                                                 .T"
+                                                                 *
+                                                                 *
+                                                                 *
+                                                                                       D*"/*#
+                                                                                       %I%
+                                                                                       "5*D-
+                                                                                                     0
+                                                                                                     1
+                                                                                                     1
+             then                                D-8+.&2         *                     6*-6          1
+                                                 9#1.13          *                     (             1
+                                                 5+22"%          *                     (2            1
+             2) Doc ID                           $"
+                                                 3&
+                                                                 *
+                                                                 :      Sorting        IT
+                                                                                       I-
+                                                                                                     1
+                                                                                                     0
+                                                 2".             :                     8.4I./        1
+                                                 +.              :                     9I44"%        1
+                                                 9"              :                     9I44"%        1
+                                                 4+.T            :                     4"-           0
+                                                 D-"3-#          :                     $"            1
+                                                 .T"             :                     5&+4"         0
+                                                 I&92"/          :                     /&            0
+                                                 9#1.13          :                     -6"           1
+                                                 T-.T/           :                     -6"2          0
+                                                 .&2%/           :                     -&4%          0
+                                                 ;&1             :                     :&.           0
+                                                 D-"3-#/         :                     ;*/           1
+                                                 4-3             :                     ;*/           0
+                                                 -$9+.+&13       :                     ;I-6          0
+
+                                                                                                   16
+     Walid Magdy, TTDS 2025/2026
+
+16
+
+
+
+
+                                                                                                              8
+                                                                                                                    10/1/25
+
+
+
+
+                                                                     !"#$      %&D()
+
+     Step 3: Posting                                                 *$+I-I&./
+                                                                     +"
+                                                                     +#.-./
+                                                                                   0
+                                                                                   0
+                                                                                   1
+                                                                     +#.-./2       0
+        1. Multiple term entries in                                  D*3I-&4       1
+                                                                     D*"/*#        1
+             a single document are                                   D*"/*#        0
+             merged                                                  D*"/*#
+                                                                     %I%
+                                                                                   0
+                                                                                   1
+                                                                     "5*D-         1
+        2. Split into Dictionary and                                 6*-6
+                                                                     (
+                                                                                   1
+                                                                                   1
+             Postings                                                (2            1
+                                                                     IT            1
+
+        3. Doc. Frequency (df)                                       I-
+                                                                     8.4I./
+                                                                                   0
+                                                                                   1
+             information is added                                    9I44"%
+                                                                     9I44"%
+                                                                                   1
+                                                                                   1
+                                                                     4"-           0
+                                                                     $"            1
+                                                                     5&+4"         0
+                                                                     /&            0
+                                                                     -6"           1
+                                                                     -6"2          0
+                                                                     -&4%          0
+                                                                     :&.           0
+                                                                     ;*/           1
+                                                                     ;*/           0
+                                                                     ;I-6          0
+
+                                                                                                               17
+     Walid Magdy, TTDS 2025/2026
+
+17
+
+
+
+
+     Inverted Index: matrix à postings
+              he   drink   ink   likes   pink   think   wink
+              2     1      0      2      0       0      1      ß D1: He likes to wink, he likes to drink
+              1     3      0      1      0       0      0      ß D2: He likes to drink, and drink, and drink
+              1     1      1      1      0       1      0      ß D3: The thing he likes to drink is ink
+              1     1      1      1      1       0      0      ß D4: The ink he likes to drink is pink
+              1     1      1      1      1       0      1      ß D5: He likes to wink, and drink pink ink
+
+                                    he                                 1 2 3 4 5
+                                 drink                                 1 2 3 4 5
+                                   ink                                 3 4 5
+                                  pink                                 4 5
+                                 thing                                 3
+                                  wink                                 1 5
+                                                                                                               18
+     Walid Magdy, TTDS 2025/2026
+
+18
+
+
+
+
+                                                                                                                         9
+                                                                                      10/1/25
+
+
+
+
+     Inverted Index: with frequency
+        • Boolean: term à DocIDs list
+        • Frequency: term à tuples (DocID,count(term)) lists
+
+                   he                1:2     2:1     3:1   4:1       5:1
+              drink                  1:1     2:3     3:1   4:1       5:1
+                ink                  3:1     4:1     5:1
+               pink                  4:1     5:1
+              thing                  3:1                    appeared in
+              wink                                          D2 3 times
+                                     1:1     5:1
+                                                                                 19
+     Walid Magdy, TTDS 2025/2026
+
+19
+
+
+
+
+     Query Processing
+        • Find documents matching query {ink AND wink}
+             1. Load inverted lists for each query word
+             2. Merge two postings lists à Linear merge
+        • Linear merge à O(n)
+           n: total number of posts for all query words
+                                                                 Matches
+                                                                 1: f(0,1) = 0
+             ink                   3:1     4:1     5:1
+                                                                 3: f(1,0) = 0
+          wink                     1:1     5:1                   4: f(1,0) = 0
+                                                                 5: f(1,1) = 1
+
+                                                                                 20
+     Walid Magdy, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                                          10
+                                                                                                    10/1/25
+
+
+
+
+     Phrase Search
+        • Find documents matching query “pink ink”
+             1. Find document containing both words
+             2. Both words has to be a phrase
+
+        • Bi-gram Index:
+        He likes to wink, and drink pink ink Convert to bigrams
+        He_likes likes_to to_wink wink_and and_drink drink_pink pink_ink
+
+        • Bi-gram Index, issues:
+             • Fast, but index size will explode!
+             • What about trigram phrases?
+             • What about proximity? “ink is pink”
+                                                                                               21
+     Walid Magdy, TTDS 2025/2026
+
+21
+
+
+
+
+      Proximity Index
+        • Terms positions is embedded to the inv. Index
+             • Called proximity/positional index
+             • Enables phrase and proximity search
+             • Tuples (DocID, term position)
+                                                      D1: He likes to wink, he likes to drink
+      he            1:2    2:1     3:1   4:1   5:1    D2: He likes to drink, and drink, and drink
+drink               1:1    2:3     3:1   4:1   5:1    D3: The thing he likes to drink is ink
+                                                      D4: The ink he likes to drink is pink
+                                                      D5: He likes to wink, and drink pink ink
+
+
+      he            1,1    1,5     2,1   3,3   4,3   5,1
+drink               1,8    2,4     2,6   2,8   3,6   4,5   5,6
+                                                                                               22
+     Walid Magdy, TTDS 2025/2026
+
+22
+
+
+
+
+                                                                                                        11
+                                                                              10/1/25
+
+
+
+
+     Query Processing: Proximity
+        • Find documents matching query “pink ink”
+             1. Use Linear merge
+             2. Additional step: check terms positions
+        • Proximity search:
+           pos(term1) – pos(term2) < |w| à #5(pink,ink)
+
+                                                Matches
+                                                 3: f(1,0) = 0
+       ink                  3,8    4,2   5,8
+                                                 4: f(1,1) = ? = 0
+     pink                   4,8    5,7           pos(ink) – pos(pink) == 1?
+                                                 5: f(1,1) = ? = 1
+                                                 pos(ink) – pos(pink) == 1?
+                                                                       23
+     Walid Magdy, TTDS 2025/2026
+
+23
+
+
+
+
+     Query Processing: Simple implementation
+        • For each term in query à retrieve posting list
+        • AND à Intersection (⋂) between posting lists
+        • OR à Union (⋃) of posting lists
+        • NOT à inverse of posting list (all docs not in the list)
+             • Usually only combined with AND operator.
+        • Phrase search à AND + check pos2-pos1 == 1
+        • Proximity search à AND + check |pos2-pos1| ≤ n
+
+
+
+                                                                       24
+     Walid Magdy, TTDS 2025/2026
+
+24
+
+
+
+
+                                                                                  12
+                                                10/1/25
+
+
+
+
+     Proximity search: data structure
+        • Possible data structure:
+            <term: df;
+               DocNo: pos1, pos2, pos3
+               DocNo: pos1, pos2, pos3
+               ……. >
+        • Example:
+            <scotland: 25;
+               94: 212
+               351: 23,34,1354,1779,1838
+               370: 981
+               3330: 115
+               3334: 121,316
+               3532: 59,111,162,265 …>
+
+                                           25
+     Walid Magdy, TTDS 2025/2026
+
+25
+
+
+
+
+     Practical
+
+
+
+
+                                           26
+     Walid Magdy, TTDS 2025/2026
+
+26
+
+
+
+
+                                                    13
+                                                          10/1/25
+
+
+
+
+     Summary
+        • Document Vector
+        • Term Vector
+        • Inverted Index
+        • Collection Matrix
+        • Posting
+        • Proximity Index
+        • Query Processing à Linear merge
+
+
+                                                     27
+     Walid Magdy, TTDS 2025/2026
+
+27
+
+
+
+
+     Resources
+        • Textbook 1: Intro to IR, Chapter 1 & 2.4
+        • Textbook 2: IR in Practice, Chapter 5
+        • Lab 2
+
+
+
+
+                                                     28
+     Walid Magdy, TTDS 2025/2026
+
+28
+
+
+
+
+                                                              14
+

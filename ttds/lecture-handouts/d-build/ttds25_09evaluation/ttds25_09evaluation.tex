@@ -1,0 +1,167 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 09}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}IR Evaluation: 从“看起来不错”到可复现实验指标}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily 为什么要评估：Lab 输出本身不能说明好坏 $\rightarrow$ 两类评估：system-centered 与 user-centered $\rightarrow$ 三维目标：effectiveness、efficiency、usability $\rightarrow$ Cranfield paradigm：固定文档、查询、相关性判断 $\rightarrow$ set-based measures：precision、recall、F-measure $\rightarrow$ rank-based measures：P@k、R-precision、AP/MAP $\rightarrow$ graded relevance：DCG 与 nDCG $\rightarrow$ 考试核心：按任务选择指标并解释假设
+\end{chainbox}
+\slideimage{1}{0.72}{/Users/huez/Documents/ttds/lec/ttds25_09evaluation.pdf}
+\begin{callout}{这节课一句话}
+这节课一句话：IR evaluation 把检索系统从主观感觉拉回实验科学，用固定 collection、query/topic、relevance judgments 和合适指标来回答“这个 ranking 是否真的更好”。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. 1. 为什么 IR 必须被实验化评估}
+\slideimage{3}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_09evaluation.pdf}
+\begin{callout}{人话直觉}
+一串 docID 和 score 就像餐厅菜单上的价格：它告诉你系统“给了什么”，但没告诉你“好不好吃”。IR evaluation 要补上这把尺子。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 检索系统的输出只有在和用户 information need、相关性判断、baseline 或其他系统比较后才有意义。第 3 页用 Lab 3 output 追问“Is that a good performance?”，说明裸 ranking score 不是评价；第 4 页把 evaluation 分成 system-centered laboratory experiment 和 user-centered studies。考试通常希望你说出：IR 是 experimental science，因为它提出假设、控制变量、用可复现指标比较系统，并据此改进方法。
+
+\noindent\textbf{考试问法：} 若问“Why is IR an experimental science?”，答 hypothesis + baseline + fixed test collection + measurable effectiveness + reproducible comparison。
+
+\Needspace{0.38\textheight}
+\section{2. 2. Evaluation 的三维度：不只看相关性}
+\slideimage{5}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_09evaluation.pdf}
+\begin{callout}{人话直觉}
+一个搜索引擎像餐厅：菜要好吃（effectiveness），上菜要快（efficiency），菜单还要好用（usability）。只拿一个维度吹系统好，答案就会偏。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Effectiveness 关心返回文档是否满足信息需求；efficiency 关心 retrieval time、indexing time、index size；usability 关心用户学习成本、灵活性和 novice/expert users 的体验。本讲后续主要聚焦 effectiveness，但第 5 页提醒考试中不要把 evaluation 简化成 MAP 一个数字。
+
+\noindent\textbf{考试问法：} 若问“三维度是什么”，逐一定义并给例子；若问本讲指标衡量什么，强调主要是 effectiveness。
+
+\Needspace{0.38\textheight}
+\section{3. 3. Cranfield Paradigm：把检索评估做成可复现实验}
+\slideimage{6}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_09evaluation.pdf}
+\begin{callout}{人话直觉}
+Cranfield 就像给所有选手同一张试卷、同一份参考答案、同一套评分标准；这样比较系统才公平。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Reusable IR test collection 包括 representative document collection、representative information needs/topics、human relevance judgments 和 evaluation measure。系统在固定 collection 和 topics 上输出结果，evaluation module 用 judgments 计算 effectiveness。它牺牲一部分真实交互复杂性，换来自动化、可重复、可比较的实验评估。
+
+\noindent\textbf{考试问法：} 若问“test collection contains what?”，按 documents、topics、judgments、measure 四件套回答，并说明 relevance 可 binary 或 graded。
+
+\Needspace{0.38\textheight}
+\section{4. 4. Precision 与 Recall：干净 vs 找全}
+\slideimage{8}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_09evaluation.pdf}
+\begin{callout}{人话直觉}
+Precision 像你捞上来的一网鱼里有多少真鱼；recall 像海里所有真鱼你捞上来多少。前者怕垃圾，后者怕漏掉。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Precision 是 retrieved documents 中 relevant 的比例；recall 是所有 relevant documents 中被 retrieved 的比例。第 8 页用 relevant/retrieved 的交集和 TP/FP/FN 展示公式。第 10 页的 trade-off 图说明二者常互相拉扯：严格检索可能 precision 高但 recall 低，宽松检索可能 recall 高但 precision 低。
+
+\[
+P = \frac{|rel \cap ret|}{|ret|} = \frac{TP}{TP+FP};\quad R = \frac{|rel \cap ret|}{|rel|} = \frac{TP}{TP+FN}
+\]
+\noindent\textbf{考试问法：} 若给 TP/FP/FN 计算，先画 retrieved 与 relevant 的集合；若问 trade-off，说明阈值、query broadening 或 ranking cutoff 会改变 P/R。
+
+\Needspace{0.38\textheight}
+\section{5. 5. 为什么 Accuracy 不适合 IR，F-measure 怎样补位}
+\slideimage{11}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_09evaluation.pdf}
+\begin{callout}{人话直觉}
+在海量文档里，大多数文档本来就不相关；一个系统什么都不返回，也可能靠 TN 拿到漂亮 accuracy，但用户会空手而归。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} IR collection 中 irrelevant documents 通常远多于 relevant documents，因此 TN 会支配 accuracy，使它掩盖检索质量。F-measure 用 harmonic mean 合并 precision 与 recall，短板很低时整体分数也低；F\(\beta\) 用 \(\beta\) 控制 recall 相对 precision 的重要性，\(\beta\)=1 等权，\(\beta\)>1 更看重 recall。
+
+\[
+F_1 = \frac{2PR}{P+R};\quad F_\beta = \frac{(\beta^2+1)PR}{\beta^2P+R}
+\]
+\noindent\textbf{考试问法：} 若问 accuracy 为什么不好，答 class imbalance + TN 巨大 + 不反映用户看到的结果；若问 F\(\beta\)，解释 harmonic mean 和 \(\beta\) 的偏好。
+
+\Needspace{0.38\textheight}
+\section{6. 6. Ranked Retrieval：排名位置本身就是质量}
+\slideimage{12}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_09evaluation.pdf}
+\begin{callout}{人话直觉}
+两个系统都找到了 5 篇相关文档，但一个把它们放在前五，另一个散落到第十页；用户体验完全不同。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Set-based P/R/F 不关心 relevant documents 出现在第几名。第 12 页用 A/B 两个 ranked list 说明：相同 P、R、F 也可能有不同用户满意度。Rank-based measures 因此把 rank 纳入指标，特别适合用户通常从上往下浏览、很少看完整列表的搜索场景。
+
+\noindent\textbf{考试问法：} 若问为什么 ranked IR 不能只用 P/R/F，答它们忽略 ordering；应使用 P@k、R-precision、AP/MAP、nDCG 等。
+
+\Needspace{0.38\textheight}
+\section{7. 7. P@K 与 R-Precision：给排名切一刀}
+\slideimage{14}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_09evaluation.pdf}
+\begin{callout}{人话直觉}
+P@K 像只检查搜索结果第一页；R-precision 像问：如果这个 query 一共有 r 篇相关文档，前 r 名里你放进来多少？
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} P@K 在固定 cutoff k 处计算 precision，适合 web search 中用户只看 top k 的假设，但不同 query 的相关文档总数不同，所以平均时可能粗糙。R-precision 令 cutoff 等于该 query 的 relevant document 数 r，即 P@r，试图检查理想情况下所有相关文档是否挤进最前面的 r 个位置。
+
+\[
+P@k = \frac{\#\{relevant\ documents\ in\ top\ k\}}{k};\quad R\text{-}precision = P@r
+\]
+\noindent\textbf{考试问法：} 若问 P@K 局限，说它忽略 k 之后的 relevant docs，且不同 query 上可比性有限；若问 R-precision，强调 r 随 query 改变。
+
+\Needspace{0.38\textheight}
+\section{8. 8. AP/MAP：把每个 relevant 出现时的惊喜累计起来}
+\slideimage{18}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_09evaluation.pdf}
+\begin{callout}{人话直觉}
+AP 像用户一路往下看，每遇到一篇相关文档就记录一次“到目前为止列表有多干净”，最后对这些关键时刻求平均。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Average Precision 对一个 query，把每个 rank k 的 precision 乘以 rel(k)，只在该位置文档 relevant 时贡献分数，再除以该 query 的 relevant 文档总数 r。MAP 是 across queries 的 AP 平均。它同时奖励 relevant documents 排得靠前和尽量找全，是 binary relevance ranked retrieval 的经典指标。
+
+\[
+AP = \frac{1}{r}\sum_{k=1}^{n} P(k)\,rel(k);\quad MAP = \frac{1}{|Q|}\sum_{q\in Q} AP(q)
+\]
+\noindent\textbf{考试问法：} 若考计算 AP，逐行写 P(k)，只在 rel(k)=1 的位置相加；若问 MAP，说明它是 query-level AP 的 mean，不是把所有文档混在一起算。
+
+\Needspace{0.38\textheight}
+\section{9. 9. DCG/nDCG：相关性有等级，排名有折扣}
+\slideimage{22}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_09evaluation.pdf}
+\begin{callout}{人话直觉}
+网页结果不是只有“有用/没用”：完美答案、部分答案、擦边答案价值不同；而且同样的答案放第 1 名比第 10 名更值钱。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} DCG 使用 graded relevance 作为 gain，并随着 rank 下降用 log discount 降低贡献。nDCG 再用 ideal DCG 归一化，让不同 query、不同相关性分布的分数可比较，通常范围在 0 到 1。第 20–22 页强调两个假设：高度相关更有用；越靠后越不容易被用户检查。
+
+\[
+DCG@k = \sum_{i=1}^{k}\frac{gain_i}{\log_2(i+1)};\quad nDCG@k = \frac{DCG@k}{IDCG@k}
+\]
+\noindent\textbf{考试问法：} 若问为什么 nDCG 常用于 web search，答 web results 常有 graded relevance，且用户强烈关注顶部排名；若考公式，先算 DCG，再除以 IDCG。
+
+\section{考试速记版}
+\begin{itemize}
+\item Cranfield = documents + topics + relevance judgments + evaluation measure。
+\item Precision 问 retrieved 里多少 relevant；recall 问 relevant 里多少 retrieved。
+\item Accuracy 在 IR 中常被大量 true negatives 扭曲。
+\item F1 是 P/R harmonic mean；F\(\beta\) 用 \(\beta\) 调 recall 与 precision 权重。
+\item P@K 适合 top-k 用户行为，但忽略 k 后内容。
+\item AP 只在 relevant 出现的 rank 记录 precision；MAP 是 query AP 的平均。
+\item DCG/nDCG 处理 graded relevance 和 rank discount。
+\item 答题时永远先说任务假设，再选指标。
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+IR evaluation is usually framed as an experimental science: we fix a representative document collection, a representative set of information needs/topics, human relevance judgments, and an effectiveness measure, then compare systems or variants against a baseline. For unranked retrieval, precision and recall capture different errors: precision measures how many retrieved documents are relevant, while recall measures how many relevant documents are retrieved. Because ranked IR users care strongly about top positions, rank-aware measures such as P@k, R-precision, AP/MAP and nDCG are needed. MAP averages each query’s average precision over the test set and is suitable for binary relevance ranked retrieval; nDCG additionally handles graded relevance by discounting lower ranks and normalizing against the ideal ranking.
+\end{callout}
+\end{document}

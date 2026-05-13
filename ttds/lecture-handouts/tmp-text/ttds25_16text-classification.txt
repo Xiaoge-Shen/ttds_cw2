@@ -1,0 +1,1420 @@
+                                                           11/12/25
+
+
+
+
+                  Text Technologies for Data Science
+                                  INFR11145
+
+
+                        Text Classification
+
+                                   Instructor:
+                                  Björn Ross
+    12-Nov-2025
+
+
+
+1
+
+
+
+
+     Pre-Lecture
+       • Today
+          • Lecture 1 (Text classification): Theory
+          • Coursework 2
+       • Next week
+          • Lecture cancelled due to strikes
+
+
+
+
+                                                       2
+     Björn Ross, TTDS 2025/2026
+
+2
+
+
+
+
+                                                                 1
+                                                              11/12/25
+
+
+
+
+    Lecture Objectives
+       • Learn about text basics of text classification
+             • Definition
+             • Types
+             • Methods and models
+
+
+
+
+                                                          3
+    Björn Ross, TTDS 2025/2026
+
+3
+
+
+
+
+                                 Definition
+
+
+
+
+                                                          4
+    Björn Ross, TTDS 2025/2026
+
+4
+
+
+
+
+                                                                    2
+                                                                                         11/12/25
+
+
+
+
+    Text Classification
+      • Text classification is the process of classifying
+          documents into predefined categories based on their
+          content.
+
+
+      - Input: Text (document, article, sentence)
+      - Task: Classify into predefined one/multiple categories
+      - Categories:
+          - Binary: relevant/irrelevant, spam .. etc.
+          - Few: sports/politics/comedy/technology
+          - Hierarchical: patents
+
+
+                                                                                     5
+    Björn Ross, TTDS 2025/2026
+
+5
+
+
+
+
+    Classification is and is not
+       • Classification (a.k.a. “categorization”): a common technology in
+          data science; studied within pattern recognition, statistics, and
+          machine learning.
+       • Definition:
+          the activity of predicting to which among a predefined finite set
+          of groups (“classes”, or “categories”) a data item belongs to
+       • Formulated as the task of generating a hypothesis (or
+          “classifier”, or “model”)
+
+                                          h:DàC
+          where D = {x1, x2, ...} is a domain of data items and
+          C = {c1, ..., cn} is a finite set of classes (the classification scheme)
+                                                                                     6
+    Björn Ross, TTDS 2025/2026
+
+6
+
+
+
+
+                                                                                               3
+                                                                                      11/12/25
+
+
+
+
+    Classification is and is not
+       • Different from clustering, where the groups (“clusters”) and
+          their number are not known in advance
+       • Unsuitable when class membership can be determined with
+          certainty (relatively easily)
+           • e.g., predicting whether a natural number belongs to Prime or Non-
+                Prime is not classification
+       • In text classification, data items are
+             • Textual: e.g., news articles, emails, sentences, queries, etc.
+             • Partly textual: e.g., Web pages
+
+
+
+
+                                                                                  7
+    Björn Ross, TTDS 2025/2026
+
+7
+
+
+
+
+                          Types of classification
+
+
+
+
+                                                                                  8
+    Björn Ross, TTDS 2025/2026
+
+8
+
+
+
+
+                                                                                            4
+                                                                                          11/12/25
+
+
+
+
+     Types of Classification
+        • Binary:
+            item to be classified into one of two classes
+            h : D à C, C = {c1, c2}
+              • e.g., Spam/not spam, offensive/not offensive, rel/irrel
+        • Single-Label Multi-Class (SLMC)
+            item to be classified into only one of n possible classes.
+            h : D à C, C = {c1 …. cn}, where n>2
+              • e.g., Sports/politics/entertainment, positive/negative/neutral
+        • Multi-Label Multi-Class (MLMC)
+            item to be classified into none, one, two, or more classes
+            h : D à 2C, C = {c1 …. cn}, where n>1
+              • e.g., Assigning CS articles to classes in the ACM Classification System
+              • Usually be solved as n independent binary classification problems
+                                                                                    9
+     Björn Ross, TTDS 2025/2026
+
+9
+
+
+
+
+     Dimension of Classification
+        • Text classification may be performed according to several
+            dimensions (“axes”) orthogonal to each other
+        •   by topic; by far the most frequent case, its applications are global
+        •   by sentiment; useful in market research, online reputation
+            management, social science and political science
+        •   by language (a.k.a. “language identification”); useful, e.g., in
+            query processing within search engines
+        •   by genre; e.g., AutomotiveNews vs. AutomotiveBlogs, useful in
+            website classification and others;
+        •   by author (a.k.a. “authorship attribution”), by native language
+            (“native language identification”), or by gender; useful in
+            forensics and cybersecurity
+        •   by usefulness; e.g., product reviews
+        •   ……                                                                      10
+     Björn Ross, TTDS 2025/2026
+
+10
+
+
+
+
+                                                                                                5
+                                                                 11/12/25
+
+
+
+
+                             Methods and models
+
+
+
+
+                                                            11
+     Björn Ross, TTDS 2025/2026
+
+11
+
+
+
+
+     Methods and models
+        • Rule-based classification
+        • Supervised-learning classification
+              • Traditional features
+              • Word embeddings
+        • Pre-trained language models
+              • Supervised fine-tuning for classification
+              • Zero-shot classification
+
+
+                                                            12
+     Björn Ross, TTDS 2025/2026
+
+12
+
+
+
+
+                                                                       6
+                                                                                             11/12/25
+
+
+
+
+     Rule-based classification
+        • An old-fashioned way to build text classifiers was via knowledge
+           engineering, i.e., manually building classification rules
+            • E.g., (Viagra or Sildenafil or Cialis) à Spam
+            • E.g. (#MAGA or America great again) à support Trump
+        • Common type: dictionary-based classification
+        • Disadvantages:
+              • Expensive to setup and to maintain
+              • Depends on few keywords à bad coverage (recall)
+
+
+
+
+                                                                                        13
+     Björn Ross, TTDS 2025/2026
+
+13
+
+
+
+
+     Supervised-learning classification
+        • A generic (task-independent) learning algorithm is used to train
+           a classifier from a set of manually classified examples
+        • The classifier learns, from these training examples, the
+           characteristics a new text should have in order to be assigned
+           to class c
+        • Advantages:
+              • Generating training examples cheaper than writing classification rules
+              • Easy update to changing conditions (e.g., addition of new classes,
+                 deletion of existing classes, shifted meaning of existing classes, etc.)
+
+
+
+
+                                                                                        14
+     Björn Ross, TTDS 2025/2026
+
+14
+
+
+
+
+                                                                                                   7
+                                                                                                         11/12/25
+
+
+
+
+     Supervised-learning classification
+                          A System and
+                          Method for …
+                                                                           ……………………       Labelled
+                                                           Manually
+                          ……………………
+                   A System  and
+                   Method ……………………
+                            for                                            ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                                                                           ……………………
+                                                                           ……………………
+                                                                                           sample
+                                                         Label Sample
+                          ……………………
+                   ……………………
+               ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                          …………………….
+                                                                           ……………………
+                                                                           …………………….
+                                                                                       (training data)
+                   ……………………
+               ……………………
+                          .
+                   ……………………                                                .
+               ……………………
+                   …………………….
+               …………………….
+               .
+                   .
+                                         Documents to
+                                         be classified
+
+                                                                           Extract
+                                                                          Features
+                          A System and
+                          Method for …
+                          ……………………
+                   A System and
+
+                                                                           Train a
+                          ……………………
+                                                         Classification
+                   Method for …
+                          ……………………
+                   ……………………
+               ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                   ……………………………….
+               ……………………
+                                                            Model         Classifier
+                          .
+                   ……………………
+               ……………………
+                   …………………….
+               …………………….
+                   .
+               .
+                                     Classified
+                                     Documents
+                                                                                                15
+     Björn Ross, TTDS 2025/2026
+
+15
+
+
+
+
+     Extract Features
+        • In order to be input to a learning algorithm (or a
+           classifier), all training (or unlabeled) documents are
+           converted into vectors in a common vector space
+        • The dimensions of the vector space are called features
+        • In order to generate a vector-based representation for
+           a set of documents D, the following steps need to be
+           taken
+              1. Feature Extraction
+              2. Feature Selection or Feature Synthesis (optional)
+              3. Feature Weighting
+
+                                                                                                16
+     Björn Ross, TTDS 2025/2026
+
+16
+
+
+
+
+                                                                                                               8
+                                                                                                        11/12/25
+
+
+
+
+     Step 1: Feature Extraction
+        • What are the features that should be different from one
+            class to another?
+        • Simplest form: Bag-of-words (BOW)
+              • Each term in a document is a feature
+              • Feature space size = vocabulary in all docs
+              • Standard IR preprocessing steps are usually applied
+                    • Tokenisation, stopping, stemming
+
+
+
+
+                                                                                                  17
+     Björn Ross, TTDS 2025/2026
+
+17
+
+
+
+
+     Step 1: Feature Extraction
+        • Bag-of-words (BOW)
+              • Recall from Indexing lecture how we represented
+                    documents and words as vectors
+
+
+       he   drink   ink   likes   pink   think   wink
+        2    1      0      2      0       0      1      ß D1: He likes to wink, he likes to drink
+        1    3      0      1      0       0      0      ß D2: He likes to drink, and drink, and drink
+        1    1      1      1      0       1      0      ß D3: The thing he likes to drink is ink
+        1    1      1      1      1       0      0      ß D4: The ink he likes to drink is pink
+        1    1      1      1      1       0      1      ß D5: He likes to wink, and drink pink ink
+
+                                                                                                  18
+     Björn Ross, TTDS 2025/2026
+
+18
+
+
+
+
+                                                                                                              9
+                                                                                                          11/12/25
+
+
+
+
+     Step 1: Feature Extraction
+        • Bag-of-words (BOW)
+              • Recall from Indexing lecture how we represented
+                    documents and words as vectors
+                                                                  Features
+
+
+       he   drink   ink   likes   pink   think   wink
+        2    1      0      2      0       0       1     ß D1: He likes to wink, he likes to drink
+        1    3      0      1      0       0       0     ß D2: He likes to drink, and drink, and drink
+        1    1      1      1      0       1       0     ß D3: The thing he likes to drink is ink
+        1    1      1      1      1       0       0     ß D4: The ink he likes to drink is pink
+        1    1      1      1      1       0       1     ß D5: He likes to wink, and drink pink ink
+                                                 feature weights – here: term frequency
+                                                 (= number of occurrences of a term in a document)
+                                                                                                     19
+     Björn Ross, TTDS 2025/2026
+
+19
+
+
+
+
+     Step 1: Feature Extraction
+        • Other simple features forms:
+              • Word n-grams (bigrams, trigrams, ….)
+                • Much larger + more sparse
+              • Sometimes char n-grams are used
+                • Especially for degraded text (OCR or ASR outputs)
+
+
+
+
+                                                                                                     20
+     Björn Ross, TTDS 2025/2026
+
+20
+
+
+
+
+                                                                                                               10
+                                                                          11/12/25
+
+
+
+
+     Step 1: Feature Extraction
+        • What other text features could be used?
+        • Sentence structure:
+              • POS (part-of-speech tags)
+              • Syntactic tree structure
+        • Topic-based features:
+              • LDA topics
+              • NEs (named entities) in text
+              • Links / Linked terms
+        • Non-textual features:
+              • Average doc\sentence\word length
+              • % of words start with upper-case letter
+              • % of links/hashtags/emojis in text
+                                                                     21
+     Björn Ross, TTDS 2025/2026
+
+21
+
+
+
+
+     Step 1: Feature Extraction
+        • What preprocessing to apply?
+              • Case-folding? really vs Really vs REALLY
+              • Punctuation? “?”, “!”, “@”, “#”
+              • Stopping? “he”, “she”, “what”, “but”
+              • Stemming? “replaced” vs “replacement”
+        • Other Features:
+              • Starts with capital letter, all caps
+              • Repeated characters “congraaaaaats” “help!!!!!!!!”
+              • Scores from dictionaries and lexicons (e.g. LIWC)
+        • Which to choose?
+              • Classification task/application
+                                                                     22
+     Björn Ross, TTDS 2025/2026
+
+22
+
+
+
+
+                                                                               11
+                                                                                       11/12/25
+
+
+
+
+     Step 2: Feature Selection
+        • Number of distinctive features = length of feature
+           vector
+        • Vector can be of length in the order of 106, and might
+           be sparse
+              à High computational cost
+              à Overfitting
+        • What are the most important features among those?
+              • e.g. Reduce from 106 to 104
+        • For each class, find the top representative k features
+           for it à get the Union over all classes à reduced
+           feature space
+                                                                                  23
+     Björn Ross, TTDS 2025/2026
+
+23
+
+
+
+
+     Step 2: Feature Selection Functions
+        • Document frequency
+              • % of docs in class 𝑐! that contain the term 𝑡"
+              • Very basic measure. Will select stop words as features
+                                       # 𝑡! , 𝑐" = 𝑃(𝑡! |𝑐" )
+        • Mutual Information
+              • How much we learn from the presence or absence of term 𝑡" about
+                 whether or not a document is in class 𝑐!
+              • Often used in feature selection in text classification
+                                                                       𝑃(𝑡, 𝑐)
+                     𝑀𝐼 𝑡! , 𝑐" =     ,           , 𝑃(𝑡, 𝑐) - 𝑙𝑜𝑔)
+                                                                     𝑃 𝑡 - 𝑃(𝑐)
+                                    #∈{## ,## } (∈{($ ,($ }
+
+        • Pearson’s Chi-squared (𝑥2)
+              • used more in comparisons between classes
+
+                                                                                  24
+     Björn Ross, TTDS 2025/2026
+
+24
+
+
+
+
+                                                                                            12
+                                                                                  11/12/25
+
+
+
+
+     Step 2: Feature Selection Functions
+
+
+
+
+                                                                             25
+     Björn Ross, TTDS 2025/2026
+
+25
+
+
+
+
+     Step 3: Feature Weighting
+        • Attributing a value to feature tk in document di
+           This value may be
+            • binary (representing presence/absence of tk in di);
+            • numeric (representing the importance of tk for di );
+                 obtained via feature weighting functions in the following
+                 two classes:
+                  • unsupervised: e.g., tfidf or BM25,
+                  • supervised: e.g., tf * MI, tf * 𝑥2
+        • Similarity between two vectors may be computed e.g.
+           via cosine similarity
+        • Scaling can be important!
+                                                                             28
+     Björn Ross, TTDS 2025/2026
+
+28
+
+
+
+
+                                                                                       13
+                                                                                                         11/12/25
+
+
+
+
+     Supervised-learning classification
+                          A System and
+                          Method for …
+                                                                           ……………………       Labelled
+                                                           Manually
+                          ……………………
+                   A System  and
+                   Method ……………………
+                            for                                            ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                                                                           ……………………
+                                                                           ……………………
+                                                                                           sample
+                                                         Label Sample
+                          ……………………
+                   ……………………
+               ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                          …………………….
+                                                                           ……………………
+                                                                           …………………….
+                                                                                       (training data)
+                   ……………………
+               ……………………
+                          .
+                   ……………………                                                .
+               ……………………
+                   …………………….
+               …………………….
+               .
+                   .
+                                         Documents to
+                                         be classified
+
+                                                                           Extract
+                                                                          Features
+                          A System and
+                          Method for …
+                          ……………………
+                   A System and
+
+                                                                           Train a
+                          ……………………
+                                                         Classification
+                   Method for …
+                          ……………………
+                   ……………………
+               ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                   ……………………………….
+               ……………………
+                                                            Model         Classifier
+                          .
+                   ……………………
+               ……………………
+                   …………………….
+               …………………….
+                   .
+               .
+                                     Classified
+                                     Documents
+                                                                                                29
+     Björn Ross, TTDS 2025/2026
+
+29
+
+
+
+
+     Training a Classifier
+        • For binary classification, essentially any supervised learning
+           algorithm can be used for training a classifier;
+           classical choices include
+             • Support vector machines (SVMs)
+             • Random forests
+             • Naïve Bayesian methods
+             • Lazy learning methods (e.g., k-NN)
+             • Logistic Regression
+             • ….
+        • The “No-free-lunch principle” (Wolpert, 1996) à
+           there is no learning algorithm that can outperform all others in
+           all contexts
+        • Implementations need to cater for
+              • the very high dimensionality
+              • the sparse nature of the representations involved
+                                                                                                30
+     Björn Ross, TTDS 2025/2026
+
+30
+
+
+
+
+                                                                                                              14
+                                                                                                                11/12/25
+
+
+
+
+     Training a Classifier
+        • For Multiclass classification, some learning algorithms for
+            binary classification are “SLMC-ready”; e.g.
+              • Decision trees
+              • Random forests
+              • Naive Bayesian methods
+              • Lazy learning methods (e.g., k-NN)
+              • Neural networks
+        • For other learners (notably: SVMs) to be used for SLMC
+            classification, combinations / cascades of the binary versions
+            need to be used
+              • e.g. multi-class classification SVM
+              • Could be directly used for MLMC as well
+
+
+
+                                                                                                           31
+     Björn Ross, TTDS 2025/2026
+
+31
+
+
+
+
+     Word embeddings
+        • More complex representation of words as vectors
+            Recall the term vectors in traditional indexing or classification, using term
+            frequency as weights:
+              •     Sparse (most values are 0)
+              •     Capture semantics only incidentally (similar vectors are terms that appear together)
+
+
+       he   drink   ink   likes   pink   think   wink
+        2    1       0     2      0       0      1      ß D1: He likes to wink, he likes to drink
+        1    3       0     1      0       0      0      ß D2: He likes to drink, and drink, and drink
+        1    1       1     1      0       1      0      ß D3: The thing he likes to drink is ink
+        1    1       1     1      1       0      0      ß D4: The ink he likes to drink is pink
+        1    1       1     1      1       0      1      ß D5: He likes to wink, and drink pink ink
+
+                                                                                                           32
+     Björn Ross, TTDS 2025/2026
+
+32
+
+
+
+
+                                                                                                                     15
+                                                                                                         11/12/25
+
+
+
+
+     Word embeddings
+        • More complex representation of words as vectors
+                 •      Dense (all entries are non-zero)
+                 •      Capture semantics (similar words have similar vectors)
+
+
+
+
+       he               drink       ink
+        0.123 0.521 0.313
+        0.451 0.987 0.812
+        0.938 0.141 0.411
+          …     …     …
+       (many dimensions e.g. 300)
+
+
+                                                                                                    33
+     Björn Ross, TTDS 2025/2026
+
+33
+
+
+
+
+     Word embeddings
+        • Obtained through self-supervised learning to learn relationships between
+             words
+                 •      Predict a centre word given surrounding context words (CBOW)
+                 •      Predict context words given target word (skip-gram)
+
+        • Can be done on a large unlabelled pre-training corpus
+        • Helps with out-of-vocabulary problems
+
+                     A System and
+                     Method for …
+
+                                                  Train word
+                     ……………………
+              A System and
+              Method ……………………
+                       for
+                     ……………………
+              ……………………
+          ……………………
+                                                                                 Pre-trained word
+                                                                                   embeddings
+                     ……………………
+                                                 embeddings
+              ……………………
+          ……………………
+                     ……………………
+              ……………………
+          ……………………
+              ……………………………….
+          ……………………
+                     .
+              ……………………
+          ……………………
+              …………………….
+          …………………….
+              .
+          .
+
+                               Unlabelled
+                               documents (pre-
+                               training data)
+                                                                                                    34
+     Björn Ross, TTDS 2025/2026
+
+34
+
+
+
+
+                                                                                                              16
+                                                                                                                 11/12/25
+
+
+
+
+     Pre-trained language models
+        • Obtained through self-supervised learning
+              • Predict the next word: The Queen of […] (next token prediction)
+              • Predict a masked word: The […] of England. (masked language modelling)
+              • …
+        • Also done on large unlabelled pre-training corpora
+        • Penultimate layer of network can be used to generate
+           contextualised word embeddings for other language-
+           based tasks
+        • Basis for many state-of-the-art text classifiers
+              • e.g. BERT (DistilBERT, RoBERTa..), XLNet, etc.
+                                                                                                         35
+     Björn Ross, TTDS 2025/2026
+
+35
+
+
+
+
+     Supervised fine-tuning
+                          A System and
+                          Method for …
+                          ……………………
+                                                         Train a language                   Pre-trained
+                   A System and
+                          ……………………
+                   Method for …
+                          ……………………
+                   ……………………
+               ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                          ……………………
+                   ……………………
+               ……………………                                       model                       language model
+                   ……………………………….
+               ……………………
+                          .
+                   ……………………
+               ……………………
+                   …………………….
+               …………………….
+                   .
+               .
+                                         Unlabelled
+                                         documents
+                                         (pre-training
+                                         data)                                  Fine-tune
+                                                                                the model
+                          A System and
+                          Method for …
+                          ……………………
+                   A System  and
+                   Method ……………………
+                            for
+                          ……………………
+                   ……………………
+               ……………………                                                               ……………………      Labelled
+                                                               Classification
+                          ……………………
+                   ……………………
+               ……………………                                                               ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                          …………………….
+                   ……………………
+                                                                                      ……………………
+                                                                                                     sample
+                                                                  model
+               ……………………                                                               ……………………
+                          .
+                   ……………………
+               ……………………
+                   …………………….
+               …………………….
+                   .
+                                                                                      ……………………
+                                                                                      …………………….
+                                                                                                  (fine-tuning
+               .
+                                     Classified                                       .
+                                                                                                      data)
+                                     Documents
+                                                                                                         36
+     Björn Ross, TTDS 2025/2026
+
+36
+
+
+
+
+                                                                                                                      17
+                                                                                                  11/12/25
+
+
+
+
+     Zero-shot classification
+        • Using language models for classification directly without giving
+           training examples (= skipping the fine-tuning step)
+              • A modern approach that can work well and requires little human effort
+              • Depends highly on black-box models, limited opportunities for
+                    customisation and error analysis (but this is an active research area)
+              • Often used as a baseline for performance comparisons
+
+
+
+
+                                                                                             37
+     Björn Ross, TTDS 2025/2026
+
+37
+
+
+
+
+     Zero-shot classification
+
+                         A System and
+                         Method for …
+                         ……………………
+                  A System and
+                         ……………………
+                                                            Train a language
+                  Method for …
+                         ……………………
+                  ……………………
+              ……………………
+                         ……………………
+                  ……………………
+              ……………………
+
+                                                                 model
+                         ……………………
+                  ……………………
+              ……………………
+                  ……………………………….
+              ……………………
+                         .
+                  ……………………
+              ……………………
+                  …………………….
+              …………………….
+                  .
+              .
+
+                                         Unlabelled
+                                         documents
+
+
+
+                          A System and
+                          Method for …
+                          ……………………
+                   A System  and
+                          ……………………
+                                                                Pre-trained
+                   Method   for
+                          ……………………
+                   ……………………
+               ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                          ……………………
+                   ……………………
+               ……………………
+                          …………………….
+                   ……………………
+               ……………………
+                                                              language model
+                          .
+                   ……………………
+               ……………………
+                   …………………….
+               …………………….
+                   .
+               .
+                                        Classified
+                                        Documents
+                                                                                             38
+     Björn Ross, TTDS 2025/2026
+
+38
+
+
+
+
+                                                                                                       18
+                                                    11/12/25
+
+
+
+
+     Few-shot classification
+        • Variation of zero-shot
+           classification: A few examples
+           are given in the prompt
+        • Also skips task-specific fine-
+           tuning
+        • Leverages models’ capability at
+           in-context learning (adapt to a
+           task from examples in the input
+           prompt)
+
+
+
+
+                                               39
+     Björn Ross, TTDS 2025/2026
+
+39
+
+
+
+
+                                  Evaluation
+
+
+
+
+                                               40
+     Björn Ross, TTDS 2025/2026
+
+40
+
+
+
+
+                                                         19
+                                                                                      11/12/25
+
+
+
+
+     Evaluation
+        • Effectiveness (e.g. accuracy, precision, recall, F1):
+              • Global effectiveness measures
+              • Per class effectiveness measures
+        • Efficiency:
+              • Speed in learning
+                • SVM with linear kernel is known to be fast
+                • DNNs are known to be much slower (specially with large # layers)
+              • Speed in classification
+                • K-NNs are known to be one of the slowest
+              • Speed in feature extraction
+                • BOW vs POS vs Link analysis features
+
+        • Importance of baselines
+                                                                                 41
+     Björn Ross, TTDS 2025/2026
+
+41
+
+
+
+
+     Evaluation: Baselines
+        • There are standard methods for creating baselines in
+           text classification to compare your classifier with
+        • Most popular/simplest baselines
+              • Random classification
+                • Classes are assigned randomly
+                • How much better is the classifier doing than random?
+              • Majority class baseline
+                • Assign all elements to the class that appears the most
+                • How much better you are doing than if you always picked the
+                     same thing output regardless of input?
+              • Simple algorithm, e.g. BOW
+                • Usually used when you introduce new interesting features
+              • LLMs zero-shot, e.g. GPT-4o
+                • Can sometimes outperform fine-tuned models
+                                                                                 42
+     Björn Ross, TTDS 2025/2026
+
+42
+
+
+
+
+                                                                                           20
+                                                                                  11/12/25
+
+
+
+
+     Evaluation: Binary Classification
+        • Accuracy:                                                 C1
+              • How many of the samples are classified
+                 correctly?
+        • A = (4+5)/10 = 0.9
+
+
+                                                                    C2
+
+
+
+
+                                                                             43
+     Björn Ross, TTDS 2025/2026
+
+43
+
+
+
+
+     Evaluation: Binary Classification
+                                                       System 2   System 1
+        • A = (1+6)/10 = 0.7 System 1                     C1        C1
+        • A = (0+7)/10 = 0.7 System 2
+        • When classes are highly
+           unbalanced
+            • Precision/recall/F1 for the
+                 rare class
+              • e.g. Spam classification (detection)
+                                                          C2        C2
+
+
+
+
+                                                                             44
+     Björn Ross, TTDS 2025/2026
+
+44
+
+
+
+
+                                                                                       21
+                                                                                11/12/25
+
+
+
+
+     Evaluation: Binary Classification
+                                                     System 2   System 1
+
+                         System 1        System 2       C1        C1
+
+       Precision        1/3 = 0.33       0/1 = 0
+
+       Recall            1/2 = 0.5       0/2 = 0
+
+       F1                   0.4             0
+                                                        C2        C2
+
+
+
+
+                                                                           45
+     Björn Ross, TTDS 2025/2026
+
+45
+
+
+
+
+     Evaluation: Multi-class
+                                                                  C1
+        • Accuracy = (3+3+1)/10 = 0.7
+        • Good measure when
+              • Classes are nearly balanced
+        • Preferred:
+              • Precision/recall/F1 for each class                C2
+
+
+             P           0.75        1      0.333
+             R           0.75     0.75       0.5
+             F1          0.75     0.86       0.4                  C3
+
+        • Macro-F1
+            = (0.75+0.86+0.4)/3
+            = 0.67
+                                                                           46
+     Björn Ross, TTDS 2025/2026
+
+46
+
+
+
+
+                                                                                     22
+                                                                         11/12/25
+
+
+
+
+     Evaluation: Multi-class
+                                                               C1
+        • Majority class baseline
+              • Accuracy = 0.8
+              • Macro-F1 = 0.296
+                                                               C2
+
+        • Macro-F1:
+              • Should be used in binary classification
+                 when two classes are important
+              • e.g.: males/females                            C3
+                 while distribution is 80/20%
+
+
+
+                                                                    47
+     Björn Ross, TTDS 2025/2026
+
+47
+
+
+
+
+     Error Analysis
+                                                               C1
+        • Confusion Matrix
+
+                                   Predicted class
+
+                                                               C2
+
+
+                    Actual class
+                                          3     0    1
+
+                                          0     3    1
+
+                                          1     0    1         C3
+
+        • Useful:
+              • Find classes that are confused with others
+              • Develop better features to solve the problem
+                                                                    48
+     Björn Ross, TTDS 2025/2026
+
+48
+
+
+
+
+                                                                              23
+                                                                                               11/12/25
+
+
+
+
+     Data splitting
+        • It’s important to avoid overfitting
+        • Labelled data could be split into two parts
+              • Training: used to train the classifier (e.g. 80% of the data)
+              • Test: used to test the performance of the trained classifier on unseen
+                  data (e.g. 20% of the data)
+
+
+
+
+                                                                                          49
+     Björn Ross, TTDS 2025/2026
+
+49
+
+
+
+
+     Hyperparameter optimisation
+        • Most classifiers have some hyperparameters to be optimized
+           • The C parameter in soft-margin SVMs
+           • The r, d parameters of non-linear kernels
+           • Decision threshold for binary SVM
+        • We may also try different models (SVM, Fine-tuned RoBERTa,
+          GPT-4o zero-shot..) so we could overfit to this choice
+        • Usually labelled data is split into three parts
+              • Training: used for training / fine-tuning (typically 80% of the data)
+              • Development: used to optimise hyperparameters. Apply the classifier
+                  on this data with different values of the hyperparameters and report
+                  the one that achieves the highest results (usually 10% of the data)
+              •   Test: used to test the performance of the trained classifier with the
+                  optimal hyperparameters on these unseen data (usually 10% of the
+                  data)
+        • Optimising the hyperparameters on test data is cheating!
+                                                                                          50
+     Björn Ross, TTDS 2025/2026
+
+50
+
+
+
+
+                                                                                                    24
+                                                                             11/12/25
+
+
+
+
+     Summary
+        • Text Classification tasks
+        • Types of text classification
+        • Models and methods for text classification
+              • Rule-based
+              • Supervised learning-based
+              • Pre-trained language models
+        • Baselines and evaluation
+
+
+
+                                                                        52
+     Björn Ross, TTDS 2025/2026
+
+52
+
+
+
+
+     Resources
+        • Fabrizio Sebastiani
+           Machine Learning in Automated Text Categorization
+           ACM Computing Surveys, 2002
+           Link: https://arxiv.org/pdf/cs/0110053
+        • Yoav Goldberg
+           A Primer on Neural Network Models for Natural
+           Language Processing
+           Link: https://arxiv.org/abs/1510.00726
+        • Brown, T., Mann, B., Ryder, N., Subbiah, M., Kaplan, J. D.,
+           Dhariwal, P., ... & Amodei, D. (2020). Language models are
+           few-shot learners. Advances in Neural Information
+           Processing Systems, 33, 1877-1901.
+
+                                                                        53
+     Björn Ross, TTDS 2025/2026
+
+53
+
+
+
+
+                                                                                  25
+

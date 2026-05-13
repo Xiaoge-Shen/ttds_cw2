@@ -1,0 +1,164 @@
+{
+  "lecture": "TTDS 15",
+  "source_pdf": "ttds25_15web2.pdf",
+  "title": "Web Search (2): Sponsored Search, SEO, Duplicate Detection, and Crawling",
+  "one_sentence": "这节课一句话：Web search 从历史上看是“自然排序、广告商业化、SEO 对抗、去重和爬虫工程”共同演化出来的系统，而不是一个单纯的 ranking formula。",
+  "concept_chain": [
+    "early keyword engines and scalability limits",
+    "sponsored search monetises ranking attention",
+    "Google separates algorithmic results from ads",
+    "user intent shapes result type",
+    "SEO exploits ranking signals",
+    "duplicate detection protects index quality",
+    "shingles and MinHash approximate near-duplicate similarity",
+    "crawler starts from seeds and expands frontier",
+    "politeness/robustness/freshness constrain crawling architecture"
+  ],
+  "slides": [
+    {
+      "page": 2,
+      "reason": "早期 engines 与 paid ranking/CPC/CPM/RPM 构成历史和商业背景。",
+      "caption": "从 keyword search 到 sponsored search。"
+    },
+    {
+      "page": 3,
+      "reason": "Google link-based ranking、ads separation 与 AI+RAG 趋势串起搜索史。",
+      "caption": "自然结果与广告并行：搜索体验与商业模式的平衡。"
+    },
+    {
+      "page": 6,
+      "reason": "Web search basic architecture：crawler、indexer、indexes/ad indexes、search。",
+      "caption": "搜索系统流水线：抓取、索引、广告索引、排序。"
+    },
+    {
+      "page": 7,
+      "reason": "informational/navigational/transactional user needs 是 ranking 的输入语境。",
+      "caption": "用户意图决定“好结果”长什么样。"
+    },
+    {
+      "page": 8,
+      "reason": "早期 SEO 如何利用 tf-idf/word density，是 spam 机制核心。",
+      "caption": "关键词堆砌：当词频成为目标。"
+    },
+    {
+      "page": 9,
+      "reason": "cloaking 与 duplicate detection 同页出现，连接 spam 与 index hygiene。",
+      "caption": "给 crawler 看假内容；给 index 做去重。"
+    },
+    {
+      "page": 10,
+      "reason": "shingles、Jaccard、MinHash/sketch 是 near-duplicate 的考试重点。",
+      "caption": "用 shingles 把近重复检测变成集合相似度问题。"
+    },
+    {
+      "page": 11,
+      "reason": "Web crawling 起点：seed URLs、frontier、unseen/dark web。",
+      "caption": "Crawler 从种子页面出发，沿链接扩张。"
+    },
+    {
+      "page": 13,
+      "reason": "crawler architecture 展示 fetch/parse/dedup/filter/frontier 的完整链路。",
+      "caption": "真实 crawler 不是循环下载，而是一套去重过滤调度系统。"
+    },
+    {
+      "page": 15,
+      "reason": "URL frontier 的 politeness 与 priority/freshness 冲突是工程难点。",
+      "caption": "既要快又要礼貌：frontier 调度的核心矛盾。"
+    }
+  ],
+  "sections": [
+    {
+      "title": "1. Web search history：先有关键词，再有广告，再有图链接",
+      "slide_page": 2,
+      "intuition": "早期搜索像在超大文件夹里 Ctrl+F；后来有人发现，搜索结果位置本身就是黄金广告位。",
+      "explanation": "1995-1997 年的 Altavista、Excite、Infoseek、Lycos、AOL 等主要使用 keyword-based traditional IR techniques，问题是 scalability 和 ranking quality。Goto/Overture 引入 paid search ranking：关键词拍卖，排名与支付相关，形成 sponsored search。CPC 是 cost per click，CPM 是 cost per thousand impressions；视频等新服务中还会用 RPM，即 revenue per 1000 video views。",
+      "exam_angle": "历史题按时间线答：early keyword engines → paid ranking/sponsored search → Google link-based ranking。商业指标题要区分 CPC/CPM/RPM。",
+      "formula_latex": null
+    },
+    {
+      "title": "2. Algorithmic results vs sponsored ads：自然排序和广告别混为一谈",
+      "slide_page": 3,
+      "intuition": "搜索页面上有两条河：一条是算法认为你需要什么，另一条是广告系统认为谁愿意为你的注意力付钱。",
+      "explanation": "1998+ Google 的 link-based ranking 改善了 algorithmic search experience，但早期也在寻找商业模式；后来 Google 将 paid search ads 放在旁边，与 algorithmic results 分开展示。Yahoo 也通过收购 Overture 和 Inktomi 组合 paid placement 与 search。2024+ 的新趋势是 AI + RAG systems，但尚无明确最终赢家。",
+      "exam_angle": "若问 paid search 与 SEO/algorithmic ranking 区别：paid search 通过广告系统和竞价获得展示；algorithmic results 基于 relevance/quality ranking；SEO 试图影响自然结果而非直接买广告位。",
+      "formula_latex": null
+    },
+    {
+      "title": "3. Web search basics：从 crawler 到 indexer 再到 ranking",
+      "slide_page": 6,
+      "intuition": "搜索不是用户敲 query 后才去全网找；真正的工作早在后台完成：先派蜘蛛抓网页，整理成索引，query 来时只查索引。",
+      "explanation": "基本组件包括 web spider/crawler、indexer、indexes/ad indexes 和 search/ranking component。Crawler 抓取网页并解析链接；indexer 处理 crawled pages，建立 searchable indexes；广告系统维护 ad indexes；用户 query 到来后，search component 在索引中检索并排序。",
+      "exam_angle": "组件题要按 pipeline 说清：crawl/fetch/parse/extract URLs → index pages → query-time search/ranking。别把 crawler 和 indexer 混成一个东西。",
+      "formula_latex": null
+    },
+    {
+      "title": "4. User intent：同一个搜索框，三种完全不同的需求",
+      "slide_page": 7,
+      "intuition": "搜“Information Retrieval”是在学习；搜“United Airlines”是要去官网；搜“Seattle weather”是要完成动作。结果页面应该跟着意图变。",
+      "explanation": "Web search user needs 主要分为 informational、navigational、transactional。Informational 是想了解某事；navigational 是想去特定网站或页面；transactional 是想完成 web-mediated action，如查天气、下载图片、购物。还有 exploratory search，需求开放、边界不明确。Intent 影响 ranking features、result types 和界面呈现。",
+      "exam_angle": "若给 query 分类，先判断用户目标：learn、go to page、do action。若问为什么 intent 重要，答不同 intent 需要不同排序和结果展示。",
+      "formula_latex": null
+    },
+    {
+      "title": "5. SEO simplest form：当 tf-idf 变成考试答案模板，网页就开始背模板",
+      "slide_page": 8,
+      "intuition": "如果早期引擎相信“maui resort”出现越多越相关，网页作者就会把 maui resort 写到天荒地老，甚至白字白底藏起来。",
+      "explanation": "SEO 是 Search Engine Optimization，通过调整网页使其在 algorithmic search results 中对特定 keywords 排名更高。早期 engines heavily relied on tf-idf/word density，SEOs 用 dense repetitions、misleading meta-tags、hidden text 等操纵 crawlers。pure word density 不可靠，因为它很容易被优化成目标而不反映真实 quality/relevance。",
+      "exam_angle": "SEO 题要区分 white/legitimate 与 shady/spammy；举例时写 keyword stuffing、misleading meta-tags、hidden same-color text，并指出它们利用 term frequency/metadata signals。",
+      "formula_latex": null
+    },
+    {
+      "title": "6. Cloaking：给搜索蜘蛛看一张脸，给用户看另一张脸",
+      "slide_page": 9,
+      "intuition": "cloaking 像考试时给监考老师看标准答案，转头给同学看广告传单：同一个 URL，对 crawler 和 human 端出不同内容。",
+      "explanation": "Cloaking 是 black-hat spam technique：server 对 search engine spider 提供 fake content，对普通用户提供另一份内容。它直接破坏 index 的真实性，是比普通关键词堆砌更强的欺骗。课件紧接 duplicate detection，说明 web search 不只要找相关，还要清理重复、垃圾、伪装内容。",
+      "exam_angle": "若问 cloaking，必须说 different content to spider and user；不要泛化成普通 SEO。可补充它为什么是 spam：it manipulates what gets indexed。",
+      "formula_latex": null
+    },
+    {
+      "title": "7. Duplicate detection：不要让同一篇网页占满索引和结果页",
+      "slide_page": 9,
+      "intuition": "如果搜索结果前十条都是同一篇文章换了日期或镜像站，用户会觉得搜索坏了；index 也在浪费空间。",
+      "explanation": "Web 充满 duplicate 和 near-duplicate content。Strict duplicate detection 检测 exact match，可用 fingerprints；near-duplicate detection 处理高度相似但不完全相同的 documents，例如只改 last modified date。近重复通常使用 similarity threshold，如 similarity > 80%。注意 near-duplicate relation 不一定传递：A≈B 且 B≈C 不保证 A≈C。",
+      "exam_angle": "若考 duplicate detection，先区分 strict duplicate/exact match 与 near-duplicate/high similarity；再说明为什么重要：节省 index、改善 ranking 和 user experience。",
+      "formula_latex": null
+    },
+    {
+      "title": "8. Shingles + MinHash：把网页相似度压缩成小签名",
+      "slide_page": 10,
+      "intuition": "不要逐字比较全网每两篇文章，那像让全班每个人和每个人逐句对答案。shingles 先切成短片段，MinHash 再给每篇文档做一个小指纹。",
+      "explanation": "Shingles 是 document 的 word n-grams，可把 document 表示为 shingle set。两个文档的集合相似度常用 Jaccard similarity，即 intersection over union。Web-scale 下不能对所有 document pairs 精确计算 shingle intersection，因此用 MinHash/sketch 为每个 document 生成短 signature，近似估计 Jaccard similarity，降低 pairwise comparison 成本。",
+      "exam_angle": "高频题答法：document → shingles → set similarity/Jaccard → web-scale too expensive → MinHash/sketch approximation。",
+      "formula_latex": "J(A,B)=\\frac{|A\\cap B|}{|A\\cup B|}"
+    },
+    {
+      "title": "9. Web crawling：从 seed URLs 开始滚雪球",
+      "slide_page": 11,
+      "intuition": "crawler 像探险队：从已知城市出发，沿路牌发现新城市；但有些区域没有路牌指向，就是 dark web/unseen web。",
+      "explanation": "Basic crawler operation：begin with known seed URLs，fetch and parse them，extract URLs they point to，place new URLs into URL frontier，repeat。URL frontier 是等待抓取的队列/集合，需要管理优先级、去重和 politeness。Dark Web 在课件图中表示 crawler 不能直接从已知 links 到达或尚未发现的部分。",
+      "exam_angle": "流程题要写 seed → fetch/parse → extract links → frontier → repeat；再补 URL dedup/content dedup 和 dark/unseen web。",
+      "formula_latex": null
+    },
+    {
+      "title": "10. Crawler architecture and frontier：快、稳、礼貌三者拉扯",
+      "slide_page": 15,
+      "intuition": "一个好 crawler 不是最快下载器；它像有礼貌的快递系统：不能狂敲同一家的门，还要优先送新闻这种容易过期的包裹。",
+      "explanation": "Crawler must be polite：尊重 robots.txt，避免过于频繁访问同一 server；must be robust：抵抗 spider traps、malicious servers、spam/link farms；should be scalable：支持 distributed operation；freshness 要求重新抓取已抓页面的新版本。Basic architecture 包括 DNS、fetch、parse、content seen check、URL filter、duplicate URL elimination、robots filters、URL frontier、fingerprints 等。URL frontier 的两大考虑是 politeness 与 priority/freshness，它们可能冲突：高优先级 URLs 若集中在同一 host，简单 priority queue 会造成 burst。",
+      "exam_angle": "若考 crawler，必须包含 politeness 和 frontier，不要只写 fetch pages。politeness 分 explicit robots.txt 和 implicit rate limiting；priority/freshness 说明哪些页面更该重抓。",
+      "formula_latex": null
+    }
+  ],
+  "quick_revision": [
+    "Early engines: keyword-based traditional IR; main issue = scalability/ranking quality。",
+    "Sponsored search: ranking attention monetised; CPC/CPM/RPM 要分清。",
+    "Algorithmic results ≠ sponsored ads；SEO ≠ paid search。",
+    "User intents: informational、navigational、transactional、exploratory。",
+    "SEO spam: keyword stuffing、misleading meta-tags、hidden text、cloaking。",
+    "Duplicate detection: exact fingerprints vs near-duplicate threshold。",
+    "Shingles = word n-grams；Jaccard = intersection/union。",
+    "MinHash/sketch approximates Jaccard to avoid full pairwise comparison。",
+    "Crawler: seed URLs → fetch/parse → extract URLs → URL frontier。",
+    "Crawler constraints: robots.txt, implicit politeness, robustness, scalability, freshness。"
+  ],
+  "exam_answer": "如果考 web crawler，可以这样答：crawler 从 seed URLs 开始，把待抓 URL 放入 URL frontier；每次取出 URL 后 fetch document、parse 页面、extract outgoing URLs，并把页面送入 indexing pipeline。系统还要做 content seen check、URL filtering、duplicate URL elimination、robots filtering 和 fingerprinting。URL frontier 不只是普通队列，它必须同时处理 priority/freshness 和 politeness：新闻等变化快或重要页面需要更频繁抓取，但 crawler 也要遵守 robots.txt 的 explicit politeness，并通过 rate limiting 避免 implicit politeness violation。一个实际 crawler 还要 robust against spider traps、malicious servers、spam/link farms，并能分布式扩展。"
+}

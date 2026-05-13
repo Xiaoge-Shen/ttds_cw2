@@ -1,0 +1,170 @@
+\documentclass[11pt,a4paper]{ctexart}
+\usepackage[margin=18mm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{needspace}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Hiragino Sans GB}
+\setmainfont{Avenir Next}
+\setsansfont{Avenir Next}
+\setmathfont{STIX Two Math}
+\definecolor{ttblue}{HTML}{25508E}
+\definecolor{ttmuted}{HTML}{5C6069}
+\definecolor{ttlight}{HTML}{E8F0FC}
+\definecolor{ttaccent}{HTML}{BE502D}
+\definecolor{ttwarm}{HTML}{FFF6E8}
+\titleformat{\section}{\Large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{ttblue}}{}{0pt}{}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.22em,topsep=0.25em}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\emergencystretch=3em
+\sloppy
+\pagestyle{empty}
+\newtcolorbox{chainbox}{colback=ttlight,colframe=ttblue!20,boxrule=0.6pt,arc=2mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{callout}[1]{colback=ttwarm,colframe=ttaccent!45,title={#1},fonttitle=\sffamily\bfseries\color{ttaccent},boxrule=0.7pt,arc=2mm,left=2.5mm,right=2.5mm,top=1.5mm,bottom=1.5mm}
+\newcommand{\slideimage}[3]{%
+\begin{center}
+\includegraphics[page=#1,width=#2\linewidth]{#3}\\[-2pt]
+{\footnotesize\color{ttmuted}原 PPT 第 #1 页}
+\end{center}}
+\begin{document}
+{\sffamily\color{ttmuted}TTDS 14}\\[3pt]
+{\Huge\sffamily\bfseries\color{ttblue}Web Search (1): Massive Web Data, PageRank, Anchor Text, and Link Spam}\\[6pt]
+图文讲义版：用原 PPT 作为视觉锚点，按“概念故事线 + 直觉解释 + 考试速记”整理。\\[6pt]
+\begin{chainbox}
+\sffamily web collection massive and messy $\rightarrow$ relevance ambiguity and subjective intent $\rightarrow$ massive data can improve top precision $\rightarrow$ web as directed graph $\rightarrow$ links as votes and anchor text as descriptions $\rightarrow$ PageRank models random surfer authority $\rightarrow$ anchor text enriches target representation $\rightarrow$ ranking signals invite spam and gaming $\rightarrow$ modern ranking uses PageRank as one feature among many
+\end{chainbox}
+\slideimage{2}{0.72}{/Users/huez/Documents/ttds/lec/ttds25_14web1.pdf}
+\begin{callout}{这节课一句话}
+这节课一句话：Web search 的难点不是“有没有网页”，而是如何在巨大、混乱、可被操纵的 web graph 中，把 relevance、authority 和 anchor descriptions 变成可排序的信号。
+\end{callout}
+\Needspace{0.38\textheight}
+\section{1. 1. Web collection：搜索引擎面对的是野生互联网}
+\slideimage{2}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_14web1.pdf}
+\begin{callout}{人话直觉}
+传统数据库像图书馆书架，web 更像全城便利贴：没人统一编号、每天疯长、还混着广告、谣言、spam 和机器生成内容。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Web document collection 没有 design/co-ordination，规模极大且持续增长；对 search engine 来说，挑战包括 storage、processing、networking，以及更棘手的 quality control。大量 apparently relevant pages 可能低质量，甚至故意迎合排名算法。这里的关键是：web search 同时是 IR 问题、工程问题和对抗问题。
+
+\noindent\textbf{考试问法：} 若问 web search challenges，按三类答：scale/technicalities、quality control、spam/SEO 对抗；再补一句 massive data 也是 opportunity。
+
+\Needspace{0.38\textheight}
+\section{2. 2. Relevance ambiguity：同一个 query 可以有很多意图}
+\slideimage{3}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_14web1.pdf}
+\begin{callout}{人话直觉}
+用户搜“Apple”，可能想买手机、查公司股价、找水果营养；搜“William Shakespeare”，也可能要传记、作品列表或某一部戏。query 短，意图长。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Web relevance 没有清晰语义，语言本身有 polysemy，且 relevance highly subjective。web 上还有 counter SEOs/spam 试图让页面看起来相关。课件提出 potential solution: wisdom of the crowds，也就是从大量用户和网页作者行为中提取信号，例如 links、anchor text、clicks 等。
+
+\noindent\textbf{考试问法：} 考 relevance challenge 时，不要只说“query ambiguous”；要提 no clear semantics、polysemy、subjectivity，以及 web-specific spam/SEO。
+
+\Needspace{0.38\textheight}
+\section{3. 3. Massive data effect：大索引会把好结果往前推}
+\slideimage{4}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_14web1.pdf}
+\begin{callout}{人话直觉}
+如果好网页像沙子里的金粒，铲四倍沙子不保证每粒更纯，但 top 10 里更容易出现更多金粒。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 课件比较两个好搜索引擎：A 抓 N 个 docs，precision@10=40\%；B 抓 4N 个 docs。在相关/非相关 score distribution 类似时，给定 score threshold 的 precision/recall 可相近，但因为 corpus 更大，top score 区域可包含更多 relevant docs，于是 P@n 可能上升。这里强调 web search 中 larger index often beats a cleverer retrieval algorithm。
+
+\[
+P@k=\frac{|\{\text{relevant documents in top }k\}|}{k}
+\]
+\noindent\textbf{考试问法：} 若问 big data vs clever algorithm，答：更大 index 通常增加 top-ranked relevant candidates，改善 precision@k；但前提是 retrieval system decent 且 score distributions roughly comparable。
+
+\Needspace{0.38\textheight}
+\section{4. 4. Web as directed graph：链接既是 vote，也是文本线索}
+\slideimage{6}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_14web1.pdf}
+\begin{callout}{人话直觉}
+网页之间的 hyperlink 像论文引用：A 链到 B，至少说明 A 的作者认为 B 有某种价值；链接文字 anchor 则像给 B 贴的外部标签。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 把 web 看成 directed graph：pages 是 nodes，hyperlinks 是 directed edges。课件给出两个 assumptions：link denotes author perceived relevance/quality signal；anchor text describes target page textual context。PageRank 利用第一点，把 links 当 votes；anchor text 利用第二点，把链接文字加入目标页的表示。
+
+\noindent\textbf{考试问法：} 若问 PageRank/anchor text 的基础假设，分别答 link as vote/quality signal 和 anchor as target description。注意方向：A 的 anchor text 描述的是 B，而不是 A。
+
+\Needspace{0.38\textheight}
+\section{5. 5. PageRank intuition：随机冲浪者停在哪里}
+\slideimage{7}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_14web1.pdf}
+\begin{callout}{人话直觉}
+想象一个无聊网友随机打开网页，然后不断随机点出链；偶尔厌倦了就随机跳到别处。长期看，他更常停留的页面就是更有 authority 的页面。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} PageRank 将 page importance 定义为 random surfer 当前在 page x 的稳态概率。一个 page 的 PR 来自两部分：teleportation 的均匀基础概率，以及所有 incoming pages 按各自 outgoing links 平分后传来的 authority。高 PR 页面的一条链接，比很多低 PR 页面的链接更有分量。
+
+\noindent\textbf{考试问法：} PageRank 定义题要说 random surfer steady-state probability；机制题要说 incoming links contribute PR(y)/L\_out(y)，source 的权威越高、outlinks 越少，贡献越大。
+
+\Needspace{0.38\textheight}
+\section{6. 6. PageRank algorithm：teleportation 防止图里迷路}
+\slideimage{8}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_14web1.pdf}
+\begin{callout}{人话直觉}
+如果只沿链接走，用户可能被困在小圈子或走到没有出链的死胡同；teleportation 就像“重新打开一个随机网页”的逃生按钮。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 初始化时每个 page 可设 PR\_0(x)=1/N。每轮更新时，page x 得到 (1-\(\lambda\))/N 的随机跳转概率，再加上所有指向 x 的 pages y 传来的 \(\lambda\)·PR\_i(y)/L\_out(y)。\(\lambda\) 是继续沿 hyperlink 浏览的概率，1-\(\lambda\) 是 random jump。迭代到收敛后，PageRank scores 总和应为 1。没有 inlinks 的页面只得到 teleportation 部分。
+
+\[
+PR_{i+1}(x)=\frac{1-\lambda}{N}+\lambda\sum_{y\to x}\frac{PR_i(y)}{L_{out}(y)}
+\]
+\noindent\textbf{考试问法：} 公式题要解释每个符号：N total pages，\(\lambda\) continuation probability，L\_out(y) outgoing links count，sum over y\(\rightarrow\)x。不要忘记 teleportation term。
+
+\Needspace{0.38\textheight}
+\section{7. 7. Anchor text：别人怎样称呼你，比你自我介绍更有用}
+\slideimage{9}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_14web1.pdf}
+\begin{callout}{人话直觉}
+IBM 页面自己未必反复写“Big Blue”，但很多外部网页可能用“Big Blue”链接它。anchor text 把这种群众描述收集起来，补进目标页。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Anchor text 是 hyperlink 中可见的链接文本，常是 target page 的 concise description。搜索引擎可把所有指向某页的 anchor texts 加入该页的 index representation，相当于 human query expansion。不同 linking pages 的 anchor text 还可按 source page 的 PageRank 或质量加权。它能显著提升 retrieval，因为它提供目标页自身可能没有的描述性词。
+
+\noindent\textbf{考试问法：} 若问 anchor text 为什么有用：答 external concise description、adds terms to target page index、helps match queries absent from page content；注意它也会带来 anchor text spam。
+
+\Needspace{0.38\textheight}
+\section{8. 8. Vulnerabilities：排名信号一公开，就会被当成游戏规则}
+\slideimage{10}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_14web1.pdf}
+\begin{callout}{人话直觉}
+如果学生知道老师只按关键词数量给分，作文就会变成关键词堆砌；如果网页知道 links 能涨排名，就会制造 links。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 课件用 Hawthorne Effect、Goodhart's Law、Cobra Effect 概括 ranking signal 的脆弱性：被观察会改变行为；measure 成为 target 后不再是好 measure；错误激励会让问题变糟。PageRank 与 anchor text 一旦影响排名，网站就会围绕它们优化甚至作弊。
+
+\noindent\textbf{考试问法：} 可用一句高级答法：web ranking is adversarial because signals are endogenous; once used for ranking, publishers optimize/gamify them。再接具体例子。
+
+\Needspace{0.38\textheight}
+\section{9. 9. Link spam：comment、trackback、link farm 的共同套路}
+\slideimage{11}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_14web1.pdf}
+\begin{callout}{人话直觉}
+所有 link spam 都在做同一件事：伪造“别人推荐我”的社会证明，让搜索引擎误以为目标页受欢迎。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} Trackback link spam 利用 blogs that link to me 等机制制造 artificial feedback loops；comment spam 在高 PR 网站评论区放 spam links，解决方式之一是 rel=nofollow，使 link 不参与 PR 计算；link farms 则由大量 fake densely-connected pages/domains 组成 clique，人工制造链接权威。Anchor text spam 则通过大量特定 anchor text 操纵某 query 排名。
+
+\noindent\textbf{考试问法：} 若考 vulnerability，至少举两个例子并说明它们操纵的是 link signal 或 anchor text signal；再说明 nofollow、spam detection 和多特征 ranking 是应对方向。
+
+\Needspace{0.38\textheight}
+\section{10. 10. Reality：PageRank 很重要，但不是现代排名的全部}
+\slideimage{14}{0.62}{/Users/huez/Documents/ttds/lec/ttds25_14web1.pdf}
+\begin{callout}{人话直觉}
+PageRank 是搜索史上的发动机，不是今天整辆车。现代搜索还要刹车、导航、传感器和反作弊系统。
+\end{callout}
+\noindent\textbf{精确定义 / 机制：} 课件总结 PageRank 曾是重大突破，核心价值是利用 collective linking behavior 估计 page authority；但现在它只是众多 ranking features 之一。现代 web ranking 还会使用 content features、user behaviour、spam signals、machine-learned ranking、Learning to Rank 等。
+
+\noindent\textbf{考试问法：} 若问 PageRank 是否仍是 Google ranking 全部，明确答 no；说明它是 authority/link feature，现代系统会结合多种 features 与 ML ranking。
+
+\section{考试速记版}
+\begin{itemize}
+\item Web challenges：scale、quality、spam/SEO、storage/processing/networking。
+\item Relevance 难：query ambiguous、polysemy、subjective、web spam。
+\item Massive data can improve P@k because more relevant candidates appear near top.主
+\item Web graph：page=node，link=edge；link as vote，anchor as target description。
+\item PageRank = random surfer steady-state probability。
+\item 公式核心：teleportation + incoming PR divided by source outdegree。
+\item Anchor text = human query expansion for target page indexing。
+\item Goodhart：ranking measure 成为 target 后会被 gaming。
+\item Spam examples：trackback spam、comment spam、link farms、anchor text spam。
+\item Modern ranking: PageRank is one feature, not the whole story.
+\end{itemize}
+\begin{callout}{一段稳妥考场回答}
+如果考 PageRank，可以这样答：PageRank 把 web 建模为 directed graph，把 page 的 importance 定义为 random surfer 长期停留在该 page 的概率。初始化可令每个 page 的 PR 为 1/N；每次迭代中，page x 获得 teleportation 部分 (1-\(\lambda\))/N，并从所有指向 x 的 pages y 获得 \(\lambda\)·PR(y)/L\_out(y) 的贡献。\(\lambda\) 表示继续沿 hyperlink 浏览的概率，L\_out(y) 是 y 的 outgoing links 数量。因此，来自 high-PageRank page 的 inlink 比来自很多 low-PageRank pages 的 links 更有价值。PageRank 利用群众链接行为估计 authority，但 link/anchor signals 会被 comment spam、trackback spam、link farms 等操纵，所以现代 ranking 只把 PageRank 作为众多 features 之一。
+\end{callout}
+\end{document}
