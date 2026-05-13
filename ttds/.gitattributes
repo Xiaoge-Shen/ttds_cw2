@@ -1,0 +1,6 @@
+cw_1/**/*.zip filter=lfs diff=lfs merge=lfs -text
+cw_2/**/*.gz filter=lfs diff=lfs merge=lfs -text
+cw_2/**/*.zip filter=lfs diff=lfs merge=lfs -text
+lab/**/*.gz filter=lfs diff=lfs merge=lfs -text
+lab/**/*.zip filter=lfs diff=lfs merge=lfs -text
+cw_1/**/*.gz filter=lfs diff=lfs merge=lfs -text

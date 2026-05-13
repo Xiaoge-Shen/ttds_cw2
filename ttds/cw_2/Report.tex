@@ -1,5 +1,5 @@
-\documentclass[11pt,a4paper]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=0.75in]{geometry}
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{amsmath}
@@ -20,105 +20,36 @@ IR Evaluation, Text Analysis, and Classification}
 
 \section{Implementation Overview}
 
-This coursework involves three main components: IR system evaluation, text corpus analysis, and sentiment classification. All implementations were completed in Python using standard libraries including pandas, numpy, scikit-learn, and NLTK.
-
-\subsection{Code Structure}
-The implementation is organized into three main classes:
-\begin{itemize}
-    \item \texttt{IREvaluator}: Computes precision, recall, R-precision, AP, and nDCG metrics for IR systems
-    \item \texttt{TextAnalyzer}: Performs mutual information, chi-square analysis, and LDA topic modeling
-    \item \texttt{SentimentClassifier}: Implements baseline and improved sentiment classification models
-\end{itemize}
-
-\subsection{Key Implementation Challenges}
-Several challenges were encountered during implementation:
-\begin{enumerate}
-    \item \textbf{nDCG Calculation}: Ensuring the correct formula from Lecture 9 was used, particularly handling the log base and position indexing correctly (i.e., $\text{rel}_i / \log_2(i)$ for $i \geq 2$).
-    \item \textbf{Data Structure Design}: Converting qrels into an efficient dictionary format (\texttt{query\_id} $\rightarrow$ \texttt{doc\_id} $\rightarrow$ \texttt{relevance}) for O(1) lookup time.
-    \item \textbf{Binary vs. Graded Relevance}: Correctly distinguishing between metrics requiring binary relevance (P, R, AP) versus graded relevance (nDCG).
-\end{enumerate}
-
-\subsection{What Was Learned}
-This coursework provided hands-on experience with:
-\begin{itemize}
-    \item Implementation of standard IR evaluation metrics from first principles
-    \item Statistical significance testing for comparing system performance
-    \item Feature selection techniques (MI and $\chi^2$) for corpus comparison
-    \item Topic modeling with LDA and interpretation of results
-    \item Practical challenges in sentiment classification and model improvement
-\end{itemize}
+This coursework implements IR evaluation metrics, text corpus analysis (MI, $\chi^2$, LDA), and sentiment classification in Python. Code is organized into three classes: \texttt{IREvaluator}, \texttt{TextAnalyzer}, and \texttt{SentimentClassifier}. Key challenges included: (1) correctly implementing nDCG with Lecture 9's formula ($\text{rel}_i / \log_2(i)$ for $i \geq 2$), (2) addressing Chi-square's negative correlation issue through positive association filtering, and (3) balancing model complexity in classification to avoid overfitting. The work provided experience with metric implementation, statistical testing, feature selection, topic modeling, and error-driven improvement.
 
 \section{IR Evaluation Results}
 
-\subsection{System Performance Comparison}
+\subsection{System Performance and Statistical Significance}
 
-Table~\ref{tab:ir_results} presents the mean performance of all six IR systems across the ten test queries, evaluated using six different metrics.
-
-\begin{table}[h]
-\centering
-\caption{Mean Performance of IR Systems Across All Metrics}
-\label{tab:ir_results}
-\begin{tabular}{ccccccc}
-\toprule
-\textbf{System} & \textbf{P@10} & \textbf{R@50} & \textbf{R-Prec} & \textbf{AP} & \textbf{nDCG@10} & \textbf{nDCG@20} \\
-\midrule
-1 & 0.390 & 0.834 & 0.401 & 0.400 & 0.363 & 0.485 \\
-2 & 0.220 & \textbf{0.867} & 0.252 & 0.300 & 0.200 & 0.246 \\
-3 & \textbf{0.410} & 0.767 & \textbf{0.449} & \textbf{0.451} & \textbf{0.420} & \textbf{0.511} \\
-4 & 0.080 & 0.189 & 0.049 & 0.075 & 0.069 & 0.076 \\
-5 & \textbf{0.410} & 0.767 & 0.358 & 0.364 & 0.332 & 0.424 \\
-6 & \textbf{0.410} & 0.767 & \textbf{0.449} & 0.445 & 0.400 & 0.490 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Best Performing Systems by Metric}
-
-Table~\ref{tab:significance} summarizes the best and second-best systems for each metric, along with statistical significance test results using a two-tailed t-test ($\alpha = 0.05$).
+Table~\ref{tab:ir_combined} presents mean performance and significance testing. System 3 achieves highest scores in 5/6 metrics (all p>0.05).
 
 \begin{table}[h]
 \centering
-\caption{Statistical Significance Analysis of Best Performing Systems}
-\label{tab:significance}
-\small
-\begin{tabular}{lccccc}
+\caption{IR System Performance and Statistical Significance}
+\label{tab:ir_combined}
+\scriptsize
+\begin{tabular}{ccccccc|cc}
 \toprule
-\textbf{Metric} & \textbf{Best Sys} & \textbf{Mean} & \textbf{2nd Sys} & \textbf{Mean} & \textbf{p-value} \\
+\textbf{Sys} & \textbf{P@10} & \textbf{R@50} & \textbf{R-P} & \textbf{AP} & \textbf{nDCG@10} & \textbf{nDCG@20} & \textbf{Best?} & \textbf{p-val} \\
 \midrule
-P@10        & 3 (tie with 5,6) & 0.410 & 5 & 0.410 & 1.000 \\
-R@50        & 2 & 0.867 & 1 & 0.834 & 0.703 \\
-R-Precision & 3 (tie with 6) & 0.449 & 6 & 0.449 & 1.000 \\
-AP          & 3 & 0.451 & 6 & 0.445 & 0.967 \\
-nDCG@10     & 3 & 0.420 & 6 & 0.400 & 0.883 \\
-nDCG@20     & 3 & 0.511 & 6 & 0.490 & 0.868 \\
+1 & 0.390 & 0.834 & 0.401 & 0.400 & 0.363 & 0.485 & - & - \\
+2 & 0.220 & \textbf{0.867} & 0.252 & 0.300 & 0.200 & 0.246 & R@50 & 0.703 \\
+3 & \textbf{0.410} & 0.767 & \textbf{0.449} & \textbf{0.451} & \textbf{0.420} & \textbf{0.511} & 5/6 & >0.86 \\
+4 & 0.080 & 0.189 & 0.049 & 0.075 & 0.069 & 0.076 & - & - \\
+5 & \textbf{0.410} & 0.767 & 0.358 & 0.364 & 0.332 & 0.424 & tie P@10 & 1.0 \\
+6 & \textbf{0.410} & 0.767 & \textbf{0.449} & 0.445 & 0.400 & 0.490 & tie R-P & 1.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Analysis and Discussion}
 
-\textbf{Overall Best System}: System 3 emerges as the strongest performer, achieving the highest scores in five out of six metrics (P@10, R-Precision, AP, nDCG@10, nDCG@20). System 2 performs best only on R@50, suggesting it retrieves more relevant documents in the top 50 results.
-
-\textbf{Statistical Significance}: Notably, \textit{none of the best systems are statistically significantly better than their second-place counterparts} (all p-values $> 0.05$). This can be attributed to several factors:
-
-\begin{enumerate}
-    \item \textbf{Small Sample Size}: With only 10 queries, the statistical power is limited. Small variations in performance across queries lead to large standard deviations, making it difficult to detect significant differences.
-    
-    \item \textbf{Tied Performances}: For P@10 and R-Precision, Systems 3, 5, and 6 achieved identical or near-identical mean scores (e.g., all three systems scored 0.410 on P@10), resulting in p-values of 1.000.
-    
-    \item \textbf{High Variance}: IR system performance often varies considerably across different queries depending on query difficulty and relevance distribution. This natural variance obscures small performance differences between systems.
-    
-    \item \textbf{Similar Retrieval Quality}: Systems 3 and 6 show remarkably similar performance patterns across all metrics, suggesting they may employ similar retrieval strategies or ranking functions.
-\end{enumerate}
-
-\textbf{Practical Implications}: While statistical significance is not achieved, System 3 consistently achieves the highest or near-highest scores across multiple metrics, suggesting it is the most robust choice in practice. The lack of significance primarily reflects limitations in test collection size rather than absence of real performance differences.
-
-\textbf{Metric-Specific Observations}:
-\begin{itemize}
-    \item System 2's superiority in R@50 but poor performance in precision-oriented metrics (P@10, nDCG) suggests a recall-focused strategy that retrieves many relevant documents but with lower ranking quality.
-    \item System 4 performs poorly across all metrics, indicating fundamental issues with its retrieval approach.
-    \item The strong correlation between systems' AP, nDCG@10, and nDCG@20 scores suggests these metrics capture similar aspects of ranking quality.
-\end{itemize}
+System 3 dominates 5/6 metrics but lacks statistical significance (all p>0.05) due to small sample size (n=10 queries). Limited queries yield high variance, obscuring differences. Additionally, tied scores (Systems 3, 5, 6 all scored 0.410 on P@10) produce p=1.000. Despite null results, System 3's consistent superiority suggests practical advantage. System 2's R@50 superiority reflects a recall-focused strategy trading precision for retrieval breadth. The lack of significance reflects test collection limitations rather than absence of real performance differences.
 
 \section{Text Analysis}
 
@@ -130,72 +61,27 @@ The analysis focused on three religious text corpora: the Quran, Old Testament (
 % TODO: Add your MI and Chi-square tables here
 % Use the format below for each corpus
 
-\subsubsection{Top Features by Mutual Information}
+\subsubsection{Top Features by MI and $\chi^2$}
 
 \begin{table}[h]
 \centering
-\caption{Top 10 Tokens by Mutual Information Score}
-\label{tab:mi_scores}
-\small
-\begin{tabular}{llllll}
+\caption{Top 5 Features by MI and $\chi^2$ for Each Corpus}
+\label{tab:features_combined}
+\scriptsize
+\begin{tabular}{p{2cm}p{3.8cm}p{3.8cm}p{3.8cm}}
 \toprule
-\multicolumn{2}{c}{\textbf{Quran}} & \multicolumn{2}{c}{\textbf{Old Testament}} & \multicolumn{2}{c}{\textbf{New Testament}} \\
-\textbf{Token} & \textbf{MI} & \textbf{Token} & \textbf{MI} & \textbf{Token} & \textbf{MI} \\
+\textbf{Method} & \textbf{Quran} & \textbf{Old Testament} & \textbf{New Testament} \\
 \midrule
-bargain & 2.576 & overflows & 0.690 & eunice & 2.236 \\
-trunks & 2.576 & circumference & 0.690 & infallible & 2.236 \\
-needlessly & 2.576 & ishpan & 0.690 & bethphage & 2.236 \\
-unsuccessful & 2.576 & embalm & 0.690 & rigid & 2.236 \\
-vicious & 2.576 & dismayed & 0.690 & murmuring & 2.236 \\
-kinsmen & 2.576 & shedder & 0.690 & apelles & 2.236 \\
-evert & 2.576 & musician & 0.690 & conversion & 2.236 \\
-mim & 2.576 & defer & 0.690 & pilot & 2.236 \\
-insignificant & 2.576 & gluttons & 0.690 & parthians & 2.236 \\
-aimlessly & 2.576 & treading & 0.690 & abba & 2.236 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsubsection{Top Features by Chi-Square}
-
-\begin{table}[h]
-\centering
-\caption{Top 10 Tokens by $\chi^2$ Score}
-\label{tab:chi_scores}
-\small
-\begin{tabular}{llllll}
-\toprule
-\multicolumn{2}{c}{\textbf{Quran}} & \multicolumn{2}{c}{\textbf{Old Testament}} & \multicolumn{2}{c}{\textbf{New Testament}} \\
-\textbf{Token} & \textbf{$\chi^2$} & \textbf{Token} & \textbf{$\chi^2$} & \textbf{Token} & \textbf{$\chi^2$} \\
+\textbf{MI} & bargain (2.576), trunks, mim, needlessly, vicious & overflows (0.690), circumference, ishpan, embalm, dismayed & eunice (2.236), infallible, bethphage, rigid, apelles \\
 \midrule
-muhammad & 1852.1 & shall & 1504.9 & jesus & 3026.7 \\
-god & 1792.5 & lord & 1114.1 & christ & 1764.5 \\
-certainly & 1682.7 & israel & 1096.0 & disciples & 741.0 \\
-believers & 1588.1 & king & 862.0 & things & 673.9 \\
-torment & 1381.9 & land & 471.6 & paul & 529.0 \\
-unbelievers & 874.5 & sons & 423.4 & peter & 529.0 \\
-revelations & 814.4 & judah & 402.0 & john & 408.2 \\
-guidance & 810.9 & house & 377.8 & spirit & 374.9 \\
-messenger & 793.1 & david & 323.7 & gospel & 300.3 \\
-quran & 753.0 & hand & 280.2 & grace & 298.4 \\
+\textbf{$\chi^2$} & muhammad (1852), god (1793), certainly (1683), believers (1588), torment (1382) & shall (1505), lord (1114), israel (1096), king (862), land (472) & jesus (3027), christ (1764), disciples (741), things (674), paul (529) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsubsection{Comparison of MI and $\chi^2$ Rankings}
 
-The two feature selection methods reveal strikingly different characteristics of the corpora:
-
-\textbf{Mutual Information (MI)} identifies \textit{corpus-exclusive vocabulary} but exhibits a known limitation: all top-ranked terms within each corpus share identical scores (2.576 for Quran, 0.690 for OT, 2.236 for NT). This occurs because these words appear exclusively in their respective corpus, achieving the theoretical maximum information gain of $\log_2(N/N_c)$ where $N$ is total documents and $N_c$ is corpus size. However, these terms are predominantly rare proper nouns (e.g., ``ishpan'', ``apelles'') or low-frequency words with limited semantic salience, making MI rankings less interpretable for understanding corpus themes.
-
-\textbf{Chi-Square ($\chi^2$)} produces more semantically meaningful rankings by prioritizing \textit{high-frequency discriminative terms}. The top words clearly capture each corpus's thematic identity:
-\begin{itemize}
-    \item \textbf{Quran}: ``muhammad'', ``believers'', ``torment'', ``messenger'' --- reflecting Islamic theology and prophetic discourse
-    \item \textbf{Old Testament}: ``israel'', ``king'', ``judah'', ``david'' --- emphasizing Hebrew monarchy and nationhood
-    \item \textbf{New Testament}: ``jesus'', ``christ'', ``disciples'', ``grace'' --- centering on Christian soteriology
-\end{itemize}
-
-\textbf{Key Difference}: MI measures \textit{lexical uniqueness} (perfect discrimination even for singletons), while $\chi^2$ tests \textit{statistically significant deviation} from expected distribution, inherently favoring terms with sufficient occurrence counts. For thematic corpus analysis, $\chi^2$ proves more robust, as its rankings reflect content-defining keywords rather than incidental vocabulary.
+MI identifies corpus-exclusive terms (all top words score identically: $\log_2(N/N_c)$) but favors rare vocabulary with limited interpretability. $\chi^2$ highlights high-frequency discriminators that capture thematic identity: ``muhammad/believers'' (Quran theology), ``israel/king/david'' (Hebrew monarchy), ``jesus/christ/disciples'' (Christian Gospel). MI measures lexical uniqueness (perfect discrimination even for singletons), while $\chi^2$ tests statistically significant deviation, favoring frequent terms. For corpus characterization, $\chi^2$ proves more semantically meaningful.
 
 \subsection{LDA Topic Modeling}
 
@@ -229,26 +115,9 @@ Based on the top tokens, I assign the following interpretive labels to these top
 
 \subsubsection{LDA Insights and Comparison with MI/$\chi^2$}
 
-\textbf{Thematic Coherence Varies Dramatically}: The average topic scores reveal striking differences in corpus homogeneity:
-\begin{itemize}
-    \item \textbf{Quran (0.358)}: Exhibits highest thematic coherence, with over one-third of its content concentrated in a single topic. This reflects the Quran's unified theological focus on monotheism and prophethood.
-    \item \textbf{New Testament (0.143)}: Moderate coherence, balancing Gospel narratives with diverse epistles and apocalyptic literature.
-    \item \textbf{Old Testament (0.080)}: Lowest coherence, consistent with its encyclopedic nature spanning history (Genesis-Kings), law (Leviticus), wisdom (Proverbs), and prophecy (Isaiah).
-\end{itemize}
+LDA reveals thematic coherence differences: Quran (0.358) shows unified theology, NT (0.143) balances Gospel with epistles, OT (0.080) exhibits diverse genres. Topic 19 (Quran-specific, 0.358 vs 0.018 in OT) and Topic 10 (NT-dominant, 0.143 vs 0.024 in OT) demonstrate distinct theological identities. Topics 5-7 show OT/NT continuity absent in Quran. 
 
-\textbf{Cross-Corpus Topic Patterns}: Analysis of the full 20-topic distribution reveals:
-\begin{itemize}
-    \item \textbf{Corpus-Exclusive Topics}: Topic 19 is Quran-specific (0.358 vs. 0.018 in OT), while Topic 10 is NT-dominant (0.143 vs. 0.024 in OT). These represent each text's unique theological identity.
-    \item \textbf{Biblical Continuity}: Topics 5-7 show OT dominance (0.07-0.08) with moderate NT presence (0.03-0.05) but low Quran scores (0.01-0.04). These likely capture prophetic/legal themes shared between Old and New Testaments, reflecting theological continuity absent in the Quran.
-    \item \textbf{OT Dispersion}: The Old Testament scores moderately (0.04-0.08) across Topics 3-9, confirming its diverse compositional structure.
-\end{itemize}
-
-\textbf{LDA vs. MI/$\chi^2$}: The methods provide complementary insights:
-\begin{itemize}
-    \item \textbf{MI/$\chi^2$} identify \textit{discriminative vocabulary} --- individual words that distinguish corpora (e.g., ``muhammad'' vs. ``jesus'').
-    \item \textbf{LDA} reveals \textit{latent thematic structure} --- co-occurring word patterns that form semantic topics (e.g., ``king + david + jerusalem + house'' forming a monarchy theme).
-    \item \textbf{Key Advantage of LDA}: Captures \textit{polysemy} and \textit{context}. For example, ``lord'' appears in all corpora but within different semantic contexts (Quran: divine authority; OT: covenant relationship; NT: christological title). LDA models these contextual differences through topic distributions, while MI/$\chi^2$ treat each word atomically.
-\end{itemize}
+MI/$\chi^2$ identify discriminative words (``muhammad'' vs ``jesus''), while LDA reveals co-occurring patterns (``king+david+jerusalem''). LDA's key advantage: capturing polysemy (``lord'' has different contexts across corpora) through topic distributions, whereas MI/$\chi^2$ treat words atomically.
 
 \section{Text Classification}
 
@@ -272,153 +141,73 @@ The baseline system followed the standard approach:
 
 \begin{table}[h]
 \centering
-\caption{Baseline System Performance}
+\caption{Baseline Performance (F1 Scores Only)}
 \label{tab:baseline}
 \scriptsize
-\begin{tabular}{lcccccccccccc}
+\begin{tabular}{lcccccc}
 \toprule
-\textbf{Split} & \textbf{P-Pos} & \textbf{R-Pos} & \textbf{F-Pos} & \textbf{P-Neg} & \textbf{R-Neg} & \textbf{F-Neg} & \textbf{P-Neu} & \textbf{R-Neu} & \textbf{F-Neu} & \textbf{P-M} & \textbf{R-M} & \textbf{F-M} \\
+\textbf{Split} & \textbf{F-Pos} & \textbf{F-Neg} & \textbf{F-Neu} & \textbf{F-Macro} & \textbf{Acc} \\
 \midrule
-Train & 0.996 & 0.996 & 0.996 & 0.999 & 0.998 & 0.999 & 0.996 & 0.997 & 0.997 & 0.997 & 0.997 & 0.997 \\
-Dev   & 0.535 & 0.557 & 0.545 & 0.451 & 0.441 & 0.446 & 0.567 & 0.556 & 0.561 & 0.517 & 0.518 & \textbf{0.518} \\
-Test  & 0.541 & 0.565 & 0.553 & 0.454 & 0.443 & 0.449 & 0.565 & 0.554 & 0.560 & 0.520 & 0.521 & \textbf{0.520} \\
+Train & 0.996 & 0.999 & 0.997 & 0.997 & 0.997 \\
+Dev   & 0.545 & 0.446 & 0.561 & \textbf{0.518} & 0.532 \\
+Test  & 0.553 & 0.449 & 0.560 & \textbf{0.520} & 0.535 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The baseline shows severe overfitting (Train F-macro=0.997 vs Dev=0.518), indicating the model memorizes training patterns. However, Dev and Test performance are highly consistent (0.518 vs 0.520), validating the data split. The negative class performs worst (F1=0.446), likely due to having the fewest training samples.
+Baseline shows severe overfitting (Train 0.997 vs Dev 0.518) but consistent dev/test performance (0.518 vs 0.520), validating split quality. Negative class worst (0.446) due to fewest samples.
 
 \subsection{Error Analysis}
-Three representative misclassification cases reveal common challenges in tweet sentiment analysis:
+Three misclassifications reveal common challenges:
 
 \begin{enumerate}
-    \item \textbf{Political news with implicit sentiment}: \\
-    \textit{Text}: ``Wikileaks: Clinton Foundation Inside Information Raises Questions About Bill Clinton | TIME'' \\
-    \textit{Predicted: neutral, Actual: negative} \\
-    \textit{Hypothesis}: Factual reporting style masks underlying negative implications. The baseline BOW model cannot capture subtle sentiment signals embedded in phrases like ``Raises Questions,'' which imply criticism. Without understanding journalistic framing conventions, the model treats this as neutral fact-reporting.
+    \item \textbf{Political news}: ``Wikileaks: Clinton Foundation...'' (Pred: neutral, Act: negative). Factual style masks negative implications; BOW cannot capture ``Raises Questions'' as implicit criticism.
     
-    \item \textbf{Neutral content with positive keywords}: \\
-    \textit{Text}: ``Bob Dylan, Roger McGuinn \& an all star lineup sing My Back Pages at the 30th Anniversary Concert...'' \\
-    \textit{Predicted: positive, Actual: neutral} \\
-    \textit{Hypothesis}: Phrases like ``all star lineup'' trigger positive classification despite overall neutral intent (event announcement). The BOW model over-weights individual positive words without recognizing that event announcements are typically informational rather than evaluative.
+    \item \textbf{Positive keywords}: ``Bob Dylan... all star lineup...'' (Pred: positive, Act: neutral). ``All star'' triggers false positive despite event announcement being informational.
     
-    \item \textbf{Context-dependent political sentiment}: \\
-    \textit{Text}: ``The 1979 islamist revolution in Iran created a hijab law. We're blinded by the fact's clarity.'' \\
-    \textit{Predicted: positive, Actual: negative} \\
-    \textit{Hypothesis}: Political and religious terms have mixed sentiment associations. The phrase ``clarity'' may be interpreted positively out of context, while ``blinded by'' implies criticism. The model lacks the contextual understanding to resolve such semantic ambiguity in politically charged discourse.
+    \item \textbf{Context-dependent}: ``Iran islamist revolution... blinded by fact's clarity'' (Pred: positive, Act: negative). ``Clarity'' interpreted positively; model misses ``blinded by'' criticism.
 \end{enumerate}
 
 \subsection{Improved System}
-Based on the error analysis revealing issues with context-insensitive word matching and the inability to capture multi-word expressions, four targeted improvements were implemented:
+Four targeted improvements address error analysis findings:
 
-\subsubsection{Improvements Made}
 \begin{enumerate}
-    \item \textbf{TF-IDF Weighting (replacing BOW)}
-    \begin{itemize}
-        \item \textit{Motivation}: Down-weight common but uninformative words (e.g., ``the'', ``is'') while emphasizing discriminative terms. Addresses baseline's over-reliance on frequent neutral words.
-        \item \textit{Implementation}: \texttt{TfidfVectorizer} with \texttt{sublinear\_tf=True} (log scaling) and \texttt{max\_df=0.95} to filter ubiquitous terms.
-        \item \textit{Result}: Improved precision across all classes, particularly for distinguishing neutral from positive/negative.
-    \end{itemize}
+    \item \textbf{TF-IDF}: Down-weights common words, up-weights discriminative terms (\texttt{sublinear\_tf=True}, \texttt{max\_df=0.95}). Improved precision distinguishing neutral from positive/negative.
     
-    \item \textbf{Bigram Features (unigrams + bigrams)}
-    \begin{itemize}
-        \item \textit{Motivation}: Capture negation patterns (``not good'') and multi-word sentiment expressions (``all star'') that were misclassified in Error Examples 1-2.
-        \item \textit{Implementation}: \texttt{ngram\_range=(1,2)} with increased vocabulary (max\_features=20,000) to accommodate bigrams.
-        \item \textit{Result}: Significant improvement on negative class (F1: 0.446→0.500, +12\%), as negations are now properly modeled.
-    \end{itemize}
+    \item \textbf{Bigrams}: Captures negation (``not good'') and multi-word expressions (\texttt{ngram\_range=(1,2)}). Negative class F1: 0.446→0.500 (+12\%).
     
-    \item \textbf{Reduced Regularization (C=500)}
-    \begin{itemize}
-        \item \textit{Motivation}: C=1000 caused severe overfitting (Train F1=0.997). Lower C increases regularization strength, encouraging simpler decision boundaries.
-        \item \textit{Implementation}: Reduced C from 1000 to 500 in \texttt{LinearSVC}.
-        \item \textit{Result}: Better generalization; though training performance remains high (0.999), the gap with dev/test narrowed.
-    \end{itemize}
+    \item \textbf{C=500}: Reduced from 1000 to mitigate overfitting. Better generalization while maintaining high training performance.
     
-    \item \textbf{Increased Feature Space}
-    \begin{itemize}
-        \item \textit{Motivation}: Bigrams require more features; 10K vocabulary truncated useful bigrams.
-        \item \textit{Implementation}: Expanded max\_features from 10,000 to 20,000.
-        \item \textit{Result}: Richer feature representation, enabling better context capture.
-    \end{itemize}
+    \item \textbf{20K features}: Expanded from 10K to accommodate bigrams, enabling richer context representation.
 \end{enumerate}
 
 \begin{table}[h]
 \centering
-\caption{Improved System Performance}
+\caption{Improved Performance (F1) and Gains vs Baseline}
 \label{tab:improved}
 \scriptsize
-\begin{tabular}{lcccccccccccc}
+\begin{tabular}{lccccc|c}
 \toprule
-\textbf{Split} & \textbf{P-Pos} & \textbf{R-Pos} & \textbf{F-Pos} & \textbf{P-Neg} & \textbf{R-Neg} & \textbf{F-Neg} & \textbf{P-Neu} & \textbf{R-Neu} & \textbf{F-Neu} & \textbf{P-M} & \textbf{R-M} & \textbf{F-M} \\
+\textbf{Split} & \textbf{F-Pos} & \textbf{F-Neg} & \textbf{F-Neu} & \textbf{F-Macro} & \textbf{Acc} & \textbf{Gain} \\
 \midrule
-Train & 0.999 & 0.999 & 0.999 & 0.999 & 0.999 & 0.999 & 0.999 & 0.999 & 0.999 & 0.999 & 0.999 & 0.999 \\
-Dev   & 0.573 & 0.589 & 0.581 & 0.503 & 0.497 & 0.500 & 0.593 & 0.585 & 0.589 & 0.556 & 0.557 & \textbf{0.557} \\
-Test  & 0.593 & 0.595 & 0.594 & 0.506 & 0.500 & 0.503 & 0.595 & 0.597 & 0.596 & 0.565 & 0.564 & \textbf{0.564} \\
+Train & 0.999 & 0.999 & 0.999 & 0.999 & 0.999 & +0.002 \\
+Dev   & 0.581 & 0.500 & 0.589 & \textbf{0.557} & 0.568 & \textbf{+0.039} \\
+Test  & 0.594 & 0.503 & 0.596 & \textbf{0.564} & 0.576 & \textbf{+0.044} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Performance Gains}
+\subsection{Performance Analysis}
 
-Table~\ref{tab:performance_gain} summarizes the improvements achieved:
+Improvements achieved +7.5\% (dev) and +8.5\% (test) gains. Per-class: positive (+6.6\%/+7.4\%), negative (+12.1\%/+12.0\%), neutral (+5.0\%/+6.4\%). Negative class's substantial gain validates error analysis hypothesis: bigrams effectively capture negation patterns.
 
-\begin{table}[h]
-\centering
-\caption{Performance Improvements: Baseline vs. Improved}
-\label{tab:performance_gain}
-\begin{tabular}{lccccc}
-\toprule
-\textbf{Split} & \textbf{Baseline F-M} & \textbf{Improved F-M} & \textbf{Absolute Gain} & \textbf{Relative Gain} \\
-\midrule
-Development & 0.518 & 0.557 & +0.039 & +7.5\% \\
-Test & 0.520 & 0.564 & +0.044 & +8.5\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{Per-Class Analysis}: The improvements benefited all classes, with the largest gains on the negative class:
-\begin{itemize}
-    \item \textbf{Positive}: 0.545 → 0.581 (+0.036, +6.6\%) on dev; 0.553 → 0.594 (+0.041, +7.4\%) on test
-    \item \textbf{Negative}: 0.446 → 0.500 (+0.054, +12.1\%) on dev; 0.449 → 0.503 (+0.054, +12.0\%) on test
-    \item \textbf{Neutral}: 0.561 → 0.589 (+0.028, +5.0\%) on dev; 0.560 → 0.596 (+0.036, +6.4\%) on test
-\end{itemize}
-
-The substantial improvement on the negative class validates our hypothesis from error analysis: bigrams effectively capture negation patterns crucial for negative sentiment detection.
-
-\subsection{Analysis of Dev vs. Test Performance}
-
-The improved model demonstrates excellent generalization characteristics:
-
-\textbf{Observation}: Test performance (F-macro=0.564) slightly exceeds development performance (0.557), with a difference of only +0.007. This pattern holds for the baseline as well (dev=0.518, test=0.520, +0.002).
-
-\textbf{Interpretation}:
-\begin{enumerate}
-    \item \textbf{No Overfitting to Dev Set}: The consistent dev/test alignment indicates that hyperparameter choices (C=500, TF-IDF settings) were not overfitted to development data. The improvements generalize robustly to unseen test data.
-    
-    \item \textbf{Representative Splits}: The 90/10 stratified split successfully maintained the underlying data distribution. Both dev and test sets exhibit similar class imbalance and difficulty characteristics.
-    
-    \item \textbf{Slightly Easier Test Set}: The marginal test superiority (+0.007) suggests the test set may contain slightly more discriminable cases or benefits from better class balance (test has proportionally more positive samples: 32.1\% vs 32.0\% in dev).
-    
-    \item \textbf{Robust Features}: TF-IDF and bigrams prove to be stable features that do not exploit dev-specific artifacts. Unlike baseline's extreme training overfitting, the improved model's features transfer well across data partitions.
-\end{enumerate}
-
-\textbf{Confidence in Deployment}: The consistent performance across splits (deviation <1\%) suggests the improved model would maintain similar accuracy (±0.56) on new tweet data with comparable sentiment distribution.
+Test performance (0.564) slightly exceeds dev (0.557, +0.007), indicating: (1) no overfitting to dev set—hyperparameters generalize well, (2) representative 90/10 stratified split maintained distribution, (3) robust TF-IDF+bigram features transfer across partitions. Consistent dev/test performance (<1\% deviation) suggests model maintains ~0.56 F1 on similar data.
 
 \section{Conclusion}
 
-This coursework provided comprehensive experience in three core areas of text and data mining. Key takeaways include:
+This coursework demonstrated: (1) IR evaluation metrics implementation with significance testing revealing small sample limitations (n=10), (2) complementary feature selection methods (MI: exclusive vocabulary, $\chi^2$: high-frequency discriminators, LDA: thematic structure) capturing religious texts' nature quantitatively (Quran coherence: 0.358, NT: 0.143, OT: 0.080), and (3) error-driven classification improvement (+8.5\% gain) validating targeted feature engineering (TF-IDF+bigrams).
 
-\textbf{IR Evaluation (Part 1)}: Implementing standard evaluation metrics from first principles reinforced understanding of precision-recall trade-offs and the importance of graded relevance (nDCG). The significance testing revealed that small sample sizes (n=10 queries) limit statistical power, emphasizing the need for large-scale evaluation collections. System 3's consistent superiority across multiple metrics (despite lack of statistical significance) demonstrates the value of multi-faceted evaluation.
-
-\textbf{Text Analysis (Part 2)}: The comparative analysis of MI, $\chi^2$, and LDA illuminated complementary strengths: MI identifies exclusive vocabulary, $\chi^2$ highlights high-frequency discriminators, and LDA reveals latent thematic structure. The striking differences in corpus coherence (Quran: 0.358, NT: 0.143, OT: 0.080) quantitatively capture the theological and compositional nature of religious texts—a finding that bridges computational methods with humanistic interpretation.
-
-\textbf{Text Classification (Part 3)}: The sentiment analysis task demonstrated the iterative nature of machine learning improvement. Error analysis directly informed feature engineering choices (bigrams for negation, TF-IDF for term weighting), resulting in substantial gains (+7.5\% on dev, +8.5\% on test). The consistent dev/test performance validated the robustness of improvements, while the largest gains on the negative class (+12\%) confirmed that targeted error analysis yields actionable insights.
-
-\textbf{Methodological Lessons}: Across all three parts, a common theme emerged: the necessity of critical evaluation. Statistical tests reveal when performance differences are meaningful (Part 1), feature selection methods must be evaluated for interpretability vs. discrimination (Part 2), and classification improvements must generalize beyond development data (Part 3). The coursework thus reinforced that computational text analysis requires not just implementing algorithms, but understanding their assumptions, limitations, and appropriate application contexts.
-
-\textbf{Challenges Faced}: The most significant challenges included (1) correctly implementing nDCG with the specific lecture formula, (2) addressing Chi-square's negative correlation issue in feature selection, and (3) balancing model complexity to avoid overfitting in classification. Each challenge required consulting both theoretical foundations (lecture slides) and practical considerations (error analysis, cross-validation).
-
-\textbf{Future Directions}: Potential extensions include: (1) larger query sets for IR evaluation to achieve statistical power, (2) hierarchical topic modeling (e.g., nested LDA) to capture sub-themes within religious texts, and (3) transformer-based classifiers (e.g., BERT) for sentiment analysis to capture deeper contextual semantics beyond TF-IDF bigrams.
+Key lesson: computational text analysis requires understanding algorithms' assumptions and limitations, not just implementation. Main challenges: nDCG formula correctness, Chi-square correlation handling, overfitting mitigation. Future directions: larger query sets for statistical power, hierarchical LDA for sub-themes, transformer-based sentiment classifiers.
 
 \end{document}
 

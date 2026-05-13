@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html>
+<html lang="en"><!-- start : common/global/components/framework/head -->
+<head>
+<!-- start : jcom/common/global/components/head -->
+<title>How do I  set or change the PATH system variable?</title>
+<meta name="Title" content="How do I  set or change the PATH system variable?">
+<meta name="Description" content="">
+<meta name="Keywords" content="">
+<meta name="siteid" content="en">
+<meta name="countryid" content="US">
+<meta name="robots" content="index, follow">
+<meta name="country" content="United States">
+<meta name="region" content="americas">
+<meta name="Language" content="en">
+<meta name="Updated Date" content="">
+<script type="text/javascript">
+var pageData = pageData || {};
+//page info
+pageData.pageInfo = pageData.pageInfo || {};
+pageData.pageInfo.language = "en";
+pageData.pageInfo.country = "United States";
+pageData.pageInfo.region = "americas";
+pageData.pageInfo.pageTitle = "";
+pageData.pageInfo.description = "";
+pageData.pageInfo.keywords = "";
+pageData.pageInfo.siteId = "en";
+pageData.pageInfo.countryId = "US";
+pageData.pageInfo.updatedDate = "";
+</script>
+<!-- start : jcom/common/global/components/seo-taxonomy-meta-data-->
+<script type="text/javascript">
+var pageData = pageData || {};
+//taxonmy
+pageData.taxonomy = pageData.taxonomy || {};
+pageData.taxonomy.productServices = [];
+pageData.taxonomy.industry = [];
+pageData.taxonomy.region = [];
+pageData.taxonomy.contentType = [];
+pageData.taxonomy.buyersJourney = [];
+pageData.taxonomy.revenue = [];
+pageData.taxonomy.title = [];
+pageData.taxonomy.audience = [];
+pageData.taxonomy.persona = [];
+</script>
+<!-- end : jcom/common/global/components/seo-taxonomy-meta-data-->
+<!-- start : jcom/common/global/components/social-media-meta-tags -->
+<!-- end : jcom/common/global/components/social-media-meta-tags -->
+<!-- start : jcom/common/global/components/seo-hreflang-meta-tags --><!-- end : jcom/common/global/components/seo-hreflang-meta-tags -->
+<!-- trustarc -->
+<script async="" type="text/javascript" crossorigin="crossOrigin" src="//consent.trustarc.com/notice?domain=oracle.com&c=teconsent&js=bb&noticeType=bb&text=true&gtm=1&language=en"></script>
+<!-- end : jcom/common/global/components/head -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<!-- start : jcom/common/global/components/framework/layoutAssetHeadInfo -->
+<!-- Container/Display Start -->
+<!-- BEGIN: RawHTML/Display -->
+<!-- EVALUATING LINKS --><link rel="preload" href="/jcom/assets/jcom_oldcss.css" as="style">
+<link rel="preload" href="/jcom/assets/jcom_screen.css" as="style">
+<link charset="utf-8" href="/jcom/assets/jcom_oldcss.css" media="screen" rel="stylesheet" type="text/css" />
+<link charset="utf-8" href="/jcom/assets/jcom_screen.css" media="screen" rel="stylesheet" type="text/css" />
+<link charset="utf-8" href="/jcom/assets/jcom_print.css" media="print" rel="stylesheet" type="text/css" />
+<link data-wscss="" href="https://www.oracle.com/asset/web/css/redwood-base.css" rel="stylesheet" />
+<link data-wscss="" href="https://www.oracle.com/asset/web/css/redwood-styles.css" rel="stylesheet" />
+<link href="/jcom/assets/jcom_redwood.css" rel="stylesheet" type="text/css" />
+<link href="/jcom/assets/jcom_simplepage.css" rel="stylesheet" type="text/css" /><script type="text/javascript" src="/jcom/assets/js/theme.min.js"></script>
+<script type="text/javascript">
+try{oracle.truste.api.getConsentDecision().consentDecision;oracle.truste.api.getConsentDecision().source}catch(err){var oracle=oracle||{};oracle.truste={};oracle.truste.api={};(function(){var trusteStorageItemName="truste.eu.cookie.notice_preferences";this.getCookieName=function(){return"notice_preferences"};this.getStorageItemName=function(){return trusteStorageItemName}}).apply(oracle.truste);(function(){var trusteCommon=oracle.truste;function getCookie(cookieKey){for(var name=cookieKey+"=",cookieArray=document.cookie.split(";"),i=0;i<cookieArray.length;i++){for(var c=cookieArray[i];" "==c.charAt(0);)c=c.substring(1);if(0==c.indexOf(name))return c.substring(name.length,c.length)}return null}function getLocalStorageItem(storageKey){return"undefined"!=typeof Storage?localStorage.getItem(storageKey):null}function getTRUSTeLocalStorageValue(storageKey){var value=getLocalStorageItem(storageKey);if(null!=value){return JSON.parse(value).value}return null}this.getConsentCode=function(){var value=getTRUSTeLocalStorageValue(trusteCommon.getStorageItemName())||getCookie(trusteCommon.getCookieName());return null==value?-1:parseInt(value)+1};this.getConsentDecision=function(){var value=this.getConsentCode();if(-1==value){var text='{"consentDecision": 0, "source": "implied"}';return JSON.parse(text)}var text='{"consentDecision": '+parseInt(value)+', "source": "asserted"}';return JSON.parse(text)}}).apply(oracle.truste.api)}
+if(oracle.truste.api.getConsentDecision().consentDecision != 1) {
+var iTag = document.createElement("script");
+if(location.host == "www.java.com" || location.host == "java.com")
+iScript = "//c.oracleinfinity.io/acs/account/wh3g12c3gg/js/java/odc.js?_ora.context=analytics:production";
+else
+iScript = "//c.oracleinfinity.io/acs/account/wh3g12c3gg/js/java/odc.js?_ora.context=analytics:development";
+iTag.src = iScript;
+iTag.async = true;
+iTag.type = 'text/javascript';
+document.head.appendChild(iTag);
+}
+</script>
+<!-- END: RawHTML/Display -->
+<!-- Container/Display end -->
+<!-- end : jcom/common/global/components/framework/layoutAssetHeadInfo -->
+</head><!-- end : common/global/components/framework/head -->
+<body class="f20 f20v0 ready" style="opacity:0">
+<div class="f11w1 jvc0 jvc0v0 clearfix">
+<!-- start : common/global/components/framework/layoutAssetStartBodyInfo -->
+<!-- Dispatcher:null -->
+<!-- BEGIN: RawHTML/Display -->
+<!-- EVALUATING LINKS --><!-- Redwood Header -->
+<header class="scs-slot" id="header-slot">
+<div class="scs-row">
+<div class="scs-col" style="width:100%">
+<div class="scs-component-container" id="b4df2ec4-758b-4dce-a75d-99b239d66c61">
+<div class="scs-component-bounding-box">
+<div>
+<div class="headerBasic-default-style scs-component scs-custom-component" style="margin-bottom:0px; margin-left:0px; margin-right:0px; margin-top:0px">
+<div class="scs-component-content" style="width:100%">
+<div class="scs-custom-component-wrapper" data-bind="attr: {'style': encodeCSS(computedStyle)}">
+<div id="b4df2ec4-758b-4dce-a75d-99b239d66c61customComponentDiv">
+<div id="b4df2ec4-758b-4dce-a75d-99b239d66c61_content_undefined">
+<header>
+<nav class="navbar navbar-expand-xl justify-content-between">
+<div class="container-fluid">
+<div id="navbar-logo"><a title="java.com" href="/en/" ></a></div>
+<input type="checkbox" id="menu">
+<label class="navbar-toggler collapsed" for="menu"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="bi" fill="currentColor" viewBox="0 0 16 16">
+<path fill-rule="evenodd" d="M2.5 11.5A.5.5 0 0 1 3 11h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"></path>
+</svg> </label>
+<div class="collapse navbar-collapse" id="navbarNav">
+<ul class="mr-auto navbar-nav">
+<li class="nav-item"><a aria-label="Developer Resources" class="nav-link " href="https://dev.java/" title="Developer Resources">Developer Resources</a></li>
+<li class="nav-item"><a aria-label="Enterprise Resources" class="nav-link " href="https://www.oracle.com/java/" title="Enterprise Resources">Enterprise Resources</a></li>
+<li class="nav-item"><a aria-label="Java for Desktop Apps" class="nav-link " href="/en/download/" title="Java for Desktop Apps">Java for Desktop Apps</a></li>
+</ul>
+<div class="container-fluid" id="search-form">
+<div class="row" id="searchbox">
+<div class="ais-SearchBox">
+<form accept-charset="utf-8" action="https://search.oracle.com/java" class="ais-SearchBox-form" data-bind="attr: { action: searchURL() }" method="get" name="searchForm" onsubmit="if((document.searchForm.Ntt.value == document.searchForm.Ntt.defaultValue) || (document.searchForm.Ntt.value == '')){return false;}"><input data-bind="value: filter()" name="langs" type="hidden" value="english" /> <input autocomplete="off" class="ais-SearchBox-input" data-bind="attr: { title: srchDefault, value: srchDefault }" maxlength="55" name="q" onblur="if( this.value=='' ) this.value=this.defaultValue;" onfocus="if( this.value==this.defaultValue ) this.value='';" size="20" title="Search" type="text" value="Search" /><button class="ais-SearchBox-submit" id="searchbtn" title="Submit the search query." type="submit"></button><button class="ais-SearchBox-reset" hidden="" title="Clear the search query." type="reset"></button></form>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- END: RawHTML/Display -->
+<!-- end : jcom/common/global/components/framework/layoutAssetStartBodyInfo -->
+<a id="maincontent"></a><!-- Constrained width main content slots. Repeats with 1-2-3-4 slots per row for 40 rows -->
+<div id="main" class="f20w1 jvc0w1 clearfix">
+<div class="f22 f22v0 cpad" data-trackas="f22" data-ocomid="f22">
+<div class="f22w1 cwidth">
+<div class="f22w2 f22sidebar">
+<div id="slot-2-00" class="jvcs0 clearfix scs-slot scs-responsive">
+<!-- start : common/global/components/framework/layoutAssetEndBodyInfo -->
+<!-- Dispatcher:null -->
+<!-- BEGIN: RawHTML/Display -->
+<!-- EVALUATING LINKS --><div class="spsidebar">
+<!--  Help Resources -->
+<div class="spheader">
+Help Resources
+</div>
+<ul>
+<li><a href="/en/download/help/index_installing.xml" data-indexP="Installing Java">Installing Java</a></li>
+<li><a href="/en/download/help/remove_olderversions.xml">Remove older versions</a></li>
+<li><a href="/en/download/help/disable_browser.xml">Disable Java</a></li>
+<li><a href="/en/download/help/index_using.xml" data-indexP="Using Java">Using Java</a></li>
+<li><a href="/en/download/faq/index_general.xml" data-indexP="General Questions">General questions</a></li>
+<li><a href="/en/security/">Security</a></li>
+<li><a href="/en/download/support.jsp">Support options</a></li>
+<li><a href="https://ops.java/supporthandbook/">Support Handbook</a></li>
+</ul>
+</div>
+<!-- END: RawHTML/Display -->
+<!-- end : jcom/common/global/components/framework/layoutAssetHelpLeftNav -->
+</div><!--  /jvcs0 clearfix -->
+</div> <!-- /f22sidebar -->
+<div class="f22w2 main-content download">
+<div class="">
+<div class="jvc0w2">
+<h3>
+<b>
+How do I  set or change the PATH system variable?
+</b>
+</h3>
+<hr />
+This article applies to:
+<ul>
+<li><b>Platform(s): </b>Solaris SPARC, Red Hat Linux, SUSE Linux, Oracle Linux, macOS, Windows 8, Windows 7, Windows Vista, Windows XP
+</li>
+</ul>
+<hr />
+<span class="bodytext">
+<!-- EVALUATING LINKS --><p><img alt="alert icon" class="alert" src="/jcom/images/alert_16.png" />The instructions on this page are intended for <strong>advanced users or system administrators.</strong></p>
+</span>
+<span class="bodytext">
+<!-- EVALUATING LINKS --><h4>General Information</h4>
+<ul>
+<li>The <b>PATH</b> is the system variable that your operating system uses to locate needed executables from the command line or Terminal window.</li>
+<li>The <b>PATH</b> system variable can be set using <b>System Utility</b> in control panel on Windows, or in your shell's startup file on Linux and Solaris.</li>
+<li>Making changes to the system PATH variable is <strong>typically not necessary</strong> for computers running <strong>Windows</strong> or <strong>Mac OS X.</strong></li>
+</ul>
+</span>
+<!-- EVALUATING LINKS --><!-- no bodytext --><hr/>
+<span class="bodytext">
+<!-- EVALUATING LINKS --><h4>Windows</h4>
+</span>
+<span class="bodytext">
+<!-- EVALUATING LINKS --><h5 class="sub">Windows 10 and Windows 8</h5>
+<ol>
+<li>In Search, search for and then select: System (Control Panel)</li>
+<li>Click the <strong>Advanced system settings</strong> link.</li>
+<li>Click <strong>Environment Variables</strong>. In the section <strong>System Variables</strong> find the <code>PATH</code> environment variable and select it. Click <strong>Edit</strong>. If the <code>PATH</code> environment variable does not exist, click <code>New</code>.</li>
+<li>In the <strong>Edit System Variable</strong> (or <strong>New System Variable</strong>) window, specify the value of the <code>PATH</code> environment variable. Click <strong>OK</strong>. Close all remaining windows by clicking <strong>OK</strong>.</li>
+<li>Reopen Command prompt window, and run your java code.</li></ol>
+</ol>
+</span>
+<span class="bodytext">
+<!-- EVALUATING LINKS --><h5 class="sub">Windows 7</h5>
+<ol>
+<li>From the desktop, right click the <strong>Computer</strong> icon.</li>
+<li>Choose <strong>Properties</strong> from the context menu.</li>
+<li>Click the <strong>Advanced system settings</strong> link.</li>
+<li>Click <strong>Environment Variables</strong>. In the section <strong>System Variables</strong> find the <code>PATH</code> environment variable and select it. Click <strong>Edit</strong>. If the <code>PATH</code> environment variable does not exist, click <code>New</code>.</li>
+<li>In the <strong>Edit System Variable</strong> (or <strong>New System Variable</strong>) window, specify the value of the <code>PATH</code> environment variable. Click <strong>OK</strong>. Close all remaining windows by clicking <strong>OK</strong>.</li>
+<li>Reopen Command prompt window, and run your java code.</li>
+</ol>
+</span>
+<span class="bodytext">
+<!-- EVALUATING LINKS --><h5 class="sub">Windows Vista</h5>
+<ol>
+<li>From the desktop, right click the <strong>My Computer</strong> icon.</li>
+<li>Choose <strong>Properties</strong> from the context menu.</li>
+<li>Click the <strong>Advanced</strong> tab (<strong>Advanced system settings</strong> link in Vista).</li>
+<li>Click <strong>Environment Variables</strong>. In the section <strong>System Variables</strong> find the <code>PATH</code> environment variable and select it. Click <strong>Edit</strong>. If the <code>PATH</code> environment variable does not exist, click <code>New</code>.</li>
+<li>In the <strong>Edit System Variable</strong> (or <strong>New System Variable</strong>) window, specify the value of the <code>PATH</code> environment variable. Click <strong>OK</strong>. Close all remaining windows by clicking <strong>OK</strong>.</li>
+<li>Reopen Command prompt window, and run your java code.</li>
+</ol>
+</span>
+<span class="bodytext">
+<!-- EVALUATING LINKS --><h5 class="sub">Windows XP</h5>
+<ol>
+<li>Select <strong>Start</strong> select <strong>Control Panel</strong>. double click <strong>System</strong> and select the <strong>Advanced</strong> tab.</li>
+<li>Click <strong>Environment Variables</strong>. In the section <strong>System Variables</strong> find the <code>PATH</code> environment variable and select it. Click <strong>Edit</strong>. If the <code>PATH</code> environment variable does not exist, click <code>New</code>.</li>
+<li>In the <strong>Edit System Variable</strong> (or <strong>New System Variable</strong>) window, specify the value of the <code>PATH</code> environment variable. Click <strong>OK</strong>. Close all remaining windows by clicking <strong>OK</strong>.</li>
+<li>Reopen Command prompt window, and run your java code.</li>
+</ol>
+</span>
+<!-- EVALUATING LINKS --><!-- no bodytext --><hr/>
+<span class="bodytext">
+<!-- EVALUATING LINKS --><h4>Mac OS X</h4>
+<p>To run a different version of Java, either specify the full path, or use the <code>java_home</code> tool:</p>
+<pre xml:space="preserve">% /usr/libexec/java_home -v 1.8.0_73 --exec javac -version
+
+</pre></span>
+<!-- EVALUATING LINKS --><!-- no bodytext --><hr/>
+<span class="bodytext">
+<!-- EVALUATING LINKS --><h4>Solaris and Linux</h4>
+<ol>
+<li>
+To find out if the path is properly set:<br/>
+In a terminal windows, enter:<br/><code>% java -version</code><br/>
+This will print the version of the <code>java</code> tool, if it can find it. If the version is old or you get the error <b>java: Command not found</b> then the path is not properly set.
+</li>
+<li>Determine which java executable is the first one found in your <b>PATH</b><br/>
+In a terminal window, enter:<br/><code>% which java</code></li>
+</ol>
+</span>
+<span class="bodytext">
+<!-- EVALUATING LINKS --><h5 class="sub">Set the PATH permanently</h5>
+<p>To set the path permanently, set the path in your startup file.<br />
+<b>Note:</b>  Instructions for two most popular Shells on Linux and Solaris are listed. If you are using other shells, see the <a href="http://docs.oracle.com/javase/tutorial/essential/environment/paths.html">Path Setting Tutorial</a>.
+</p>
+</span>
+<span class="bodytext">
+<!-- EVALUATING LINKS --><h6 class="sub">Bash Shell</h6>
+<p>Edit the startup file (<code>~/.bashrc</code>)</p>
+<ol>
+<li>Modify <b>PATH</b> variable<br/>
+<code>PATH=/usr/local/jdk1.8.0/bin:$PATH</code>
+<br />
+<code>export PATH</code></li>
+<li>Save and close the file</li>
+<li>Load the startup file<br />
+<code>% . /.profile</code>
+</li>
+<li>Verify that the path is set by repeating the <code>java</code> command<br />
+<code>% java -version</code></li>
+</ol>
+</span>
+<span class="bodytext">
+<!-- EVALUATING LINKS --><h6 class="sub">C Shell (csh)</h6>
+<p>Edit the startup file <code>(~/.cshrc</code>)</p>
+<ol>
+<li>Set Path <br/>
+<code>set path=(/usr/local/jdk1.8.0/bin $path)</code></li>
+<li>Save and close the file</li>
+<li>Load the startup file<br />
+<code>% source ~/.cshrc</code>
+</li>
+<li>Verify that the path is set by repeating the <code>java</code> command<br />
+<code>% java -version</code></li>
+</ol>
+</span>
+</div><!-- /jvc0w2  -->
+</div>
+</div> <!-- /f22w2 -->
+</div> <!-- /f22w1 -->
+</div> <!-- /f22v0 -->
+</div><!-- /jvc0w1 /f20w1 /main -->
+<!-- start : common/global/components/framework/layoutAssetEndBodyInfo -->
+<!-- Dispatcher:null -->
+<!-- BEGIN: RawHTML/Display -->
+<!-- EVALUATING LINKS -->    <!-- Redwood Footer -->
+<footer id="footer-slot" class="scs-slot">
+<div class="scs-row">
+<div class="scs-col" style="width: 100%;">
+<div id="a1aa471c-33cd-4550-a612-79ff2091d9e7" class="scs-component-container">
+<div class="scs-component-bounding-box">
+<div>
+<div class="scs-custom-component scs-component scs-component-default-style" style="margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;">
+<div class="scs-component-content" style="width:100%;">
+<div class="scs-custom-component-wrapper" style="">
+<div id="a1aa471c-33cd-4550-a612-79ff2091d9e7customComponentDiv" data-asset-operation="view:CORE1CE64AD7F2E944B68F223DEBB0AF616A">
+<!-- /U10v6 -->
+<div id="u10" class="u10 u10v0" data-trackas="footer">
+<div class="u10w1">
+<div class="u10w5">
+<div class="u10-links u10-min">
+<div>
+<a href=" https://www.oracle.com/legal/copyright.html" data-lbl="copyright">&copy; 2025 Oracle</a>
+</div>
+<p>
+<script src="/jcom/assets/footer.min.js"></script>
+<a href="/en/selectlanguage.jsp" title="Select Language">Select Language</a>
+<a href="/en/download/support.jsp" title="Support">Support</a>
+<a href="https://www.oracle.com/html/privacy.html" title="Privacy">Privacy</a>
+<span id="teconsent"></span>
+<a href="https://www.oracle.com/html/terms.html" title="Terms of Use">Terms of Use</a>
+<a href="https://www.oracle.com/html/3party.html" title="Trademarks">Trademarks</a>
+</p>
+</div>
+</div>
+</div>
+</div>
+<!-- /U10v6 -->
+</div>
+</div>
+</div>
+<div></div>
+</div>
+<div class="scs-hidden">
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</footer>
+<script type="text/javascript" src="/jcom/assets/remote.js"></script>
+<!-- END: RawHTML/Display -->
+<!-- end : jcom/common/global/components/framework/layoutAssetEndBodyInfo -->
+</div><!-- /f11w1 /jvc0 -->
+<script language="JavaScript">
+<!--
+var s_channel="javac:Support:FAQ";
+var s_pageName="javac:Support:FAQ:";
+var s_prop19="en_javac:Support:FAQ:";
+var s_charSet="UTF-8";
+//-->
+</script>
+<script>
+userAgent = navigator.userAgent;
+userAgent = userAgent == null ? "" : userAgent.toLowerCase();
+if (userAgent.indexOf('mac') != -1){
+if(document.getElementById("olderVersions")) {
+document.getElementById("olderVersions").style.display = "none"
+}
+}
+</script>
+</body>
+</html>
+
+
